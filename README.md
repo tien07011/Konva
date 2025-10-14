@@ -44,3 +44,25 @@ You don’t have to ever use `eject`. The curated feature set is suitable for sm
 You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
 
 To learn React, check out the [React documentation](https://reactjs.org/).
+
+## MilitarySymbolEditor
+
+A simple Konva-based editor component `MilitarySymbolEditor` with shape logic split by file:
+- `src/shapes/RectangleShape.tsx`
+- `src/shapes/EllipseShape.tsx`
+- `src/shapes/LineShape.tsx`
+- `src/shapes/ArrowShape.tsx`
+- Shared types and renderer in `src/shapes/types.ts` and `src/shapes/registry.tsx`
+
+Usage: the editor is already wired into `src/App.tsx`. Run the app and use the toolbar to select a tool, then click and drag on the canvas to draw. You can select and transform shapes with the transformer handles.
+
+### New: Line and Arrow tools
+
+- Draw Line and Arrow by selecting their toolbar buttons, then click-drag to set start → end.
+- Release to finalize; press Escape while dragging to cancel.
+- Line has stroke-only; Arrow uses both stroke and fill for the head.
+
+Export/Import JSON includes these shapes:
+
+- Line: `{ type: 'line', x, y, rotation, stroke, strokeWidth, points: [x1, y1, x2, y2] }`
+- Arrow: `{ type: 'arrow', x, y, rotation, fill, stroke, strokeWidth, pointerLength, pointerWidth, points: [x1, y1, x2, y2] }`
