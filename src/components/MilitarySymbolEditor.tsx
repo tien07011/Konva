@@ -2,6 +2,7 @@ import React from 'react';
 import { Stage, Layer } from 'react-konva';
 import { AnyShape, ShapeType } from '../shapes/types';
 import { renderShape, createShape, updateOnDraw as updateOnDrawFromModule, isValidAfterDraw, shapeRegistry } from '../shapes/registry';
+import ShapePropertiesModal from './ShapePropertiesModal';
 
 type Tool = ShapeType | 'select';
 
@@ -40,6 +41,8 @@ const MilitarySymbolEditor: React.FC = () => {
   const [tool, setTool] = React.useState<Tool>('select');
   const [shapes, setShapes] = React.useState<AnyShape[]>([]);
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
+  const selectedShape = React.useMemo(() => shapes.find((s) => s.id === selectedId) || null, [shapes, selectedId]);
+  const [showEditor, setShowEditor] = React.useState(false);
   const [drawing, setDrawing] = React.useState<{
     id: string;
     type: ShapeType;
@@ -162,6 +165,10 @@ const MilitarySymbolEditor: React.FC = () => {
       const radiusY = s.radiusY != null ? Number(s.radiusY) : Number(s.radius) || 0;
       return radiusX > 0 && radiusY > 0 ? ({ ...base, radiusX, radiusY } as AnyShape) : null;
     }
+    if (normalizedType === 'diamond') {
+      const w = Number(s.width) || 0; const h = Number(s.height) || 0;
+      return w > 0 && h > 0 ? ({ ...base, width: w, height: h } as AnyShape) : null;
+    }
     if (normalizedType === 'line') {
       const pts: number[] = Array.isArray(s.points) ? s.points.map((n: any) => Number(n) || 0) : [0, 0, Number(s.dx) || 0, Number(s.dy) || 0];
       // Ensure 4 numbers
@@ -251,6 +258,7 @@ const MilitarySymbolEditor: React.FC = () => {
                 () => {
                   setSelectedId(shape.id);
                   setTool('select');
+                  setShowEditor(true);
                 },
                 (attrs) => updateShape(shape.id, attrs as any)
               )
@@ -258,6 +266,16 @@ const MilitarySymbolEditor: React.FC = () => {
           </KLayer>
         </KStage>
       </div>
+      {/* Shape properties modal */}
+      <ShapePropertiesModal
+        shape={selectedShape}
+        open={!!selectedShape && showEditor}
+        onClose={() => setShowEditor(false)}
+        onApply={(patch) => {
+          if (!selectedShape) return;
+          updateShape(selectedShape.id, patch as any);
+        }}
+      />
     </div>
   );
 };

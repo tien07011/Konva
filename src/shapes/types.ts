@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type ShapeType = 'rectangle' | 'ellipse' | 'line' | 'arrow' | 'text';
+export type ShapeType = 'rectangle' | 'ellipse' | 'line' | 'arrow' | 'diamond' | 'text';
 
 export interface BaseShape {
   id: string;
@@ -25,6 +25,12 @@ export interface EllipseShape extends BaseShape {
   radiusY: number;
 }
 
+export interface DiamondShape extends BaseShape {
+  type: 'diamond';
+  width: number; // tip-to-tip horizontal distance
+  height: number; // tip-to-tip vertical distance
+}
+
 export interface LineShape extends BaseShape {
   type: 'line';
   // points are in local coordinates relative to (x, y)
@@ -39,7 +45,7 @@ export interface ArrowShape extends BaseShape {
   pointerWidth: number;
 }
 
-export type AnyShape = RectShape | EllipseShape | LineShape | ArrowShape;
+export type AnyShape = RectShape | EllipseShape | LineShape | ArrowShape | DiamondShape;
 
 export interface EditableShapeProps<T extends AnyShape> {
   shape: T;
