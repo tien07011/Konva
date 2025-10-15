@@ -1,10 +1,8 @@
 import React from 'react';
 import { Stage, Layer } from 'react-konva';
 import { AnyShape, ShapeType } from '../shapes/types';
-import { renderShape, createShape, updateOnDraw as updateOnDrawFromModule, isValidAfterDraw, shapeRegistry } from '../shapes/registry';
+import { renderShape, createShape, shapeRegistry } from '../shapes/registry';
 import ShapePropertiesModal from './ShapePropertiesModal';
-
-type Tool = ShapeType | 'select';
 
 const defaultStyles = {
   fill: '#88c0d0',
@@ -38,95 +36,48 @@ const ToolbarButton: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement> & { 
 );
 
 const MilitarySymbolEditor: React.FC = () => {
-  const [tool, setTool] = React.useState<Tool>('select');
+  const stageRef = React.useRef<any>(null);
   const [shapes, setShapes] = React.useState<AnyShape[]>([]);
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const selectedShape = React.useMemo(() => shapes.find((s) => s.id === selectedId) || null, [shapes, selectedId]);
   const [showEditor, setShowEditor] = React.useState(false);
-  const [drawing, setDrawing] = React.useState<{
-    id: string;
-    type: ShapeType;
-    startX: number;
-    startY: number;
-  } | null>(null);
   const [showIO, setShowIO] = React.useState(false);
   const [ioText, setIoText] = React.useState('');
 
-  // Editor không còn thêm trực tiếp; tạo qua drag logic
+  // Helper: tạo hình mặc định ở giữa canvas
+  const addDefaultShape = (type: ShapeType) => {
+    const stage = stageRef.current;
+    const w = stage?.width?.() ?? window.innerWidth;
+    const h = stage?.height?.() ?? (window.innerHeight - 60);
+    const cx = Math.round(w / 2);
+    const cy = Math.round(h / 2);
+    const id = `${type}-${Date.now()}-${Math.round(Math.random() * 1000)}`;
+    const base = makeShape(id, type, cx, cy);
+    let created: AnyShape = base;
+    if (type === 'rectangle') {
+      created = { ...(base as any), width: 120, height: 80 };
+    } else if (type === 'ellipse') {
+      created = { ...(base as any), radiusX: 60, radiusY: 40 };
+    } else if (type === 'diamond') {
+      created = { ...(base as any), width: 120, height: 80 };
+    } else if (type === 'line') {
+      created = { ...(base as any), points: [0, 0, 120, 0] };
+    } else if (type === 'arrow') {
+      created = { ...(base as any), points: [0, 0, 120, 0] };
+    }
+    setShapes((prev) => [...prev, created]);
+    setSelectedId(id);
+  };
 
   const handleStageMouseDown = (e: any) => {
     const stage = e.target.getStage();
     const pointer = stage.getPointerPosition();
     if (!pointer) return;
 
-    if (tool === 'select') {
-      // Nếu click vào vùng trống thì bỏ chọn
-      if (e.target === stage) setSelectedId(null);
-      return;
-    }
-
-    // Bắt đầu vẽ: tạo shape tạm với id và set drawing state
-    const id = `${tool}-${Date.now()}-${Math.round(Math.random() * 1000)}`;
-    const type = tool as ShapeType;
-    const sx = pointer.x;
-    const sy = pointer.y;
-    const base = makeShape(id, type, sx, sy);
-
-    // Khởi tạo kích thước nhỏ để hiển thị ngay
-    setShapes((prev) => {
-      const initial = (() => {
-        if (type === 'rectangle') return { ...base, width: 1, height: 1 } as AnyShape;
-        if (type === 'ellipse') return { ...base, radiusX: 1, radiusY: 1 } as AnyShape;
-        return base;
-      })();
-      return [...prev, initial];
-    });
-    setDrawing({ id, type, startX: sx, startY: sy });
+    // Nếu click vào vùng trống thì bỏ chọn
+    if (e.target === stage) setSelectedId(null);
   };
 
-  const handleStageMouseMove = (e: any) => {
-    if (!drawing) return;
-    const stage = e.target.getStage();
-    const p = stage.getPointerPosition();
-    if (!p) return;
-    setShapes((prev) => prev.map((s) => {
-      if (s.id !== drawing.id) return s;
-      const patch = updateOnDrawFromModule(s, { start: { x: drawing.startX, y: drawing.startY }, current: { x: p.x, y: p.y } });
-      return { ...s, ...patch } as AnyShape;
-    }));
-  };
-
-  const finalizeDrawing = React.useCallback((cancel: boolean) => {
-    if (!drawing) return;
-    setShapes((prev) => {
-      if (cancel) return prev.filter((s) => s.id !== drawing.id);
-      // Loại bỏ shape quá nhỏ theo module rule
-      return prev.filter((s) => (s.id !== drawing.id ? true : isValidAfterDraw(s)));
-    });
-    if (!cancel) {
-      setSelectedId(drawing.id);
-      setTool('select');
-    }
-    setDrawing(null);
-  }, [drawing, setShapes]);
-
-  const handleStageMouseUp = (e: any) => {
-    if (!drawing) return;
-    finalizeDrawing(false);
-  };
-
-  // ESC to cancel current drawing
-  React.useEffect(() => {
-    const onKeyDown = (ev: KeyboardEvent) => {
-      if (ev.key === 'Escape' && drawing) {
-        finalizeDrawing(true);
-      }
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => {
-      window.removeEventListener('keydown', onKeyDown);
-    };
-  }, [drawing, finalizeDrawing]);
 
   const updateShape = (id: string, attrs: Partial<AnyShape>) => {
     setShapes((prev) => prev.map((s) => (s.id === id ? { ...s, ...attrs } as AnyShape : s)));
@@ -170,17 +121,44 @@ const MilitarySymbolEditor: React.FC = () => {
       return w > 0 && h > 0 ? ({ ...base, width: w, height: h } as AnyShape) : null;
     }
     if (normalizedType === 'line') {
-      const pts: number[] = Array.isArray(s.points) ? s.points.map((n: any) => Number(n) || 0) : [0, 0, Number(s.dx) || 0, Number(s.dy) || 0];
-      // Ensure 4 numbers
-      const points: [number, number, number, number] = [pts[0] || 0, pts[1] || 0, pts[2] || 0, pts[3] || 0];
-      return ({ ...base, points } as AnyShape);
+      let pts: number[] = [];
+      if (Array.isArray(s.points)) {
+        pts = s.points.map((n: any) => Number(n) || 0).filter((n: any) => Number.isFinite(n));
+      } else if (s.dx != null || s.dy != null) {
+        pts = [0, 0, Number(s.dx) || 0, Number(s.dy) || 0];
+      }
+      if (pts.length < 4 || pts.length % 2 !== 0) {
+        // fallback to a minimal line
+        pts = [0, 0, 1, 1];
+      }
+      return ({ ...base, points: pts } as AnyShape);
     }
     if (normalizedType === 'arrow') {
-      const pts: number[] = Array.isArray(s.points) ? s.points.map((n: any) => Number(n) || 0) : [0, 0, Number(s.dx) || 0, Number(s.dy) || 0];
-      const points: [number, number, number, number] = [pts[0] || 0, pts[1] || 0, pts[2] || 0, pts[3] || 0];
+      let pts: number[] = [];
+      if (Array.isArray(s.points)) {
+        pts = s.points.map((n: any) => Number(n)).filter((n: any) => Number.isFinite(n));
+      } else if (s.dx != null || s.dy != null) {
+        pts = [0, 0, Number(s.dx) || 0, Number(s.dy) || 0];
+      }
+      if (pts.length < 4 || pts.length % 2 !== 0) {
+        pts = [0, 0, 1, 1];
+      }
       const pointerLength = s.pointerLength != null ? Number(s.pointerLength) : 14;
       const pointerWidth = s.pointerWidth != null ? Number(s.pointerWidth) : 12;
-      return ({ ...base, points, pointerLength, pointerWidth } as AnyShape);
+      return ({ ...base, points: pts, pointerLength, pointerWidth } as AnyShape);
+    }
+    if (normalizedType === 'thick-arrow') {
+      let pts: number[] = [];
+      if (Array.isArray(s.points)) {
+        pts = s.points.map((n: any) => Number(n)).filter((n: any) => Number.isFinite(n));
+      } else if (s.dx != null || s.dy != null) {
+        pts = [0, 0, Number(s.dx) || 0, Number(s.dy) || 0];
+      }
+      const p = pts.length === 4 ? (pts as [number, number, number, number]) : ([0, 0, 1, 1] as [number, number, number, number]);
+      const shaftWidth = s.shaftWidth != null ? Number(s.shaftWidth) : 16;
+      const headLength = s.headLength != null ? Number(s.headLength) : 30;
+      const headWidth = s.headWidth != null ? Number(s.headWidth) : 34;
+      return ({ ...base, points: p, shaftWidth, headLength, headWidth } as AnyShape);
     }
     return null;
   };
@@ -201,16 +179,14 @@ const MilitarySymbolEditor: React.FC = () => {
     }
     setShapes(next);
     setSelectedId(null);
-    setTool('select');
     setShowIO(false);
   };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
       <div style={{ padding: 8, borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center' }}>
-        <ToolbarButton active={tool === 'select'} onClick={() => setTool('select')}>Select</ToolbarButton>
         {Object.values(shapeRegistry).map((m) => (
-          <ToolbarButton key={m.type} active={tool === m.type} onClick={() => setTool(m.type)}>
+          <ToolbarButton key={m.type} onClick={() => addDefaultShape(m.type as any)}>
             {m.label}
           </ToolbarButton>
         ))}
@@ -237,27 +213,21 @@ const MilitarySymbolEditor: React.FC = () => {
           </div>
         </div>
       )}
-      <div style={{ flex: 1 }}>
+      <div style={{ flex: 1, position: 'relative' }}>
         <KStage
+          ref={stageRef}
           width={window.innerWidth}
           height={window.innerHeight - 60}
           onMouseDown={handleStageMouseDown}
-          onMouseMove={handleStageMouseMove}
-          onMouseUp={handleStageMouseUp}
-          onMouseLeave={handleStageMouseUp}
-          onTouchStart={handleStageMouseDown}
-          onTouchMove={handleStageMouseMove}
-          onTouchEnd={handleStageMouseUp}
           style={{ background: '#f8fafc' }}
         >
-          <KLayer listening={tool === 'select' && !drawing}>
+          <KLayer>
             {shapes.map((shape) =>
               renderShape(
                 shape,
                 shape.id === selectedId,
                 () => {
                   setSelectedId(shape.id);
-                  setTool('select');
                   setShowEditor(true);
                 },
                 (attrs) => updateShape(shape.id, attrs as any)
@@ -265,17 +235,19 @@ const MilitarySymbolEditor: React.FC = () => {
             )}
           </KLayer>
         </KStage>
+        {/* Right properties panel */}
+        <div style={{ position: 'absolute', top: 0, right: 0, height: '100%', width: selectedShape && showEditor ? 420 : 0, transition: 'width 150ms ease', pointerEvents: selectedShape && showEditor ? 'auto' : 'none' }}>
+          <ShapePropertiesModal
+            shape={selectedShape}
+            open={!!selectedShape && showEditor}
+            onClose={() => setShowEditor(false)}
+            onApply={(patch) => {
+              if (!selectedShape) return;
+              updateShape(selectedShape.id, patch as any);
+            }}
+          />
+        </div>
       </div>
-      {/* Shape properties modal */}
-      <ShapePropertiesModal
-        shape={selectedShape}
-        open={!!selectedShape && showEditor}
-        onClose={() => setShowEditor(false)}
-        onApply={(patch) => {
-          if (!selectedShape) return;
-          updateShape(selectedShape.id, patch as any);
-        }}
-      />
     </div>
   );
 };

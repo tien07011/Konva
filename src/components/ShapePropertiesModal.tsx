@@ -6,7 +6,6 @@ type Props = {
   open: boolean;
   onClose: () => void;
   onApply: (patch: Partial<AnyShape>) => void;
-  onApplyAll?: (patch: Partial<AnyShape>) => void; // optional: apply all changes at once
 };
 
 type Field = {
@@ -41,14 +40,18 @@ function getFieldsFor(shape: AnyShape | null): Field[] {
       { key: 'height', label: 'Height', type: 'number', step: 1, min: 0 },
     ],
     line: [
-      { key: 'dx', label: 'Delta X (x2)', type: 'number', step: 1 },
-      { key: 'dy', label: 'Delta Y (y2)', type: 'number', step: 1 },
+      { key: 'points', label: 'Points (x0,y0,x1,y1,...)', type: 'text' },
     ],
     arrow: [
-      { key: 'dx', label: 'Delta X (x2)', type: 'number', step: 1 },
-      { key: 'dy', label: 'Delta Y (y2)', type: 'number', step: 1 },
+      { key: 'points', label: 'Points (x0,y0,x1,y1,...)', type: 'text' },
       { key: 'pointerLength', label: 'Pointer length', type: 'number', step: 1, min: 0 },
       { key: 'pointerWidth', label: 'Pointer width', type: 'number', step: 1, min: 0 },
+    ],
+    'thick-arrow': [
+      { key: 'points', label: 'Endpoints (x1,y1,x2,y2)', type: 'text' },
+      { key: 'shaftWidth', label: 'Shaft width', type: 'number', step: 1, min: 0 },
+      { key: 'headLength', label: 'Head length', type: 'number', step: 1, min: 0 },
+      { key: 'headWidth', label: 'Head width', type: 'number', step: 1, min: 0 },
     ],
     text: [], // not used currently
   };
@@ -75,12 +78,16 @@ const Modal: React.FC<Props> = ({ shape, open, onClose, onApply }) => {
     } else if (shape.type === 'diamond') {
       base.width = shape.width; base.height = shape.height;
     } else if (shape.type === 'line') {
-      const [, , dx, dy] = shape.points;
-      base.dx = dx; base.dy = dy;
+      base.points = (shape.points || []).join(',');
     } else if (shape.type === 'arrow') {
-      const [, , dx, dy] = shape.points;
-      base.dx = dx; base.dy = dy;
+      base.points = (shape.points || []).join(',');
       base.pointerLength = shape.pointerLength; base.pointerWidth = shape.pointerWidth;
+    }
+    else if (shape.type === 'thick-arrow') {
+      base.points = (shape.points || []).join(',');
+      base.shaftWidth = (shape as any).shaftWidth;
+      base.headLength = (shape as any).headLength;
+      base.headWidth = (shape as any).headWidth;
     }
     setLocal(base);
   }, [shape?.id, open]);
@@ -108,23 +115,34 @@ const Modal: React.FC<Props> = ({ shape, open, onClose, onApply }) => {
       patch.width = clamp(num(local.width, shape.width), 0, Infinity);
       patch.height = clamp(num(local.height, shape.height), 0, Infinity);
     } else if (shape.type === 'line') {
-      const dx = num(local.dx, shape.points[2]);
-      const dy = num(local.dy, shape.points[3]);
-      patch.points = [0, 0, dx, dy];
+      const str = String(local.points ?? '').trim();
+      const arr = str.split(/[\s,]+/).map((v) => Number(v)).filter((n) => Number.isFinite(n));
+      // ensure even length and at least 2 points
+      const pts = arr.length >= 4 && arr.length % 2 === 0 ? arr : shape.points;
+      patch.points = pts;
     } else if (shape.type === 'arrow') {
-      const dx = num(local.dx, shape.points[2]);
-      const dy = num(local.dy, shape.points[3]);
-      patch.points = [0, 0, dx, dy];
+      const str = String(local.points ?? '').trim();
+      const arr = str.split(/\s*,\s*|\s+/).filter(Boolean).map((v) => Number(v)).filter((n) => Number.isFinite(n));
+      const pts = arr.length >= 4 && arr.length % 2 === 0 ? arr : shape.points;
+      patch.points = pts;
       patch.pointerLength = clamp(num(local.pointerLength, shape.pointerLength), 0, Infinity);
       patch.pointerWidth = clamp(num(local.pointerWidth, shape.pointerWidth), 0, Infinity);
+    } else if (shape.type === 'thick-arrow') {
+      const str = String(local.points ?? '').trim();
+      const arr = str.split(/\s*,\s*|\s+/).filter(Boolean).map((v) => Number(v)).filter((n) => Number.isFinite(n));
+      const pts = arr.length === 4 ? (arr as any) : shape.points;
+      (patch as any).points = pts;
+      (patch as any).shaftWidth = clamp(num(local.shaftWidth, (shape as any).shaftWidth), 0, Infinity);
+      (patch as any).headLength = clamp(num(local.headLength, (shape as any).headLength), 0, Infinity);
+      (patch as any).headWidth = clamp(num(local.headWidth, (shape as any).headWidth), 0, Infinity);
     }
     onApply(patch);
     onClose();
   };
 
   return (
-    <div style={styles.backdrop} onMouseDown={onClose}>
-      <div style={styles.modal} onMouseDown={(e) => e.stopPropagation()}>
+    <div style={styles.backdrop}>
+      <div style={styles.modal}>
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
           <strong style={{ fontSize: 16, flex: 1 }}>Edit {shape.type} – {shape.id}</strong>
           <button onClick={onClose} style={styles.iconBtn} aria-label="Close">✕</button>
@@ -133,14 +151,15 @@ const Modal: React.FC<Props> = ({ shape, open, onClose, onApply }) => {
           {fields.map((f) => (
             <label key={f.key} style={styles.label}>
               <span style={styles.labelText}>{f.label}</span>
-              {f.type === 'color' ? (
+              {f.type === 'color' && (
                 <input
                   type="color"
                   value={String(local[f.key] ?? '')}
                   onChange={(e) => setLocal((s: any) => ({ ...s, [f.key]: e.target.value }))}
                   style={styles.input}
                 />
-              ) : (
+              )}
+              {f.type === 'number' && (
                 <input
                   type="number"
                   value={String(local[f.key] ?? '')}
@@ -148,6 +167,14 @@ const Modal: React.FC<Props> = ({ shape, open, onClose, onApply }) => {
                   min={f.min}
                   onChange={(e) => setLocal((s: any) => ({ ...s, [f.key]: e.target.value }))}
                   style={styles.input}
+                />
+              )}
+              {f.type === 'text' && (
+                <textarea
+                  value={String(local[f.key] ?? '')}
+                  onChange={(e) => setLocal((s: any) => ({ ...s, [f.key]: e.target.value }))}
+                  rows={3}
+                  style={{ ...styles.input, fontFamily: 'monospace' }}
                 />
               )}
             </label>
@@ -175,10 +202,10 @@ function clamp(n: number, min: number, max: number) {
 
 const styles: Record<string, React.CSSProperties> = {
   backdrop: {
-    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50,
+    position: 'fixed', inset: 0, background: 'transparent', zIndex: 50, pointerEvents: 'none',
   },
   modal: {
-    width: 420, background: '#fff', borderRadius: 10, boxShadow: '0 10px 30px rgba(0,0,0,0.2)', padding: 16, border: '1px solid #e5e7eb',
+    position: 'absolute', right: 0, top: 0, height: '100%', width: 420, background: '#fff', boxShadow: '-8px 0 24px rgba(0,0,0,0.08)', padding: 16, borderLeft: '1px solid #e5e7eb', overflow: 'auto', pointerEvents: 'auto',
   },
   label: { display: 'flex', flexDirection: 'column', gap: 4 },
   labelText: { color: '#334155', fontSize: 12 },

@@ -5,6 +5,7 @@ import { EllipseModule } from './EllipseShape';
 import { LineModule } from './LineShape';
 import { ArrowModule } from './ArrowShape';
 import { DiamondModule } from './DiamondShape';
+import { ThickArrowModule } from './ThickArrowShape';
 
 const modules: Array<ShapeModule<AnyShape>> = [
   RectangleModule as unknown as ShapeModule<AnyShape>,
@@ -12,6 +13,7 @@ const modules: Array<ShapeModule<AnyShape>> = [
   LineModule as unknown as ShapeModule<AnyShape>,
   ArrowModule as unknown as ShapeModule<AnyShape>,
   DiamondModule as unknown as ShapeModule<AnyShape>,
+  ThickArrowModule as unknown as ShapeModule<AnyShape>,
 ];
 
 export const shapeRegistry: Record<ShapeType, ShapeModule<AnyShape>> = modules.reduce((acc, m) => {

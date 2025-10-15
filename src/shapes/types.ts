@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type ShapeType = 'rectangle' | 'ellipse' | 'line' | 'arrow' | 'diamond' | 'text';
+export type ShapeType = 'rectangle' | 'ellipse' | 'line' | 'arrow' | 'diamond' | 'thick-arrow' | 'text';
 
 export interface BaseShape {
   id: string;
@@ -33,19 +33,30 @@ export interface DiamondShape extends BaseShape {
 
 export interface LineShape extends BaseShape {
   type: 'line';
-  // points are in local coordinates relative to (x, y)
-  points: [number, number, number, number]; // [0, 0, dx, dy]
+  // Polyline points in local coordinates relative to (x, y)
+  // Must be an even-length array: [x0, y0, x1, y1, ..., xn, yn]
+  points: number[];
 }
 
 export interface ArrowShape extends BaseShape {
   type: 'arrow';
-  // points are in local coordinates relative to (x, y)
-  points: [number, number, number, number]; // [0, 0, dx, dy]
+  // Polyline points in local coordinates relative to (x, y)
+  // Must be an even-length array: [x0, y0, x1, y1, ..., xn, yn]
+  points: number[];
   pointerLength: number;
   pointerWidth: number;
 }
 
-export type AnyShape = RectShape | EllipseShape | LineShape | ArrowShape | DiamondShape;
+export interface ThickArrowShape extends BaseShape {
+  type: 'thick-arrow';
+  // start and end in local coordinates relative to (x, y)
+  points: [number, number, number, number];
+  shaftWidth: number;     // visual shaft thickness
+  headLength: number;     // length of the arrow head along direction
+  headWidth: number;      // total width of the arrow head at its base
+}
+
+export type AnyShape = RectShape | EllipseShape | LineShape | ArrowShape | DiamondShape | ThickArrowShape;
 
 export interface EditableShapeProps<T extends AnyShape> {
   shape: T;

@@ -1,0 +1,115 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "build",
+			"type": "shell",
+			"command": "npm run -s build --silent",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "start",
+			"type": "shell",
+			"command": "npm run -s start --silent",
+			"args": [],
+			"isBackground": true,
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "build",
+			"type": "shell",
+			"command": "npm run -s build --silent",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "build",
+			"type": "shell",
+			"command": "npm run -s build --silent",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build",
+			"type": "shell",
+			"command": "npm run -s build --silent",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build",
+			"type": "shell",
+			"command": "npm run -s build --silent",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build",
+			"type": "shell",
+			"command": "npm run -s build --silent",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build",
+			"type": "shell",
+			"command": "npm run -s build --silent",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build",
+			"type": "shell",
+			"command": "npm run -s build --silent",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build",
+			"type": "shell",
+			"command": "npm run -s build --silent",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build",
+			"type": "shell",
+			"command": "npm run -s build --silent",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build",
+			"type": "shell",
+			"command": "npm run -s build --silent",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build",
+			"type": "shell",
+			"command": "npm run -s build --silent",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "build",
+			"type": "shell",
+			"command": "npm run -s build --silent",
+			"isBackground": false,
+			"group": "build"
+		}
+	]
+}
