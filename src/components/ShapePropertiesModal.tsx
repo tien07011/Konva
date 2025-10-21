@@ -53,6 +53,13 @@ function getFieldsFor(shape: AnyShape | null): Field[] {
       { key: 'headLength', label: 'Head length', type: 'number', step: 1, min: 0 },
       { key: 'headWidth', label: 'Head width', type: 'number', step: 1, min: 0 },
     ],
+    polygon: [
+      { key: 'points', label: 'Vertices (x0,y0,x1,y1,...)', type: 'text' },
+    ],
+    curve: [
+      { key: 'points', label: 'Points (x0,y0,x1,y1,...)', type: 'text' },
+      { key: 'tension', label: 'Tension (0..1)', type: 'number', step: 0.1, min: 0 },
+    ],
     text: [], // not used currently
   };
   return [...common, ...byType[shape.type]];
@@ -88,6 +95,13 @@ const Modal: React.FC<Props> = ({ shape, open, onClose, onApply }) => {
       base.shaftWidth = (shape as any).shaftWidth;
       base.headLength = (shape as any).headLength;
       base.headWidth = (shape as any).headWidth;
+    }
+    else if (shape.type === 'polygon') {
+      base.points = (shape.points || []).join(',');
+    }
+    else if (shape.type === 'curve') {
+      base.points = (shape.points || []).join(',');
+      (base as any).tension = (shape as any).tension ?? 0.5;
     }
     setLocal(base);
   }, [shape?.id, open]);
@@ -135,6 +149,17 @@ const Modal: React.FC<Props> = ({ shape, open, onClose, onApply }) => {
       (patch as any).shaftWidth = clamp(num(local.shaftWidth, (shape as any).shaftWidth), 0, Infinity);
       (patch as any).headLength = clamp(num(local.headLength, (shape as any).headLength), 0, Infinity);
       (patch as any).headWidth = clamp(num(local.headWidth, (shape as any).headWidth), 0, Infinity);
+    } else if (shape.type === 'polygon') {
+      const str = String(local.points ?? '').trim();
+      const arr = str.split(/\s*,\s*|\s+/).filter(Boolean).map((v) => Number(v)).filter((n) => Number.isFinite(n));
+      const even = arr.length % 2 === 0 ? arr : shape.points;
+      patch.points = even.length >= 6 ? even : shape.points;
+    } else if (shape.type === 'curve') {
+      const str = String(local.points ?? '').trim();
+      const arr = str.split(/\s*,\s*|\s+/).filter(Boolean).map((v) => Number(v)).filter((n) => Number.isFinite(n));
+      const even = arr.length % 2 === 0 && arr.length >= 4 ? arr : shape.points;
+      patch.points = even;
+      (patch as any).tension = clamp(num(local.tension, (shape as any).tension ?? 0.5), 0, 1);
     }
     onApply(patch);
     onClose();

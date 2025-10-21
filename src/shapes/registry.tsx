@@ -6,6 +6,8 @@ import { LineModule } from './LineShape';
 import { ArrowModule } from './ArrowShape';
 import { DiamondModule } from './DiamondShape';
 import { ThickArrowModule } from './ThickArrowShape';
+import { PolygonModule } from './PolygonShape';
+import { CurveModule } from './CurveShape';
 
 const modules: Array<ShapeModule<AnyShape>> = [
   RectangleModule as unknown as ShapeModule<AnyShape>,
@@ -14,6 +16,8 @@ const modules: Array<ShapeModule<AnyShape>> = [
   ArrowModule as unknown as ShapeModule<AnyShape>,
   DiamondModule as unknown as ShapeModule<AnyShape>,
   ThickArrowModule as unknown as ShapeModule<AnyShape>,
+  PolygonModule as unknown as ShapeModule<AnyShape>,
+  CurveModule as unknown as ShapeModule<AnyShape>,
 ];
 
 export const shapeRegistry: Record<ShapeType, ShapeModule<AnyShape>> = modules.reduce((acc, m) => {

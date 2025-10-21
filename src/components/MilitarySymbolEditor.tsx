@@ -64,6 +64,10 @@ const MilitarySymbolEditor: React.FC = () => {
       created = { ...(base as any), points: [0, 0, 120, 0] };
     } else if (type === 'arrow') {
       created = { ...(base as any), points: [0, 0, 120, 0] };
+    } else if (type === 'polygon') {
+      created = { ...(base as any), points: [0, -60, 50, 30, -50, 30] };
+    } else if (type === 'curve') {
+      created = { ...(base as any), points: [0, 0, 60, -40, 120, 0], tension: 0.5 } as any;
     }
     setShapes((prev) => [...prev, created]);
     setSelectedId(id);
@@ -159,6 +163,29 @@ const MilitarySymbolEditor: React.FC = () => {
       const headLength = s.headLength != null ? Number(s.headLength) : 30;
       const headWidth = s.headWidth != null ? Number(s.headWidth) : 34;
       return ({ ...base, points: p, shaftWidth, headLength, headWidth } as AnyShape);
+    }
+    if (normalizedType === 'polygon') {
+      let pts: number[] = [];
+      if (Array.isArray(s.points)) {
+        pts = s.points.map((n: any) => Number(n)).filter((n: any) => Number.isFinite(n));
+      }
+      if (pts.length < 6 || pts.length % 2 !== 0) {
+        // Fallback triangle
+        pts = [0, -40, 35, 20, -35, 20];
+      }
+      return ({ ...base, points: pts } as AnyShape);
+    }
+    if (normalizedType === 'curve') {
+      let pts: number[] = [];
+      if (Array.isArray(s.points)) {
+        pts = s.points.map((n: any) => Number(n)).filter((n: any) => Number.isFinite(n));
+      }
+      if (pts.length < 4 || pts.length % 2 !== 0) {
+        // minimal two-point curve
+        pts = [0, 0, 120, 0];
+      }
+      const tension = s.tension != null ? Number(s.tension) : 0.5;
+      return ({ ...base, points: pts, tension } as AnyShape);
     }
     return null;
   };

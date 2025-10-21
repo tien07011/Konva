@@ -78,6 +78,8 @@ const ThickArrow: React.FC<EditableShapeProps<ThickArrowShapeType>> = ({ shape, 
   const p3x = poly[4], p3y = poly[5]; // head-left base corner
   const tipX = poly[6], tipY = poly[7];
   const p5x = poly[8], p5y = poly[9]; // head-right base corner
+  const baseCenterX = baseX; // head base center (shaft end)
+  const baseCenterY = baseY;
 
   return (
     <Group
@@ -177,14 +179,12 @@ const ThickArrow: React.FC<EditableShapeProps<ThickArrowShapeType>> = ({ shape, 
             onDragMove={(e: any) => {
               const g = groupRef.current; if (!g) return;
               const local = g.getRelativePointerPosition(); if (!local) return;
-              const vx = local.x - baseX;
-              const vy = local.y - baseY;
-              const offN = vx * nx + vy * ny; // width component
-              let offU = vx * ux + vy * uy;    // length component
-              offU = Math.max(4, Math.min(len - 4, offU));
+              const vx = local.x - baseCenterX;
+              const vy = local.y - baseCenterY;
+              const offN = vx * nx + vy * ny; // adjust only width (perpendicular)
               const minHeadWidth = Math.max(2, shape.shaftWidth);
               const newWidth = Math.max(minHeadWidth, Math.abs(offN) * 2);
-              onChange({ headWidth: newWidth, headLength: offU } as Partial<ThickArrowShapeType>);
+              onChange({ headWidth: newWidth } as Partial<ThickArrowShapeType>);
             }}
             onDragEnd={(e: any) => { e.cancelBubble = true; }}
           />
@@ -203,19 +203,42 @@ const ThickArrow: React.FC<EditableShapeProps<ThickArrowShapeType>> = ({ shape, 
             onDragMove={(e: any) => {
               const g = groupRef.current; if (!g) return;
               const local = g.getRelativePointerPosition(); if (!local) return;
-              const vx = local.x - baseX;
-              const vy = local.y - baseY;
-              const offN = vx * nx + vy * ny;
-              let offU = vx * ux + vy * uy;
-              offU = Math.max(4, Math.min(len - 4, offU));
+              const vx = local.x - baseCenterX;
+              const vy = local.y - baseCenterY;
+              const offN = vx * nx + vy * ny; // adjust only width (perpendicular)
               const minHeadWidth = Math.max(2, shape.shaftWidth);
               const newWidth = Math.max(minHeadWidth, Math.abs(offN) * 2);
-              onChange({ headWidth: newWidth, headLength: offU } as Partial<ThickArrowShapeType>);
+              onChange({ headWidth: newWidth } as Partial<ThickArrowShapeType>);
             }}
             onDragEnd={(e: any) => { e.cancelBubble = true; }}
           />
 
-          {/* center head-length handle removed; adjust via orange squares */}
+          {/* dedicated head-length handle at base center: drag along axis to change head length */}
+          <Circle
+            x={baseCenterX}
+            y={baseCenterY}
+            radius={5}
+            fill="#e0f2fe"
+            stroke="#0284c7"
+            strokeWidth={2}
+            draggable
+            onMouseDown={(ev: any) => (ev.cancelBubble = true)}
+            onTouchStart={(ev: any) => (ev.cancelBubble = true)}
+            onDragMove={(e: any) => {
+              const g = groupRef.current; if (!g) return;
+              const local = g.getRelativePointerPosition(); if (!local) return;
+              // project pointer onto the centerline to compute new base position along axis
+              const vx = local.x - x1;
+              const vy = local.y - y1;
+              let t = vx * ux + vy * uy; // distance from tail along axis
+              const MIN_HEAD_LEN = 4;
+              // clamp t so that head length stays within [MIN_HEAD_LEN, len]
+              t = Math.max(0, Math.min(len - MIN_HEAD_LEN, t));
+              const newHeadLength = len - t;
+              onChange({ headLength: newHeadLength } as Partial<ThickArrowShapeType>);
+            }}
+            onDragEnd={(e: any) => { e.cancelBubble = true; }}
+          />
         </>
       )}
     </Group>

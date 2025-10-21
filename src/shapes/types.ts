@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type ShapeType = 'rectangle' | 'ellipse' | 'line' | 'arrow' | 'diamond' | 'thick-arrow' | 'text';
+export type ShapeType = 'rectangle' | 'ellipse' | 'line' | 'arrow' | 'diamond' | 'thick-arrow' | 'polygon' | 'curve' | 'text';
 
 export interface BaseShape {
   id: string;
@@ -38,6 +38,13 @@ export interface LineShape extends BaseShape {
   points: number[];
 }
 
+export interface CurveShape extends BaseShape {
+  type: 'curve';
+  // Control points in local coordinates; rendered with Konva.Line and tension > 0 for smooth spline
+  points: number[];
+  tension: number; // 0..1 typical
+}
+
 export interface ArrowShape extends BaseShape {
   type: 'arrow';
   // Polyline points in local coordinates relative to (x, y)
@@ -56,7 +63,14 @@ export interface ThickArrowShape extends BaseShape {
   headWidth: number;      // total width of the arrow head at its base
 }
 
-export type AnyShape = RectShape | EllipseShape | LineShape | ArrowShape | DiamondShape | ThickArrowShape;
+export interface PolygonShape extends BaseShape {
+  type: 'polygon';
+  // Vertices in local coordinates relative to (x, y)
+  // Must be an even-length array: [x0, y0, x1, y1, ..., xn, yn], closed automatically
+  points: number[];
+}
+
+export type AnyShape = RectShape | EllipseShape | LineShape | ArrowShape | DiamondShape | ThickArrowShape | PolygonShape | CurveShape;
 
 export interface EditableShapeProps<T extends AnyShape> {
   shape: T;
