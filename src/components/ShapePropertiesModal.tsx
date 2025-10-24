@@ -70,6 +70,113 @@ function getFieldsFor(shape: AnyShape | null): Field[] {
   return [...common, ...byType[shape.type]];
 }
 
+type Adapter = {
+  toLocal?: (shape: AnyShape) => Record<string, any>;
+  toPatch?: (local: any, shape: AnyShape) => Partial<AnyShape>;
+};
+
+const adapters: Record<ShapeType, Adapter> = {
+  rectangle: {
+    toLocal: (shape) => ({ width: (shape as any).width, height: (shape as any).height }),
+    toPatch: (local, shape) => ({
+      width: clamp(num(local.width, (shape as any).width), 0, Infinity),
+      height: clamp(num(local.height, (shape as any).height), 0, Infinity),
+    }),
+  },
+  ellipse: {
+    toLocal: (shape) => ({ radiusX: (shape as any).radiusX, radiusY: (shape as any).radiusY }),
+    toPatch: (local, shape) => ({
+      radiusX: clamp(num(local.radiusX, (shape as any).radiusX), 0, Infinity),
+      radiusY: clamp(num(local.radiusY, (shape as any).radiusY), 0, Infinity),
+    }),
+  },
+  diamond: {
+    toLocal: (shape) => ({ width: (shape as any).width, height: (shape as any).height }),
+    toPatch: (local, shape) => ({
+      width: clamp(num(local.width, (shape as any).width), 0, Infinity),
+      height: clamp(num(local.height, (shape as any).height), 0, Infinity),
+    }),
+  },
+  line: {
+    toLocal: (shape) => ({ points: ((shape as any).points || []).join(',') }),
+    toPatch: (local, shape) => {
+      const arr = parseNumbers(local.points);
+      const pts = arr.length >= 4 && arr.length % 2 === 0 ? arr : (shape as any).points;
+      return { points: pts } as Partial<AnyShape>;
+    },
+  },
+  arrow: {
+    toLocal: (shape) => ({
+      points: ((shape as any).points || []).join(','),
+      pointerLength: (shape as any).pointerLength,
+      pointerWidth: (shape as any).pointerWidth,
+    }),
+    toPatch: (local, shape) => {
+      const arr = parseNumbers(local.points);
+      const pts = arr.length >= 4 && arr.length % 2 === 0 ? arr : (shape as any).points;
+      return {
+        points: pts,
+        pointerLength: clamp(num(local.pointerLength, (shape as any).pointerLength), 0, Infinity),
+        pointerWidth: clamp(num(local.pointerWidth, (shape as any).pointerWidth), 0, Infinity),
+      } as Partial<AnyShape>;
+    },
+  },
+  'thick-arrow': {
+    toLocal: (shape) => ({
+      points: ((shape as any).points || []).join(','),
+      shaftWidth: (shape as any).shaftWidth,
+      headLength: (shape as any).headLength,
+      headWidth: (shape as any).headWidth,
+    }),
+    toPatch: (local, shape) => {
+      const arr = parseNumbers(local.points);
+      const pts = arr.length === 4 ? (arr as any) : (shape as any).points;
+      return {
+        points: pts,
+        shaftWidth: clamp(num(local.shaftWidth, (shape as any).shaftWidth), 0, Infinity),
+        headLength: clamp(num(local.headLength, (shape as any).headLength), 0, Infinity),
+        headWidth: clamp(num(local.headWidth, (shape as any).headWidth), 0, Infinity),
+      } as Partial<AnyShape>;
+    },
+  },
+  polygon: {
+    toLocal: (shape) => ({ points: ((shape as any).points || []).join(',') }),
+    toPatch: (local, shape) => {
+      const arr = parseNumbers(local.points);
+      const even = arr.length % 2 === 0 ? arr : (shape as any).points;
+      const pts = even.length >= 6 ? even : (shape as any).points;
+      return { points: pts } as Partial<AnyShape>;
+    },
+  },
+  curve: {
+    toLocal: (shape) => ({
+      points: ((shape as any).points || []).join(','),
+      tension: (shape as any).tension ?? 0.5,
+    }),
+    toPatch: (local, shape) => {
+      const arr = parseNumbers(local.points);
+      const even = arr.length % 2 === 0 && arr.length >= 4 ? arr : (shape as any).points;
+      return {
+        points: even,
+        tension: clamp(num(local.tension, (shape as any).tension ?? 0.5), 0, 1),
+      } as Partial<AnyShape>;
+    },
+  },
+  svg: {
+    toLocal: (shape) => ({
+      width: (shape as any).width,
+      height: (shape as any).height,
+      svg: (shape as any).svg || '',
+    }),
+    toPatch: (local, shape) => ({
+      width: clamp(num(local.width, (shape as any).width), 0, Infinity),
+      height: clamp(num(local.height, (shape as any).height), 0, Infinity),
+      svg: typeof local.svg === 'string' && local.svg.trim() ? local.svg : (shape as any).svg,
+    }) as Partial<AnyShape>,
+  },
+  text: {},
+};
+
 const Modal: React.FC<Props> = ({ shape, open, onClose, onApply }) => {
   const [local, setLocal] = React.useState<any>({});
 
@@ -83,37 +190,8 @@ const Modal: React.FC<Props> = ({ shape, open, onClose, onApply }) => {
       stroke: shape.stroke,
       strokeWidth: shape.strokeWidth,
     };
-    if (shape.type === 'rectangle') {
-      base.width = shape.width; base.height = shape.height;
-    } else if (shape.type === 'ellipse') {
-      base.radiusX = shape.radiusX; base.radiusY = shape.radiusY;
-    } else if (shape.type === 'diamond') {
-      base.width = shape.width; base.height = shape.height;
-    } else if (shape.type === 'line') {
-      base.points = (shape.points || []).join(',');
-    } else if (shape.type === 'arrow') {
-      base.points = (shape.points || []).join(',');
-      base.pointerLength = shape.pointerLength; base.pointerWidth = shape.pointerWidth;
-    }
-    else if (shape.type === 'thick-arrow') {
-      base.points = (shape.points || []).join(',');
-      base.shaftWidth = (shape as any).shaftWidth;
-      base.headLength = (shape as any).headLength;
-      base.headWidth = (shape as any).headWidth;
-    }
-    else if (shape.type === 'polygon') {
-      base.points = (shape.points || []).join(',');
-    }
-    else if (shape.type === 'curve') {
-      base.points = (shape.points || []).join(',');
-      (base as any).tension = (shape as any).tension ?? 0.5;
-    }
-    else if (shape.type === 'svg') {
-      (base as any).width = (shape as any).width;
-      (base as any).height = (shape as any).height;
-      (base as any).svg = (shape as any).svg || '';
-    }
-    setLocal(base);
+    const extra = adapters[shape.type]?.toLocal?.(shape) ?? {};
+    setLocal({ ...base, ...extra });
   }, [shape?.id, open]);
 
   if (!open || !shape) return null;
@@ -121,7 +199,7 @@ const Modal: React.FC<Props> = ({ shape, open, onClose, onApply }) => {
   const fields = getFieldsFor(shape);
 
   const apply = () => {
-    const patch: any = {
+    const basePatch: any = {
       x: num(local.x, shape.x),
       y: num(local.y, shape.y),
       rotation: num(local.rotation, shape.rotation ?? 0),
@@ -129,52 +207,8 @@ const Modal: React.FC<Props> = ({ shape, open, onClose, onApply }) => {
       stroke: local.stroke ?? shape.stroke,
       strokeWidth: num(local.strokeWidth, shape.strokeWidth),
     };
-    if (shape.type === 'rectangle') {
-      patch.width = clamp(num(local.width, shape.width), 0, Infinity);
-      patch.height = clamp(num(local.height, shape.height), 0, Infinity);
-    } else if (shape.type === 'ellipse') {
-      patch.radiusX = clamp(num(local.radiusX, shape.radiusX), 0, Infinity);
-      patch.radiusY = clamp(num(local.radiusY, shape.radiusY), 0, Infinity);
-    } else if (shape.type === 'diamond') {
-      patch.width = clamp(num(local.width, shape.width), 0, Infinity);
-      patch.height = clamp(num(local.height, shape.height), 0, Infinity);
-    } else if (shape.type === 'line') {
-      const str = String(local.points ?? '').trim();
-      const arr = str.split(/[\s,]+/).map((v) => Number(v)).filter((n) => Number.isFinite(n));
-      // ensure even length and at least 2 points
-      const pts = arr.length >= 4 && arr.length % 2 === 0 ? arr : shape.points;
-      patch.points = pts;
-    } else if (shape.type === 'arrow') {
-      const str = String(local.points ?? '').trim();
-      const arr = str.split(/\s*,\s*|\s+/).filter(Boolean).map((v) => Number(v)).filter((n) => Number.isFinite(n));
-      const pts = arr.length >= 4 && arr.length % 2 === 0 ? arr : shape.points;
-      patch.points = pts;
-      patch.pointerLength = clamp(num(local.pointerLength, shape.pointerLength), 0, Infinity);
-      patch.pointerWidth = clamp(num(local.pointerWidth, shape.pointerWidth), 0, Infinity);
-    } else if (shape.type === 'thick-arrow') {
-      const str = String(local.points ?? '').trim();
-      const arr = str.split(/\s*,\s*|\s+/).filter(Boolean).map((v) => Number(v)).filter((n) => Number.isFinite(n));
-      const pts = arr.length === 4 ? (arr as any) : shape.points;
-      (patch as any).points = pts;
-      (patch as any).shaftWidth = clamp(num(local.shaftWidth, (shape as any).shaftWidth), 0, Infinity);
-      (patch as any).headLength = clamp(num(local.headLength, (shape as any).headLength), 0, Infinity);
-      (patch as any).headWidth = clamp(num(local.headWidth, (shape as any).headWidth), 0, Infinity);
-    } else if (shape.type === 'polygon') {
-      const str = String(local.points ?? '').trim();
-      const arr = str.split(/\s*,\s*|\s+/).filter(Boolean).map((v) => Number(v)).filter((n) => Number.isFinite(n));
-      const even = arr.length % 2 === 0 ? arr : shape.points;
-      patch.points = even.length >= 6 ? even : shape.points;
-    } else if (shape.type === 'curve') {
-      const str = String(local.points ?? '').trim();
-      const arr = str.split(/\s*,\s*|\s+/).filter(Boolean).map((v) => Number(v)).filter((n) => Number.isFinite(n));
-      const even = arr.length % 2 === 0 && arr.length >= 4 ? arr : shape.points;
-      patch.points = even;
-      (patch as any).tension = clamp(num(local.tension, (shape as any).tension ?? 0.5), 0, 1);
-    } else if (shape.type === 'svg') {
-      (patch as any).width = clamp(num(local.width, (shape as any).width), 0, Infinity);
-      (patch as any).height = clamp(num(local.height, (shape as any).height), 0, Infinity);
-      (patch as any).svg = typeof local.svg === 'string' && local.svg.trim() ? local.svg : (shape as any).svg;
-    }
+    const extraPatch = adapters[shape.type]?.toPatch?.(local, shape) ?? {};
+    const patch = { ...basePatch, ...extraPatch } as Partial<AnyShape>;
     onApply(patch);
     onClose();
   };
@@ -237,6 +271,16 @@ function num(v: any, fallback: number): number {
 
 function clamp(n: number, min: number, max: number) {
   return Math.min(Math.max(n, min), max);
+}
+
+function parseNumbers(v: any): number[] {
+  const str = String(v ?? '').trim();
+  if (!str) return [];
+  return str
+    .split(/\s*,\s*|\s+/)
+    .filter(Boolean)
+    .map((s) => Number(s))
+    .filter((n) => Number.isFinite(n));
 }
 
 const styles: Record<string, React.CSSProperties> = {
