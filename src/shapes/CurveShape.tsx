@@ -145,7 +145,7 @@ export const CurveModule: ShapeModule<CurveShapeType> = {
     fill: 'transparent',
     stroke: base.stroke,
     strokeWidth: base.strokeWidth,
-    points: [0, 0, 60, 0, 120, 0],
+    points: [0, 0, 120, 0],
     tension: 0.5,
   }),
   updateOnDraw: (shape: CurveShapeType, ctx: DrawContext) => {

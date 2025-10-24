@@ -169,7 +169,7 @@ export const ArrowModule: ShapeModule<ArrowShapeType> = {
     strokeWidth: base.strokeWidth,
     pointerLength: 14,
     pointerWidth: 12,
-    points: [0, 0, 1, 1],
+    points: [0, 0, 120, 0],
   }),
   updateOnDraw: (shape: ArrowShapeType, ctx: DrawContext) => {
     const dx = ctx.current.x - ctx.start.x;
@@ -198,7 +198,7 @@ export const ArrowModule: ShapeModule<ArrowShapeType> = {
       pts = [0, 0, Number(raw.dx) || 0, Number(raw.dy) || 0];
     }
     if (pts.length < 4 || pts.length % 2 !== 0) {
-      pts = [0, 0, 1, 1];
+      pts = [0, 0, 120, 0];
     }
     const pointerLength = raw.pointerLength != null ? Number(raw.pointerLength) : 14;
     const pointerWidth = raw.pointerWidth != null ? Number(raw.pointerWidth) : 12;

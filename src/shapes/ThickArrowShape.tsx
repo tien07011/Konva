@@ -260,7 +260,7 @@ export const ThickArrowModule: ShapeModule<ThickArrowShapeType> = {
     fill: '#ffffff',
     stroke: base.stroke,
     strokeWidth: base.strokeWidth,
-    points: [0, 0, 120, 40],
+    points: [0, 0, 120, 0],
     shaftWidth: 16,
     headLength: 30,
     headWidth: 34,
@@ -283,7 +283,7 @@ export const ThickArrowModule: ShapeModule<ThickArrowShapeType> = {
     let pts: any = Array.isArray(raw.points) ? raw.points.map((n: any) => Number(n)).filter((n: any) => Number.isFinite(n)) : [];
     if (pts.length !== 4) {
       const dx = Number(raw.dx) || 120;
-      const dy = Number(raw.dy) || 40;
+      const dy = Number(raw.dy) || 0;
       pts = [0, 0, dx, dy];
     }
     const shaftWidth = raw.shaftWidth != null ? Number(raw.shaftWidth) : 16;

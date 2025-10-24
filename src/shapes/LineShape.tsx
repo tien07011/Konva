@@ -165,7 +165,7 @@ export const LineModule: ShapeModule<LineShapeType> = {
     fill: 'transparent',
     stroke: base.stroke,
     strokeWidth: base.strokeWidth,
-    points: [0, 0, 1, 1],
+    points: [0, 0, 120, 0],
   }),
   updateOnDraw: (shape: LineShapeType, ctx: DrawContext) => {
     // During initial drag (legacy), keep a simple two-point line
@@ -196,7 +196,7 @@ export const LineModule: ShapeModule<LineShapeType> = {
       pts = [0, 0, Number(raw.dx) || 0, Number(raw.dy) || 0];
     }
     if (pts.length < 4 || pts.length % 2 !== 0) {
-      pts = [0, 0, 1, 1];
+      pts = [0, 0, 120, 0];
     }
     return {
       id,
