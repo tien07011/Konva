@@ -60,6 +60,11 @@ function getFieldsFor(shape: AnyShape | null): Field[] {
       { key: 'points', label: 'Points (x0,y0,x1,y1,...)', type: 'text' },
       { key: 'tension', label: 'Tension (0..1)', type: 'number', step: 0.1, min: 0 },
     ],
+    svg: [
+      { key: 'width', label: 'Width', type: 'number', step: 1, min: 0 },
+      { key: 'height', label: 'Height', type: 'number', step: 1, min: 0 },
+      { key: 'svg', label: 'SVG markup', type: 'text' },
+    ],
     text: [], // not used currently
   };
   return [...common, ...byType[shape.type]];
@@ -102,6 +107,11 @@ const Modal: React.FC<Props> = ({ shape, open, onClose, onApply }) => {
     else if (shape.type === 'curve') {
       base.points = (shape.points || []).join(',');
       (base as any).tension = (shape as any).tension ?? 0.5;
+    }
+    else if (shape.type === 'svg') {
+      (base as any).width = (shape as any).width;
+      (base as any).height = (shape as any).height;
+      (base as any).svg = (shape as any).svg || '';
     }
     setLocal(base);
   }, [shape?.id, open]);
@@ -160,6 +170,10 @@ const Modal: React.FC<Props> = ({ shape, open, onClose, onApply }) => {
       const even = arr.length % 2 === 0 && arr.length >= 4 ? arr : shape.points;
       patch.points = even;
       (patch as any).tension = clamp(num(local.tension, (shape as any).tension ?? 0.5), 0, 1);
+    } else if (shape.type === 'svg') {
+      (patch as any).width = clamp(num(local.width, (shape as any).width), 0, Infinity);
+      (patch as any).height = clamp(num(local.height, (shape as any).height), 0, Infinity);
+      (patch as any).svg = typeof local.svg === 'string' && local.svg.trim() ? local.svg : (shape as any).svg;
     }
     onApply(patch);
     onClose();

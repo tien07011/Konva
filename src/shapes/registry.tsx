@@ -8,6 +8,7 @@ import { DiamondModule } from './DiamondShape';
 import { ThickArrowModule } from './ThickArrowShape';
 import { PolygonModule } from './PolygonShape';
 import { CurveModule } from './CurveShape';
+import { SvgModule } from './SvgShape';
 
 const modules: Array<ShapeModule<AnyShape>> = [
   RectangleModule as unknown as ShapeModule<AnyShape>,
@@ -18,6 +19,7 @@ const modules: Array<ShapeModule<AnyShape>> = [
   ThickArrowModule as unknown as ShapeModule<AnyShape>,
   PolygonModule as unknown as ShapeModule<AnyShape>,
   CurveModule as unknown as ShapeModule<AnyShape>,
+  SvgModule as unknown as ShapeModule<AnyShape>,
 ];
 
 export const shapeRegistry: Record<ShapeType, ShapeModule<AnyShape>> = modules.reduce((acc, m) => {
@@ -27,7 +29,7 @@ export const shapeRegistry: Record<ShapeType, ShapeModule<AnyShape>> = modules.r
 export function renderShape(
   shape: AnyShape,
   isSelected: boolean,
-  onSelect: () => void,
+  onSelect: (e: any) => void,
   onChange: (attrs: any) => void
 ) {
   const mod = shapeRegistry[shape.type];

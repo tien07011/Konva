@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type ShapeType = 'rectangle' | 'ellipse' | 'line' | 'arrow' | 'diamond' | 'thick-arrow' | 'polygon' | 'curve' | 'text';
+export type ShapeType = 'rectangle' | 'ellipse' | 'line' | 'arrow' | 'diamond' | 'thick-arrow' | 'polygon' | 'curve' | 'svg' | 'text';
 
 export interface BaseShape {
   id: string;
@@ -70,12 +70,30 @@ export interface PolygonShape extends BaseShape {
   points: number[];
 }
 
-export type AnyShape = RectShape | EllipseShape | LineShape | ArrowShape | DiamondShape | ThickArrowShape | PolygonShape | CurveShape;
+export interface SvgShape extends BaseShape {
+  type: 'svg';
+  width: number;
+  height: number;
+  // Raw SVG markup string. Example: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">...</svg>'
+  svg: string;
+}
+
+export type AnyShape =
+  | RectShape
+  | EllipseShape
+  | LineShape
+  | ArrowShape
+  | DiamondShape
+  | ThickArrowShape
+  | PolygonShape
+  | CurveShape
+  | SvgShape;
 
 export interface EditableShapeProps<T extends AnyShape> {
   shape: T;
   isSelected: boolean;
-  onSelect: () => void;
+  // Pass Konva event up so parent can read modifiers (e.g., shift for multi-select)
+  onSelect: (e: any) => void;
   onChange: (attrs: Partial<T>) => void;
 }
 
