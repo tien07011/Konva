@@ -100,4 +100,9 @@ export interface ShapeModule<T extends AnyShape> {
   updateOnDraw: (shape: T, ctx: DrawContext) => Partial<T>;
   // Optional validator to accept very small shapes after draw
   isValidAfterDraw?: (shape: T) => boolean;
+  // Normalize imported JSON (shape-specific) into a valid shape, or null if invalid
+  normalize?: (
+    raw: any,
+    base: Pick<BaseShape, 'fill' | 'stroke' | 'strokeWidth'>
+  ) => T | null;
 }

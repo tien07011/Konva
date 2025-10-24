@@ -1,10 +1,18 @@
 import React from 'react';
-import { Line as KLine, Circle, Group } from 'react-konva';
+import { Line as KLine, Circle, Group, Transformer } from 'react-konva';
 import Konva from 'konva';
 import { EditableShapeProps, CurveShape as CurveShapeType, ShapeModule, DrawContext } from './types';
 
 const CurveShape: React.FC<EditableShapeProps<CurveShapeType>> = ({ shape, isSelected, onSelect, onChange }) => {
   const groupRef = React.useRef<Konva.Group>(null);
+  const trRef = React.useRef<Konva.Transformer>(null);
+
+  React.useEffect(() => {
+    if (isSelected && trRef.current && groupRef.current) {
+      trRef.current.nodes([groupRef.current]);
+      trRef.current.getLayer()?.batchDraw();
+    }
+  }, [isSelected]);
 
   const points = shape.points;
   const vertices = React.useMemo(() => {
@@ -107,6 +115,15 @@ const CurveShape: React.FC<EditableShapeProps<CurveShapeType>> = ({ shape, isSel
               />
             );
           })}
+          <Transformer
+            ref={trRef}
+            rotateEnabled
+            enabledAnchors={[]}
+            onTransformEnd={() => {
+              const g = groupRef.current!;
+              onChange({ x: g.x(), y: g.y(), rotation: g.rotation() } as Partial<CurveShapeType>);
+            }}
+          />
         </>
       )}
     </Group>
@@ -140,4 +157,31 @@ export const CurveModule: ShapeModule<CurveShapeType> = {
     return { x: ctx.start.x, y: ctx.start.y, points: [0, 0, midx, midy, dx, dy] };
   },
   isValidAfterDraw: (s) => (s.points?.length ?? 0) >= 4,
+  normalize: (raw, base) => {
+    if (!raw || typeof raw !== 'object') return null;
+    const id = String(raw.id ?? 'curve-' + Date.now());
+    const x = Number(raw.x) || 0;
+    const y = Number(raw.y) || 0;
+    const rotation = Number(raw.rotation) || 0;
+    let pts: number[] = [];
+    if (Array.isArray(raw.points)) {
+      pts = raw.points.map((n: any) => Number(n)).filter((n: any) => Number.isFinite(n));
+    }
+    if (pts.length < 4 || pts.length % 2 !== 0) {
+      pts = [0, 0, 120, 0];
+    }
+    const tension = raw.tension != null ? Number(raw.tension) : 0.5;
+    return {
+      id,
+      type: 'curve',
+      x,
+      y,
+      rotation,
+      points: pts,
+      tension,
+      fill: 'transparent',
+      stroke: typeof raw.stroke === 'string' ? raw.stroke : base.stroke,
+      strokeWidth: Number(raw.strokeWidth) || base.strokeWidth,
+    } as CurveShapeType;
+  },
 };

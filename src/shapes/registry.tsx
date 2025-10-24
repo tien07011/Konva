@@ -48,3 +48,16 @@ export function isValidAfterDraw(shape: AnyShape) {
   const mod = shapeRegistry[shape.type];
   return mod.isValidAfterDraw ? mod.isValidAfterDraw(shape as any) : true;
 }
+
+export function normalizeShape(raw: any, base: { fill: string; stroke: string; strokeWidth: number }): AnyShape | null {
+  if (!raw || typeof raw !== 'object') return null;
+  let t: any = raw.type;
+  // legacy mapping
+  if (t === 'circle') t = 'ellipse';
+  if (!t || !(t in shapeRegistry)) return null;
+  const mod = shapeRegistry[t as ShapeType];
+  if (mod.normalize) {
+    return mod.normalize(raw, base) as AnyShape;
+  }
+  return null;
+}

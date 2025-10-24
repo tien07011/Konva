@@ -1,10 +1,18 @@
 import React from 'react';
-import { Line as KLine, Circle, Group } from 'react-konva';
+import { Line as KLine, Circle, Group, Transformer } from 'react-konva';
 import Konva from 'konva';
 import { EditableShapeProps, PolygonShape as PolygonShapeType, ShapeModule, DrawContext } from './types';
 
 const PolygonShape: React.FC<EditableShapeProps<PolygonShapeType>> = ({ shape, isSelected, onSelect, onChange }) => {
   const groupRef = React.useRef<Konva.Group>(null);
+  const trRef = React.useRef<Konva.Transformer>(null);
+
+  React.useEffect(() => {
+    if (isSelected && trRef.current && groupRef.current) {
+      trRef.current.nodes([groupRef.current]);
+      trRef.current.getLayer()?.batchDraw();
+    }
+  }, [isSelected]);
 
   const points = shape.points;
   const vertices = React.useMemo(() => {
@@ -107,6 +115,15 @@ const PolygonShape: React.FC<EditableShapeProps<PolygonShapeType>> = ({ shape, i
               />
             );
           })}
+          <Transformer
+            ref={trRef}
+            rotateEnabled
+            enabledAnchors={[]}
+            onTransformEnd={() => {
+              const g = groupRef.current!;
+              onChange({ x: g.x(), y: g.y(), rotation: g.rotation() } as Partial<PolygonShapeType>);
+            }}
+          />
         </>
       )}
     </Group>
@@ -142,4 +159,29 @@ export const PolygonModule: ShapeModule<PolygonShapeType> = {
     return { x: ctx.start.x, y: ctx.start.y, points: [x0, y0, x1, y1, x2, y2, x3, y3] };
   },
   isValidAfterDraw: (s) => s.points.length >= 6,
+  normalize: (raw, base) => {
+    if (!raw || typeof raw !== 'object') return null;
+    const id = String(raw.id ?? 'polygon-' + Date.now());
+    const x = Number(raw.x) || 0;
+    const y = Number(raw.y) || 0;
+    const rotation = Number(raw.rotation) || 0;
+    let pts: number[] = [];
+    if (Array.isArray(raw.points)) {
+      pts = raw.points.map((n: any) => Number(n)).filter((n: any) => Number.isFinite(n));
+    }
+    if (pts.length < 6 || pts.length % 2 !== 0) {
+      pts = [0, -40, 35, 20, -35, 20];
+    }
+    return {
+      id,
+      type: 'polygon',
+      x,
+      y,
+      rotation,
+      points: pts,
+      fill: typeof raw.fill === 'string' ? raw.fill : base.fill,
+      stroke: typeof raw.stroke === 'string' ? raw.stroke : base.stroke,
+      strokeWidth: Number(raw.strokeWidth) || base.strokeWidth,
+    } as PolygonShapeType;
+  },
 };

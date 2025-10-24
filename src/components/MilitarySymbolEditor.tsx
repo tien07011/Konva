@@ -1,7 +1,7 @@
 import React from 'react';
 import { Stage, Layer } from 'react-konva';
 import { AnyShape, ShapeType } from '../shapes/types';
-import { renderShape, createShape, shapeRegistry } from '../shapes/registry';
+import { renderShape, createShape, shapeRegistry, normalizeShape as normalizeShapeFromRegistry } from '../shapes/registry';
 import ShapePropertiesModal from './ShapePropertiesModal';
 
 const defaultStyles = {
@@ -52,23 +52,7 @@ const MilitarySymbolEditor: React.FC = () => {
     const cx = Math.round(w / 2);
     const cy = Math.round(h / 2);
     const id = `${type}-${Date.now()}-${Math.round(Math.random() * 1000)}`;
-    const base = makeShape(id, type, cx, cy);
-    let created: AnyShape = base;
-    if (type === 'rectangle') {
-      created = { ...(base as any), width: 120, height: 80 };
-    } else if (type === 'ellipse') {
-      created = { ...(base as any), radiusX: 60, radiusY: 40 };
-    } else if (type === 'diamond') {
-      created = { ...(base as any), width: 120, height: 80 };
-    } else if (type === 'line') {
-      created = { ...(base as any), points: [0, 0, 120, 0] };
-    } else if (type === 'arrow') {
-      created = { ...(base as any), points: [0, 0, 120, 0] };
-    } else if (type === 'polygon') {
-      created = { ...(base as any), points: [0, -60, 50, 30, -50, 30] };
-    } else if (type === 'curve') {
-      created = { ...(base as any), points: [0, 0, 60, -40, 120, 0], tension: 0.5 } as any;
-    }
+    const created = makeShape(id, type, cx, cy);
     setShapes((prev) => [...prev, created]);
     setSelectedId(id);
   };
@@ -94,101 +78,8 @@ const MilitarySymbolEditor: React.FC = () => {
     setShowIO(true);
   };
 
-  const normalizeShape = (s: any): AnyShape | null => {
-    if (!s || typeof s !== 'object') return null;
-    if (!s.id || !s.type) return null;
-    // backward compat: map legacy 'circle' to 'ellipse'
-    const normalizedType = s.type === 'circle' ? 'ellipse' : s.type;
-    if (!(normalizedType in shapeRegistry)) return null;
-    const base = {
-      id: String(s.id),
-      type: normalizedType as ShapeType,
-      x: Number(s.x) || 0,
-      y: Number(s.y) || 0,
-      rotation: Number(s.rotation) || 0,
-      fill: typeof s.fill === 'string' ? s.fill : defaultStyles.fill,
-      stroke: typeof s.stroke === 'string' ? s.stroke : defaultStyles.stroke,
-      strokeWidth: Number(s.strokeWidth) || defaultStyles.strokeWidth,
-    } as any;
-    if (normalizedType === 'rectangle') {
-      const w = Number(s.width) || 0; const h = Number(s.height) || 0;
-      return w > 0 && h > 0 ? ({ ...base, width: w, height: h } as AnyShape) : null;
-    }
-    if (normalizedType === 'ellipse') {
-      // support both legacy circle and new ellipse fields
-      const radiusX = s.radiusX != null ? Number(s.radiusX) : Number(s.radius) || 0;
-      const radiusY = s.radiusY != null ? Number(s.radiusY) : Number(s.radius) || 0;
-      return radiusX > 0 && radiusY > 0 ? ({ ...base, radiusX, radiusY } as AnyShape) : null;
-    }
-    if (normalizedType === 'diamond') {
-      const w = Number(s.width) || 0; const h = Number(s.height) || 0;
-      return w > 0 && h > 0 ? ({ ...base, width: w, height: h } as AnyShape) : null;
-    }
-    if (normalizedType === 'line') {
-      let pts: number[] = [];
-      if (Array.isArray(s.points)) {
-        pts = s.points.map((n: any) => Number(n) || 0).filter((n: any) => Number.isFinite(n));
-      } else if (s.dx != null || s.dy != null) {
-        pts = [0, 0, Number(s.dx) || 0, Number(s.dy) || 0];
-      }
-      if (pts.length < 4 || pts.length % 2 !== 0) {
-        // fallback to a minimal line
-        pts = [0, 0, 1, 1];
-      }
-      return ({ ...base, points: pts } as AnyShape);
-    }
-    if (normalizedType === 'arrow') {
-      let pts: number[] = [];
-      if (Array.isArray(s.points)) {
-        pts = s.points.map((n: any) => Number(n)).filter((n: any) => Number.isFinite(n));
-      } else if (s.dx != null || s.dy != null) {
-        pts = [0, 0, Number(s.dx) || 0, Number(s.dy) || 0];
-      }
-      if (pts.length < 4 || pts.length % 2 !== 0) {
-        pts = [0, 0, 1, 1];
-      }
-      const pointerLength = s.pointerLength != null ? Number(s.pointerLength) : 14;
-      const pointerWidth = s.pointerWidth != null ? Number(s.pointerWidth) : 12;
-      return ({ ...base, points: pts, pointerLength, pointerWidth } as AnyShape);
-    }
-    if (normalizedType === 'thick-arrow') {
-      let pts: number[] = [];
-      if (Array.isArray(s.points)) {
-        pts = s.points.map((n: any) => Number(n)).filter((n: any) => Number.isFinite(n));
-      } else if (s.dx != null || s.dy != null) {
-        pts = [0, 0, Number(s.dx) || 0, Number(s.dy) || 0];
-      }
-      const p = pts.length === 4 ? (pts as [number, number, number, number]) : ([0, 0, 1, 1] as [number, number, number, number]);
-      const shaftWidth = s.shaftWidth != null ? Number(s.shaftWidth) : 16;
-      const headLength = s.headLength != null ? Number(s.headLength) : 30;
-      const headWidth = s.headWidth != null ? Number(s.headWidth) : 34;
-      return ({ ...base, points: p, shaftWidth, headLength, headWidth } as AnyShape);
-    }
-    if (normalizedType === 'polygon') {
-      let pts: number[] = [];
-      if (Array.isArray(s.points)) {
-        pts = s.points.map((n: any) => Number(n)).filter((n: any) => Number.isFinite(n));
-      }
-      if (pts.length < 6 || pts.length % 2 !== 0) {
-        // Fallback triangle
-        pts = [0, -40, 35, 20, -35, 20];
-      }
-      return ({ ...base, points: pts } as AnyShape);
-    }
-    if (normalizedType === 'curve') {
-      let pts: number[] = [];
-      if (Array.isArray(s.points)) {
-        pts = s.points.map((n: any) => Number(n)).filter((n: any) => Number.isFinite(n));
-      }
-      if (pts.length < 4 || pts.length % 2 !== 0) {
-        // minimal two-point curve
-        pts = [0, 0, 120, 0];
-      }
-      const tension = s.tension != null ? Number(s.tension) : 0.5;
-      return ({ ...base, points: pts, tension } as AnyShape);
-    }
-    return null;
-  };
+  // shape import normalization is delegated to modules
+  const normalizeShape = (s: any): AnyShape | null => normalizeShapeFromRegistry(s, defaultStyles);
 
   const doImport = () => {
     let parsed: any;

@@ -1,11 +1,19 @@
 import React from 'react';
-import { Arrow as KArrow, Circle, Group } from 'react-konva';
+import { Arrow as KArrow, Circle, Group, Transformer } from 'react-konva';
 import Konva from 'konva';
 import { EditableShapeProps, ArrowShape as ArrowShapeType, ShapeModule, DrawContext } from './types';
 
 const ArrowShape: React.FC<EditableShapeProps<ArrowShapeType>> = ({ shape, isSelected, onSelect, onChange }) => {
   const shapeRef = React.useRef<Konva.Arrow>(null);
   const groupRef = React.useRef<Konva.Group>(null);
+  const trRef = React.useRef<Konva.Transformer>(null);
+
+  React.useEffect(() => {
+    if (isSelected && trRef.current && groupRef.current) {
+      trRef.current.nodes([groupRef.current]);
+      trRef.current.getLayer()?.batchDraw();
+    }
+  }, [isSelected]);
 
   const points = shape.points;
   const anchors = React.useMemo(() => {
@@ -128,6 +136,15 @@ const ArrowShape: React.FC<EditableShapeProps<ArrowShapeType>> = ({ shape, isSel
                 />
               );
             })}
+            <Transformer
+              ref={trRef}
+              rotateEnabled
+              enabledAnchors={[]}
+              onTransformEnd={() => {
+                const g = groupRef.current!;
+                onChange({ x: g.x(), y: g.y(), rotation: g.rotation() } as Partial<ArrowShapeType>);
+              }}
+            />
           </>
         )}
       </Group>
@@ -167,5 +184,36 @@ export const ArrowModule: ShapeModule<ArrowShapeType> = {
       return Math.hypot(dx, dy) >= 3;
     }
     return true;
+  },
+  normalize: (raw, base) => {
+    if (!raw || typeof raw !== 'object') return null;
+    const id = String(raw.id ?? 'arrow-' + Date.now());
+    const x = Number(raw.x) || 0;
+    const y = Number(raw.y) || 0;
+    const rotation = Number(raw.rotation) || 0;
+    let pts: number[] = [];
+    if (Array.isArray(raw.points)) {
+      pts = raw.points.map((n: any) => Number(n)).filter((n: any) => Number.isFinite(n));
+    } else if (raw.dx != null || raw.dy != null) {
+      pts = [0, 0, Number(raw.dx) || 0, Number(raw.dy) || 0];
+    }
+    if (pts.length < 4 || pts.length % 2 !== 0) {
+      pts = [0, 0, 1, 1];
+    }
+    const pointerLength = raw.pointerLength != null ? Number(raw.pointerLength) : 14;
+    const pointerWidth = raw.pointerWidth != null ? Number(raw.pointerWidth) : 12;
+    return {
+      id,
+      type: 'arrow',
+      x,
+      y,
+      rotation,
+      points: pts,
+      pointerLength,
+      pointerWidth,
+      fill: typeof raw.fill === 'string' ? raw.fill : base.fill,
+      stroke: typeof raw.stroke === 'string' ? raw.stroke : base.stroke,
+      strokeWidth: Number(raw.strokeWidth) || base.strokeWidth,
+    } as ArrowShapeType;
   },
 };

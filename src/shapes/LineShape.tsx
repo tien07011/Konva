@@ -1,11 +1,19 @@
 import React from 'react';
-import { Line, Circle, Group } from 'react-konva';
+import { Line, Circle, Group, Transformer } from 'react-konva';
 import Konva from 'konva';
 import { EditableShapeProps, LineShape as LineShapeType, ShapeModule, DrawContext } from './types';
 
 const LineShape: React.FC<EditableShapeProps<LineShapeType>> = ({ shape, isSelected, onSelect, onChange }) => {
   const shapeRef = React.useRef<Konva.Line>(null);
   const groupRef = React.useRef<Konva.Group>(null);
+  const trRef = React.useRef<Konva.Transformer>(null);
+
+  React.useEffect(() => {
+    if (isSelected && trRef.current && groupRef.current) {
+      trRef.current.nodes([groupRef.current]);
+      trRef.current.getLayer()?.batchDraw();
+    }
+  }, [isSelected]);
 
   const points = shape.points;
   const anchors = React.useMemo(() => {
@@ -126,6 +134,15 @@ const LineShape: React.FC<EditableShapeProps<LineShapeType>> = ({ shape, isSelec
                 />
               );
             })}
+            <Transformer
+              ref={trRef}
+              rotateEnabled
+              enabledAnchors={[]}
+              onTransformEnd={() => {
+                const g = groupRef.current!;
+                onChange({ x: g.x(), y: g.y(), rotation: g.rotation() } as Partial<LineShapeType>);
+              }}
+            />
           </>
         )}
       </Group>
@@ -165,5 +182,32 @@ export const LineModule: ShapeModule<LineShapeType> = {
       return Math.hypot(dx, dy) >= 3;
     }
     return true;
+  },
+  normalize: (raw, base) => {
+    if (!raw || typeof raw !== 'object') return null;
+    const id = String(raw.id ?? 'line-' + Date.now());
+    const x = Number(raw.x) || 0;
+    const y = Number(raw.y) || 0;
+    const rotation = Number(raw.rotation) || 0;
+    let pts: number[] = [];
+    if (Array.isArray(raw.points)) {
+      pts = raw.points.map((n: any) => Number(n) || 0).filter((n: any) => Number.isFinite(n));
+    } else if (raw.dx != null || raw.dy != null) {
+      pts = [0, 0, Number(raw.dx) || 0, Number(raw.dy) || 0];
+    }
+    if (pts.length < 4 || pts.length % 2 !== 0) {
+      pts = [0, 0, 1, 1];
+    }
+    return {
+      id,
+      type: 'line',
+      x,
+      y,
+      rotation,
+      points: pts,
+      fill: 'transparent',
+      stroke: typeof raw.stroke === 'string' ? raw.stroke : base.stroke,
+      strokeWidth: Number(raw.strokeWidth) || base.strokeWidth,
+    } as LineShapeType;
   },
 };

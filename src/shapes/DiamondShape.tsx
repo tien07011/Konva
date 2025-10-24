@@ -107,4 +107,26 @@ export const DiamondModule: ShapeModule<DiamondShapeType> = {
     return { x: nx, y: ny, width: Math.abs(dx), height: Math.abs(dy) };
   },
   isValidAfterDraw: (s) => s.width >= 3 && s.height >= 3,
+  normalize: (raw, base) => {
+    if (!raw || typeof raw !== 'object') return null;
+    const id = String(raw.id ?? 'diamond-' + Date.now());
+    const x = Number(raw.x) || 0;
+    const y = Number(raw.y) || 0;
+    const rotation = Number(raw.rotation) || 0;
+    const width = Number(raw.width) || 0;
+    const height = Number(raw.height) || 0;
+    if (width <= 0 || height <= 0) return null;
+    return {
+      id,
+      type: 'diamond',
+      x,
+      y,
+      rotation,
+      width,
+      height,
+      fill: typeof raw.fill === 'string' ? raw.fill : base.fill,
+      stroke: typeof raw.stroke === 'string' ? raw.stroke : base.stroke,
+      strokeWidth: Number(raw.strokeWidth) || base.strokeWidth,
+    } as DiamondShapeType;
+  },
 };

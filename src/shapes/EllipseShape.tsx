@@ -95,4 +95,27 @@ export const EllipseModule: ShapeModule<EllipseShapeType> = {
     return { x: cx, y: cy, radiusX: Math.max(1, rx), radiusY: Math.max(1, ry) };
   },
   isValidAfterDraw: (s) => s.radiusX >= 3 && s.radiusY >= 3,
+  normalize: (raw, base) => {
+    if (!raw || typeof raw !== 'object') return null;
+    const id = String(raw.id ?? 'ellipse-' + Date.now());
+    const x = Number(raw.x) || 0;
+    const y = Number(raw.y) || 0;
+    const rotation = Number(raw.rotation) || 0;
+    // support legacy 'radius' or explicit radiusX/Y
+    const rX = raw.radiusX != null ? Number(raw.radiusX) : Number(raw.radius) || 0;
+    const rY = raw.radiusY != null ? Number(raw.radiusY) : Number(raw.radius) || 0;
+    if (rX <= 0 || rY <= 0) return null;
+    return {
+      id,
+      type: 'ellipse',
+      x,
+      y,
+      rotation,
+      radiusX: rX,
+      radiusY: rY,
+      fill: typeof raw.fill === 'string' ? raw.fill : base.fill,
+      stroke: typeof raw.stroke === 'string' ? raw.stroke : base.stroke,
+      strokeWidth: Number(raw.strokeWidth) || base.strokeWidth,
+    };
+  },
 };

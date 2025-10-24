@@ -274,4 +274,34 @@ export const ThickArrowModule: ShapeModule<ThickArrowShapeType> = {
     const [x1, y1, x2, y2] = s.points;
     return Math.hypot(x2 - x1, y2 - y1) >= 3;
   },
+  normalize: (raw, base) => {
+    if (!raw || typeof raw !== 'object') return null;
+    const id = String(raw.id ?? 'thick-arrow-' + Date.now());
+    const x = Number(raw.x) || 0;
+    const y = Number(raw.y) || 0;
+    const rotation = Number(raw.rotation) || 0;
+    let pts: any = Array.isArray(raw.points) ? raw.points.map((n: any) => Number(n)).filter((n: any) => Number.isFinite(n)) : [];
+    if (pts.length !== 4) {
+      const dx = Number(raw.dx) || 120;
+      const dy = Number(raw.dy) || 40;
+      pts = [0, 0, dx, dy];
+    }
+    const shaftWidth = raw.shaftWidth != null ? Number(raw.shaftWidth) : 16;
+    const headLength = raw.headLength != null ? Number(raw.headLength) : 30;
+    const headWidth = raw.headWidth != null ? Number(raw.headWidth) : 34;
+    return {
+      id,
+      type: 'thick-arrow',
+      x,
+      y,
+      rotation,
+      points: pts as [number, number, number, number],
+      shaftWidth,
+      headLength,
+      headWidth,
+      fill: typeof raw.fill === 'string' ? raw.fill : '#ffffff',
+      stroke: typeof raw.stroke === 'string' ? raw.stroke : base.stroke,
+      strokeWidth: Number(raw.strokeWidth) || base.strokeWidth,
+    } as ThickArrowShapeType;
+  },
 };
