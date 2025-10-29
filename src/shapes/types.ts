@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type ShapeType = 'rectangle' | 'ellipse' | 'line' | 'arrow' | 'diamond' | 'thick-arrow' | 'polygon' | 'curve' | 'svg' | 'text';
+export type ShapeType = 'rectangle' | 'ellipse' | 'line' | 'arrow' | 'diamond' | 'thick-arrow' | 'polygon' | 'curve' | 'svg' | 'text' | 'group';
 
 export interface BaseShape {
   id: string;
@@ -11,6 +11,8 @@ export interface BaseShape {
   fill: string;
   stroke: string;
   strokeWidth: number;
+  // When inside a group, this points to the parent group id
+  parentId?: string;
 }
 
 export interface RectShape extends BaseShape {
@@ -78,6 +80,12 @@ export interface SvgShape extends BaseShape {
   svg: string;
 }
 
+export interface GroupShape extends BaseShape {
+  type: 'group';
+  // List of child shape ids contained in this group
+  children: string[];
+}
+
 export type AnyShape =
   | RectShape
   | EllipseShape
@@ -87,7 +95,8 @@ export type AnyShape =
   | ThickArrowShape
   | PolygonShape
   | CurveShape
-  | SvgShape;
+  | SvgShape
+  | GroupShape;
 
 export interface EditableShapeProps<T extends AnyShape> {
   shape: T;

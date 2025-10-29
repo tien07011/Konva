@@ -66,6 +66,7 @@ function getFieldsFor(shape: AnyShape | null): Field[] {
       { key: 'svg', label: 'SVG markup', type: 'text' },
     ],
     text: [], // not used currently
+    group: [],
   };
   return [...common, ...byType[shape.type]];
 }
@@ -175,6 +176,7 @@ const adapters: Record<ShapeType, Adapter> = {
     }) as Partial<AnyShape>,
   },
   text: {},
+  group: {},
 };
 
 const Modal: React.FC<Props> = ({ shape, open, onClose, onApply }) => {
