@@ -9,6 +9,7 @@ import { ThickArrowModule } from './ThickArrowShape';
 import { PolygonModule } from './PolygonShape';
 import { CurveModule } from './CurveShape';
 import { SvgModule } from './SvgShape';
+import { PathModule } from './PathShape';
 
 const modules: Array<ShapeModule<AnyShape>> = [
   RectangleModule as unknown as ShapeModule<AnyShape>,
@@ -19,6 +20,7 @@ const modules: Array<ShapeModule<AnyShape>> = [
   ThickArrowModule as unknown as ShapeModule<AnyShape>,
   PolygonModule as unknown as ShapeModule<AnyShape>,
   CurveModule as unknown as ShapeModule<AnyShape>,
+  PathModule as unknown as ShapeModule<AnyShape>,
   SvgModule as unknown as ShapeModule<AnyShape>,
 ];
 

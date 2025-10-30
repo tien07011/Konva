@@ -60,6 +60,9 @@ function getFieldsFor(shape: AnyShape | null): Field[] {
       { key: 'points', label: 'Points (x0,y0,x1,y1,...)', type: 'text' },
       { key: 'tension', label: 'Tension (0..1)', type: 'number', step: 0.1, min: 0 },
     ],
+    path: [
+      { key: 'd', label: 'Path d', type: 'text' },
+    ],
     svg: [
       { key: 'width', label: 'Width', type: 'number', step: 1, min: 0 },
       { key: 'height', label: 'Height', type: 'number', step: 1, min: 0 },
@@ -162,6 +165,14 @@ const adapters: Record<ShapeType, Adapter> = {
         tension: clamp(num(local.tension, (shape as any).tension ?? 0.5), 0, 1),
       } as Partial<AnyShape>;
     },
+  },
+  path: {
+    toLocal: (shape) => ({
+      d: (shape as any).d || '',
+    }),
+    toPatch: (local, shape) => ({
+      d: typeof local.d === 'string' && local.d.trim() ? local.d : (shape as any).d,
+    }) as Partial<AnyShape>,
   },
   svg: {
     toLocal: (shape) => ({

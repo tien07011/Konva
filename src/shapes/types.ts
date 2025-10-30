@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type ShapeType = 'rectangle' | 'ellipse' | 'line' | 'arrow' | 'diamond' | 'thick-arrow' | 'polygon' | 'curve' | 'svg' | 'text' | 'group';
+export type ShapeType = 'rectangle' | 'ellipse' | 'line' | 'arrow' | 'diamond' | 'thick-arrow' | 'polygon' | 'curve' | 'path' | 'svg' | 'text' | 'group';
 
 export interface BaseShape {
   id: string;
@@ -72,6 +72,13 @@ export interface PolygonShape extends BaseShape {
   points: number[];
 }
 
+export interface PathSvgShape extends BaseShape {
+  type: 'path';
+  // SVG path data string (attribute "d")
+  // Supports commands: M/m, L/l, H/h, V/v, C/c, S/s, Q/q, T/t, A/a, Z/z
+  d: string;
+}
+
 export interface SvgShape extends BaseShape {
   type: 'svg';
   width: number;
@@ -95,6 +102,7 @@ export type AnyShape =
   | ThickArrowShape
   | PolygonShape
   | CurveShape
+  | PathSvgShape
   | SvgShape
   | GroupShape;
 
