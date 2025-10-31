@@ -1,6 +1,6 @@
 // Common drawing types for shapes and tools
 
-export type ToolType = 'line' | 'rect'; // extend: 'ellipse' | 'arrow' | 'pen' | ...
+export type ToolType = 'none' | 'line' | 'rect'; // extend: 'ellipse' | 'arrow' | 'pen' | ...
 
 export interface BaseShape {
   id: string;

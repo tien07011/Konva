@@ -16,15 +16,16 @@ interface DrawingCanvasProps {
   strokeWidth: number;
   onHistoryChange?: (info: { canUndo: boolean; canRedo: boolean }) => void;
   tool?: ToolType; // default 'line'
+  onToolChange?: (t: ToolType) => void;
 }
 
 export const DrawingCanvas = React.forwardRef<DrawingCanvasHandle, DrawingCanvasProps>(
-  ({ strokeColor, strokeWidth, onHistoryChange, tool = 'line' }, ref) => {
+  ({ strokeColor, strokeWidth, onHistoryChange, tool = 'line', onToolChange }, ref) => {
     const { shapes, draft, canUndo, canRedo, clear, undo, redo, onMouseDown, onMouseMove, onMouseUp, onLineDragEnd, onLineChange, onShapeUpdate, onRectDragEnd, onRectChange } =
       useDrawing({ tool, stroke: strokeColor, strokeWidth, onHistoryChange });
 
-    const [selectedId, setSelectedId] = useState<string | null>(null);
-    const selectedShape = useMemo(() => shapes.find((s) => s.id === selectedId) || null, [shapes, selectedId]);
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const selectedShape = useMemo(() => shapes.find((s) => s.id === selectedIds[0]) || null, [shapes, selectedIds]);
 
     useEffect(() => {
       onHistoryChange?.({ canUndo, canRedo });
@@ -58,17 +59,30 @@ export const DrawingCanvas = React.forwardRef<DrawingCanvasHandle, DrawingCanvas
             draft={draft}
             onMouseDown={onMouseDown}
             onMouseMove={onMouseMove}
-            onMouseUp={onMouseUp}
+            onMouseUp={(e: any) => {
+              const hadDraft = !!draft;
+              onMouseUp(e);
+              if (hadDraft) {
+                setSelectedIds([]);
+                onToolChange?.('none');
+              }
+            }}
             onLineDragEnd={onLineDragEnd}
             onLineChange={onLineChange}
             onRectDragEnd={onRectDragEnd}
             onRectChange={onRectChange}
-            selectedId={selectedId}
-            onSelectShape={setSelectedId}
+            selectedIds={selectedIds}
+            onSelectShape={(id, append) => {
+              if (append) setSelectedIds((prev) => (prev.includes(id) ? prev.filter((sid) => sid !== id) : [...prev, id]));
+              else setSelectedIds([id]);
+            }}
+            onSetSelection={(ids) => setSelectedIds(ids)}
+            onClearSelection={() => setSelectedIds([])}
+            selectMode={tool === 'none'}
           />
         </div>
         {/* Properties panel */}
-        {selectedShape && (
+        {selectedShape && selectedIds.length === 1 && (
           <div
             style={{
               width: 260,
@@ -82,7 +96,7 @@ export const DrawingCanvas = React.forwardRef<DrawingCanvasHandle, DrawingCanvas
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <strong>Thuộc tính</strong>
-              <button type="button" onClick={() => setSelectedId(null)} style={{ fontSize: 12 }}>Bỏ chọn</button>
+              <button type="button" onClick={() => setSelectedIds([])} style={{ fontSize: 12 }}>Bỏ chọn</button>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

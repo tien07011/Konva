@@ -50,6 +50,7 @@ export function useDrawing({ tool = 'line', stroke, strokeWidth, onHistoryChange
   }, [notifyHistory]);
 
   const startDraft = useCallback((x: number, y: number) => {
+    if (tool === 'none') return;
     if (tool === 'line') {
       const d: LineShape = {
         id: nextId(),

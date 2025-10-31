@@ -58,6 +58,7 @@ export const PaintApp: React.FC = () => {
           strokeColor={strokeColor}
           strokeWidth={strokeWidth}
           tool={tool}
+          onToolChange={setTool}
           onHistoryChange={({ canUndo, canRedo }) => {
             setCanUndo(canUndo);
             setCanRedo(canRedo);
