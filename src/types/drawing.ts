@@ -7,6 +7,7 @@ export interface BaseShape {
   type: ToolType;
   stroke: string;
   strokeWidth: number;
+  rotation?: number;
 }
 
 export interface LineShape extends BaseShape {

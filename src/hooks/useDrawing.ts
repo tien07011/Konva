@@ -23,6 +23,8 @@ export interface UseDrawingResult {
   onMouseUp: (e: any) => void;
   // shape interactions
   onLineDragEnd: (payload: { id: string; points: number[] }) => void;
+  onLineChange: (payload: { id: string; points?: number[]; rotation?: number }) => void;
+  onShapeUpdate: (payload: { id: string; stroke?: string; strokeWidth?: number; rotation?: number }) => void;
 }
 
 let uid = 0;
@@ -81,6 +83,31 @@ export function useDrawing({ tool = 'line', stroke, strokeWidth, onHistoryChange
     redoStack.current = [];
     notifyHistory();
   }, [notifyHistory]);
+
+  const onLineChange = useCallback((payload: { id: string; points?: number[]; rotation?: number }) => {
+    setShapes((prev) =>
+      prev.map((s) =>
+        s.id === payload.id && s.type === 'line'
+          ? { ...s, ...(payload.points ? { points: payload.points } : {}), ...(payload.rotation != null ? { rotation: payload.rotation } : {}) }
+          : s
+      )
+    );
+  }, []);
+
+  const onShapeUpdate = useCallback((payload: { id: string; stroke?: string; strokeWidth?: number; rotation?: number }) => {
+    setShapes((prev) =>
+      prev.map((s) =>
+        s.id === payload.id
+          ? {
+              ...s,
+              ...(payload.stroke !== undefined ? { stroke: payload.stroke } : {}),
+              ...(payload.strokeWidth !== undefined ? { strokeWidth: payload.strokeWidth } : {}),
+              ...(payload.rotation !== undefined ? { rotation: payload.rotation } : {}),
+            }
+          : s
+      )
+    );
+  }, []);
 
   const onMouseDown = useCallback((e: any) => {
     // Only start drawing when clicking on empty stage, not on existing shapes
@@ -143,5 +170,7 @@ export function useDrawing({ tool = 'line', stroke, strokeWidth, onHistoryChange
     onMouseMove,
     onMouseUp,
     onLineDragEnd,
-  }), [shapes, draft, canUndo, canRedo, clear, undo, redo, onMouseDown, onMouseMove, onMouseUp, onLineDragEnd]);
+    onLineChange,
+    onShapeUpdate,
+  }), [shapes, draft, canUndo, canRedo, clear, undo, redo, onMouseDown, onMouseMove, onMouseUp, onLineDragEnd, onLineChange, onShapeUpdate]);
 }

@@ -15,11 +15,14 @@ interface CanvasAreaProps {
 	onMouseMove: PointerHandler;
 	onMouseUp: PointerHandler;
   onLineDragEnd?: (payload: { id: string; points: number[] }) => void;
+  onLineChange?: (payload: { id: string; points?: number[]; rotation?: number }) => void;
+  selectedId?: string | null;
+  onSelectShape?: (id: string | null) => void;
 }
 
 // Vùng canvas hiển thị các shape và bản nháp
 export const CanvasArea = React.forwardRef<CanvasAreaHandle, CanvasAreaProps>(
-	({ shapes, draft, onMouseDown, onMouseMove, onMouseUp, onLineDragEnd }, ref) => {
+	({ shapes, draft, onMouseDown, onMouseMove, onMouseUp, onLineDragEnd, onLineChange, selectedId = null, onSelectShape }, ref) => {
 		const containerRef = useRef<HTMLDivElement | null>(null);
 		const stageRef = useRef<any>(null); // Konva.Stage instance
 		const [size, setSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
@@ -60,13 +63,26 @@ export const CanvasArea = React.forwardRef<CanvasAreaHandle, CanvasAreaProps>(
 					width={size.width}
 					height={size.height}
 					style={{ display: 'block' }}
-					onMouseDown={onMouseDown}
+					onMouseDown={(e: any) => {
+						// Clear selection when clicking on empty stage
+						const stage = e.target.getStage?.();
+						if (stage && e.target === stage) onSelectShape?.(null);
+						onMouseDown(e);
+					}}
 					onMouseMove={onMouseMove}
 					onMouseUp={onMouseUp}
 				>
 					<Layer>
 						{shapes.map((s) => (
-							<ShapeNode key={s.id} shape={s} isDraft={false} onLineDragEnd={onLineDragEnd} />
+							<ShapeNode
+								key={s.id}
+								shape={s}
+								isDraft={false}
+								isSelected={selectedId === s.id}
+								onSelect={(id) => onSelectShape?.(id)}
+								onLineDragEnd={onLineDragEnd}
+								onLineChange={onLineChange}
+							/>
 						))}
 
 						{draft ? (
