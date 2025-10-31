@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { MenuBar } from './MenuBar';
-import { CanvasArea, type CanvasAreaHandle } from './CanvasArea';
+import { DrawingCanvas, type DrawingCanvasHandle } from './DrawingCanvas';
 
 export const PaintApp: React.FC = () => {
   // UI state only (chỉ vẽ đường)
@@ -11,7 +11,7 @@ export const PaintApp: React.FC = () => {
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
 
-  const canvasRef = useRef<CanvasAreaHandle | null>(null);
+  const canvasRef = useRef<DrawingCanvasHandle | null>(null);
 
   return (
     <div
@@ -33,12 +33,23 @@ export const PaintApp: React.FC = () => {
         onRedo={() => canvasRef.current?.redo()}
         onClear={() => canvasRef.current?.clear()}
         onExport={() => {
-          console.log('Export json clicked');
+          const json = canvasRef.current?.exportJSON();
+          if (!json) return;
+          const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          const ts = new Date();
+          const pad = (n: number) => String(n).padStart(2, '0');
+          const name = `screen-${ts.getFullYear()}${pad(ts.getMonth() + 1)}${pad(ts.getDate())}-${pad(ts.getHours())}${pad(ts.getMinutes())}${pad(ts.getSeconds())}.json`;
+          a.download = name;
+          a.click();
+          URL.revokeObjectURL(url);
         }}
       />
 
       <div style={{ display: 'flex', flex: 1 }}>
-        <CanvasArea
+        <DrawingCanvas
           ref={canvasRef}
           strokeColor={strokeColor}
           strokeWidth={strokeWidth}
