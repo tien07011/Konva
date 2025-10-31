@@ -16,13 +16,15 @@ interface CanvasAreaProps {
 	onMouseUp: PointerHandler;
   onLineDragEnd?: (payload: { id: string; points: number[] }) => void;
   onLineChange?: (payload: { id: string; points?: number[]; rotation?: number }) => void;
+	onRectDragEnd?: (payload: { id: string; x: number; y: number }) => void;
+	onRectChange?: (payload: { id: string; x?: number; y?: number; width?: number; height?: number; rotation?: number }) => void;
   selectedId?: string | null;
   onSelectShape?: (id: string | null) => void;
 }
 
 // Vùng canvas hiển thị các shape và bản nháp
 export const CanvasArea = React.forwardRef<CanvasAreaHandle, CanvasAreaProps>(
-	({ shapes, draft, onMouseDown, onMouseMove, onMouseUp, onLineDragEnd, onLineChange, selectedId = null, onSelectShape }, ref) => {
+	({ shapes, draft, onMouseDown, onMouseMove, onMouseUp, onLineDragEnd, onLineChange, onRectDragEnd, onRectChange, selectedId = null, onSelectShape }, ref) => {
 		const containerRef = useRef<HTMLDivElement | null>(null);
 		const stageRef = useRef<any>(null); // Konva.Stage instance
 		const [size, setSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
@@ -82,6 +84,8 @@ export const CanvasArea = React.forwardRef<CanvasAreaHandle, CanvasAreaProps>(
 								onSelect={(id) => onSelectShape?.(id)}
 								onLineDragEnd={onLineDragEnd}
 								onLineChange={onLineChange}
+								onRectDragEnd={onRectDragEnd}
+								onRectChange={onRectChange}
 							/>
 						))}
 

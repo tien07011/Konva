@@ -20,7 +20,7 @@ interface DrawingCanvasProps {
 
 export const DrawingCanvas = React.forwardRef<DrawingCanvasHandle, DrawingCanvasProps>(
   ({ strokeColor, strokeWidth, onHistoryChange, tool = 'line' }, ref) => {
-    const { shapes, draft, canUndo, canRedo, clear, undo, redo, onMouseDown, onMouseMove, onMouseUp, onLineDragEnd, onLineChange, onShapeUpdate } =
+    const { shapes, draft, canUndo, canRedo, clear, undo, redo, onMouseDown, onMouseMove, onMouseUp, onLineDragEnd, onLineChange, onShapeUpdate, onRectDragEnd, onRectChange } =
       useDrawing({ tool, stroke: strokeColor, strokeWidth, onHistoryChange });
 
     const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -61,6 +61,8 @@ export const DrawingCanvas = React.forwardRef<DrawingCanvasHandle, DrawingCanvas
             onMouseUp={onMouseUp}
             onLineDragEnd={onLineDragEnd}
             onLineChange={onLineChange}
+            onRectDragEnd={onRectDragEnd}
+            onRectChange={onRectChange}
             selectedId={selectedId}
             onSelectShape={setSelectedId}
           />

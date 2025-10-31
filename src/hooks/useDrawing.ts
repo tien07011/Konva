@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState, useEffect } from 'react';
-import type { AnyShape, DraftShape, HistoryState, LineShape, ToolType } from '../types/drawing';
+import type { AnyShape, DraftShape, HistoryState, LineShape, RectShape, ToolType } from '../types/drawing';
 
 export interface UseDrawingOptions {
   tool?: ToolType; // default 'line'
@@ -25,6 +25,8 @@ export interface UseDrawingResult {
   onLineDragEnd: (payload: { id: string; points: number[] }) => void;
   onLineChange: (payload: { id: string; points?: number[]; rotation?: number }) => void;
   onShapeUpdate: (payload: { id: string; stroke?: string; strokeWidth?: number; rotation?: number }) => void;
+  onRectDragEnd: (payload: { id: string; x: number; y: number }) => void;
+  onRectChange: (payload: { id: string; x?: number; y?: number; width?: number; height?: number; rotation?: number }) => void;
 }
 
 let uid = 0;
@@ -57,6 +59,18 @@ export function useDrawing({ tool = 'line', stroke, strokeWidth, onHistoryChange
         points: [x, y, x, y],
       };
       setDraft(d);
+    } else if (tool === 'rect') {
+      const d: RectShape = {
+        id: nextId(),
+        type: 'rect',
+        stroke,
+        strokeWidth,
+        x,
+        y,
+        width: 0,
+        height: 0,
+      };
+      setDraft(d);
     }
   }, [stroke, strokeWidth, tool]);
 
@@ -64,6 +78,14 @@ export function useDrawing({ tool = 'line', stroke, strokeWidth, onHistoryChange
     if (!draft) return;
     if (draft.type === 'line') {
       setDraft({ ...draft, points: [draft.points[0], draft.points[1], x, y] });
+    } else if (draft.type === 'rect') {
+      const x0 = (draft as RectShape).x;
+      const y0 = (draft as RectShape).y;
+      const nx = Math.min(x0, x);
+      const ny = Math.min(y0, y);
+      const w = Math.abs(x - x0);
+      const h = Math.abs(y - y0);
+      setDraft({ ...(draft as RectShape), x: nx, y: ny, width: w, height: h });
     }
   }, [draft]);
 
@@ -89,6 +111,29 @@ export function useDrawing({ tool = 'line', stroke, strokeWidth, onHistoryChange
       prev.map((s) =>
         s.id === payload.id && s.type === 'line'
           ? { ...s, ...(payload.points ? { points: payload.points } : {}), ...(payload.rotation != null ? { rotation: payload.rotation } : {}) }
+          : s
+      )
+    );
+  }, []);
+
+  const onRectDragEnd = useCallback((payload: { id: string; x: number; y: number }) => {
+    setShapes((prev) => prev.map((s) => (s.id === payload.id && s.type === 'rect' ? { ...(s as RectShape), x: payload.x, y: payload.y } : s)));
+    redoStack.current = [];
+    notifyHistory();
+  }, [notifyHistory]);
+
+  const onRectChange = useCallback((payload: { id: string; x?: number; y?: number; width?: number; height?: number; rotation?: number }) => {
+    setShapes((prev) =>
+      prev.map((s) =>
+        s.id === payload.id && s.type === 'rect'
+          ? {
+              ...(s as RectShape),
+              ...(payload.x !== undefined ? { x: payload.x } : {}),
+              ...(payload.y !== undefined ? { y: payload.y } : {}),
+              ...(payload.width !== undefined ? { width: payload.width } : {}),
+              ...(payload.height !== undefined ? { height: payload.height } : {}),
+              ...(payload.rotation !== undefined ? { rotation: payload.rotation } : {}),
+            }
           : s
       )
     );
@@ -172,5 +217,7 @@ export function useDrawing({ tool = 'line', stroke, strokeWidth, onHistoryChange
     onLineDragEnd,
     onLineChange,
     onShapeUpdate,
-  }), [shapes, draft, canUndo, canRedo, clear, undo, redo, onMouseDown, onMouseMove, onMouseUp, onLineDragEnd, onLineChange, onShapeUpdate]);
+    onRectDragEnd,
+    onRectChange,
+  }), [shapes, draft, canUndo, canRedo, clear, undo, redo, onMouseDown, onMouseMove, onMouseUp, onLineDragEnd, onLineChange, onShapeUpdate, onRectDragEnd, onRectChange]);
 }

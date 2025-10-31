@@ -1,11 +1,15 @@
 import React from 'react';
 import { SymbolLine } from './shapes/SymbolLine';
+import { SymbolRect } from './shapes/SymbolRect';
+import type { ToolType } from '../types/drawing';
 
 interface MenuBarProps {
   strokeColor: string;
   onStrokeColorChange: (c: string) => void;
   strokeWidth: number;
   onStrokeWidthChange: (n: number) => void;
+  tool?: ToolType;
+  onToolChange?: (t: ToolType) => void;
   canUndo?: boolean;
   canRedo?: boolean;
   onUndo: () => void;
@@ -20,6 +24,8 @@ export const MenuBar: React.FC<MenuBarProps> = ({
   onStrokeColorChange,
   strokeWidth,
   onStrokeWidthChange,
+  tool = 'line',
+  onToolChange,
   canUndo = false,
   canRedo = false,
   onUndo,
@@ -41,7 +47,36 @@ export const MenuBar: React.FC<MenuBarProps> = ({
         zIndex: 10,
       }}
     >
-      <SymbolLine stroke={strokeColor} strokeWidth={strokeWidth} />
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button
+          type="button"
+          onClick={() => onToolChange?.('line')}
+          aria-pressed={tool === 'line'}
+          title="Công cụ: Vẽ đường"
+          style={{
+            padding: 4,
+            border: tool === 'line' ? '2px solid #2563eb' : '1px solid #e5e7eb',
+            borderRadius: 8,
+            background: tool === 'line' ? '#eff6ff' : '#ffffff',
+          }}
+        >
+          <SymbolLine stroke={strokeColor} strokeWidth={strokeWidth} />
+        </button>
+        <button
+          type="button"
+          onClick={() => onToolChange?.('rect')}
+          aria-pressed={tool === 'rect'}
+          title="Công cụ: Hình chữ nhật"
+          style={{
+            padding: 4,
+            border: tool === 'rect' ? '2px solid #2563eb' : '1px solid #e5e7eb',
+            borderRadius: 8,
+            background: tool === 'rect' ? '#eff6ff' : '#ffffff',
+          }}
+        >
+          <SymbolRect stroke={strokeColor} strokeWidth={strokeWidth} />
+        </button>
+      </div>
 
       <div style={{ width: 1, height: 28, background: '#e5e7eb' }} />
 

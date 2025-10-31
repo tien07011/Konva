@@ -58,8 +58,24 @@ export function buildScreenFromShapes(shapes: AnyShape[], opts: ExportOptions = 
       if (translate) out.translate = translate;
       return out;
     }
+    if (s.type === 'rect') {
+      const x = s.x;
+      const y = s.y;
+      const x2 = s.x + s.width;
+      const y2 = s.y + s.height;
+      const r = (n: number) => round(n, precision);
+      const d = `M ${r(x)} ${r(y)} L ${r(x2)} ${r(y)} L ${r(x2)} ${r(y2)} L ${r(x)} ${r(y2)} Z`;
+      const out: OutShape = {
+        id: s.id,
+        d,
+        stroke: s.stroke,
+        strokeWidth: s.strokeWidth,
+      };
+      if ((s as any).rotation != null) out.rotation = round((s as any).rotation, precision);
+      return out;
+    }
     return {
-      id: s.id,
+      id: (s as any).id ?? 'unknown',
       d: '',
     };
   });

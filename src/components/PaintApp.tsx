@@ -1,11 +1,13 @@
 import React, { useRef, useState } from 'react';
 import { MenuBar } from './MenuBar';
 import { DrawingCanvas, type DrawingCanvasHandle } from './DrawingCanvas';
+import type { ToolType } from '../types/drawing';
 
 export const PaintApp: React.FC = () => {
   // UI state only (chỉ vẽ đường)
   const [strokeColor, setStrokeColor] = useState<string>('#111827');
   const [strokeWidth, setStrokeWidth] = useState<number>(4);
+  const [tool, setTool] = useState<ToolType>('line');
 
   // History flags
   const [canUndo, setCanUndo] = useState(false);
@@ -27,6 +29,8 @@ export const PaintApp: React.FC = () => {
         onStrokeColorChange={setStrokeColor}
         strokeWidth={strokeWidth}
         onStrokeWidthChange={setStrokeWidth}
+        tool={tool}
+        onToolChange={setTool}
         canUndo={canUndo}
         canRedo={canRedo}
         onUndo={() => canvasRef.current?.undo()}
@@ -53,6 +57,7 @@ export const PaintApp: React.FC = () => {
           ref={canvasRef}
           strokeColor={strokeColor}
           strokeWidth={strokeWidth}
+          tool={tool}
           onHistoryChange={({ canUndo, canRedo }) => {
             setCanUndo(canUndo);
             setCanRedo(canRedo);
