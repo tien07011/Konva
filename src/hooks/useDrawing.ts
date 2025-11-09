@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState, useEffect } from 'react';
-import type { AnyShape, DraftShape, HistoryState, LineShape, RectShape, ToolType } from '../types/drawing';
+import type { AnyShape, DraftShape, HistoryState, LineShape, RectShape, ToolType, ShapeGroup } from '../types/drawing';
 
 export interface UseDrawingOptions {
   tool?: ToolType; // default 'line'
@@ -10,6 +10,7 @@ export interface UseDrawingOptions {
 
 export interface UseDrawingResult {
   shapes: AnyShape[];
+  groups: ShapeGroup[];
   draft: DraftShape;
   canUndo: boolean;
   canRedo: boolean;
@@ -24,9 +25,15 @@ export interface UseDrawingResult {
   // shape interactions
   onLineDragEnd: (payload: { id: string; points: number[] }) => void;
   onLineChange: (payload: { id: string; points?: number[]; rotation?: number }) => void;
+  onLineStyleChange: (payload: { id: string; lineJoin?: 'miter' | 'round' | 'bevel' }) => void;
   onShapeUpdate: (payload: { id: string; stroke?: string; strokeWidth?: number; rotation?: number }) => void;
   onRectDragEnd: (payload: { id: string; x: number; y: number }) => void;
   onRectChange: (payload: { id: string; x?: number; y?: number; width?: number; height?: number; rotation?: number }) => void;
+  // grouping
+  groupShapes: (ids: string[], name?: string) => string | null; // returns new group id
+  ungroupGroup: (groupId: string) => void;
+  groupDragEnd: (payload: { id: string; x: number; y: number }) => void;
+  groupChange: (payload: { id: string; x?: number; y?: number; rotation?: number; scaleX?: number; scaleY?: number }) => void;
 }
 
 let uid = 0;
@@ -34,6 +41,7 @@ const nextId = () => `shape_${++uid}`;
 
 export function useDrawing({ tool = 'line', stroke, strokeWidth, onHistoryChange }: UseDrawingOptions): UseDrawingResult {
   const [shapes, setShapes] = useState<AnyShape[]>([]);
+  const [groups, setGroups] = useState<ShapeGroup[]>([]);
   const [draft, setDraft] = useState<DraftShape>(null);
   const redoStack = useRef<AnyShape[]>([]);
 
@@ -58,6 +66,7 @@ export function useDrawing({ tool = 'line', stroke, strokeWidth, onHistoryChange
         stroke,
         strokeWidth,
         points: [x, y, x, y],
+        lineJoin: 'miter',
       };
       setDraft(d);
     } else if (tool === 'rect') {
@@ -117,6 +126,12 @@ export function useDrawing({ tool = 'line', stroke, strokeWidth, onHistoryChange
     );
   }, []);
 
+  const onLineStyleChange = useCallback((payload: { id: string; lineJoin?: 'miter' | 'round' | 'bevel' }) => {
+    setShapes((prev) =>
+      prev.map((s) => (s.id === payload.id && s.type === 'line' ? { ...s, ...(payload.lineJoin ? { lineJoin: payload.lineJoin } : {}) } : s))
+    );
+  }, []);
+
   const onRectDragEnd = useCallback((payload: { id: string; x: number; y: number }) => {
     setShapes((prev) => prev.map((s) => (s.id === payload.id && s.type === 'rect' ? { ...(s as RectShape), x: payload.x, y: payload.y } : s)));
     redoStack.current = [];
@@ -153,6 +168,67 @@ export function useDrawing({ tool = 'line', stroke, strokeWidth, onHistoryChange
           : s
       )
     );
+  }, []);
+
+  // Group helpers
+  const isInAnyGroup = useCallback((id: string, groupsList: ShapeGroup[]): boolean => {
+    for (const g of groupsList) {
+      if (g.shapeIds.includes(id)) return true;
+      if (isInAnyGroup(id, g.groups)) return true;
+    }
+    return false;
+  }, []);
+
+  const groupShapes = useCallback((ids: string[], name = 'Group'): string | null => {
+    const unique = Array.from(new Set(ids.filter(Boolean)));
+    if (unique.length < 2) return null; // need at least two shapes to group
+    // ensure all ids exist
+    const allExist = unique.every((id) => shapes.some((s) => s.id === id));
+    if (!allExist) return null;
+    // remove ids already grouped (top-level only for now)
+    const topLevelIds = unique.filter((id) => !isInAnyGroup(id, groups));
+    if (topLevelIds.length < 2) return null;
+    const newGroup: ShapeGroup = {
+      id: nextId(),
+      name,
+      shapeIds: topLevelIds,
+      groups: [],
+      visible: true,
+      locked: false,
+    };
+    setGroups((prev) => [newGroup, ...prev]);
+    return newGroup.id;
+  }, [groups, isInAnyGroup, shapes]);
+
+  const ungroupGroup = useCallback((groupId: string) => {
+    const removeRec = (list: ShapeGroup[]): ShapeGroup[] =>
+      list
+        .filter((g) => g.id !== groupId)
+        .map((g) => ({ ...g, groups: removeRec(g.groups) }));
+    setGroups((prev) => removeRec(prev));
+  }, []);
+
+  const groupDragEnd = useCallback((payload: { id: string; x: number; y: number }) => {
+    setGroups((prev) => prev.map((g) => g.id === payload.id ? { ...g, translate: { x: payload.x, y: payload.y } } : g));
+  }, []);
+
+  const groupChange = useCallback((payload: { id: string; x?: number; y?: number; rotation?: number; scaleX?: number; scaleY?: number }) => {
+    setGroups((prev) => prev.map((g) => {
+      if (g.id !== payload.id) return g;
+      const next: ShapeGroup = { ...g };
+      if (payload.x != null || payload.y != null) {
+        const tx = payload.x != null ? payload.x : g.translate?.x || 0;
+        const ty = payload.y != null ? payload.y : g.translate?.y || 0;
+        next.translate = { x: tx, y: ty };
+      }
+      if (payload.rotation != null) next.rotation = payload.rotation;
+      if (payload.scaleX != null || payload.scaleY != null) {
+        const sx = payload.scaleX != null ? payload.scaleX : g.scale?.x || 1;
+        const sy = payload.scaleY != null ? payload.scaleY : g.scale?.y || 1;
+        next.scale = { x: sx, y: sy };
+      }
+      return next;
+    }));
   }, []);
 
   const onMouseDown = useCallback((e: any) => {
@@ -206,6 +282,7 @@ export function useDrawing({ tool = 'line', stroke, strokeWidth, onHistoryChange
 
   return useMemo(() => ({
     shapes,
+    groups,
     draft,
     canUndo,
     canRedo,
@@ -217,8 +294,13 @@ export function useDrawing({ tool = 'line', stroke, strokeWidth, onHistoryChange
     onMouseUp,
     onLineDragEnd,
     onLineChange,
+  onLineStyleChange,
     onShapeUpdate,
     onRectDragEnd,
     onRectChange,
-  }), [shapes, draft, canUndo, canRedo, clear, undo, redo, onMouseDown, onMouseMove, onMouseUp, onLineDragEnd, onLineChange, onShapeUpdate, onRectDragEnd, onRectChange]);
+    groupShapes,
+    ungroupGroup,
+    groupDragEnd,
+    groupChange,
+  }), [shapes, groups, draft, canUndo, canRedo, clear, undo, redo, onMouseDown, onMouseMove, onMouseUp, onLineDragEnd, onLineChange, onShapeUpdate, onRectDragEnd, onRectChange, groupShapes, ungroupGroup, groupDragEnd, groupChange]);
 }

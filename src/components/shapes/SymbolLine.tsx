@@ -25,7 +25,7 @@ export const LineShapeNode: React.FC<{
         stroke={shape.stroke}
         strokeWidth={shape.strokeWidth}
         lineCap="round"
-        lineJoin="round"
+        lineJoin={shape.lineJoin || 'miter'}
         dash={dashed ? [8, 6] : undefined}
         draggable={!dashed && draggable}
         perfectDrawEnabled={false}
