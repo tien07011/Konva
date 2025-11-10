@@ -26,7 +26,7 @@ export const DrawingCanvas = React.forwardRef<DrawingCanvasHandle, DrawingCanvas
       useDrawing({ tool, stroke: strokeColor, strokeWidth, onHistoryChange });
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [selectedShapeIds, setSelectedShapeIds] = useState<string[]>([]); // for layers panel multi-select
+  const [selectedShapeIds, setSelectedShapeIds] = useState<string[]>([]); // multi-select (layers or marquee)
   const selectedShape = useMemo(() => (selectedId ? shapes.find((s) => s.id === selectedId) || null : null), [shapes, selectedId]);
 
     useEffect(() => {
@@ -80,6 +80,9 @@ export const DrawingCanvas = React.forwardRef<DrawingCanvasHandle, DrawingCanvas
             shapes={shapes}
             groups={groups}
             draft={draft}
+            tool={tool}
+            selectedId={selectedId}
+            selectedIds={selectedShapeIds}
             onMouseDown={onMouseDown}
             onMouseMove={onMouseMove}
             onMouseUp={(e: any) => {
@@ -94,8 +97,21 @@ export const DrawingCanvas = React.forwardRef<DrawingCanvasHandle, DrawingCanvas
             onLineChange={onLineChange}
             onRectDragEnd={onRectDragEnd}
             onRectChange={onRectChange}
-            selectedId={selectedId}
             onSelectShape={(id: string | null) => setSelectedId(id)}
+            onMarqueeSelect={(ids) => {
+              setSelectedShapeIds(ids);
+              // do not override single selectedId unless exactly one id
+              setSelectedId(ids.length === 1 ? ids[0] : null);
+            }}
+            onContextGroupRequest={() => {
+              if (selectedShapeIds.length >= 2) {
+                const gid = groupShapes(selectedShapeIds, `Group ${selectedShapeIds.length}`);
+                if (gid) {
+                  setSelectedShapeIds([]);
+                  setSelectedId(gid);
+                }
+              }
+            }}
             onGroupDragEnd={groupDragEnd}
             onGroupChange={groupChange}
           />
