@@ -95,7 +95,7 @@ export const RectShapeNode: React.FC<{
             'middle-left',
             'middle-right',
           ]}
-          boundBoxFunc={(oldBox, newBox) => {
+          boundBoxFunc={(oldBox: any, newBox: any) => {
             if (newBox.width < 1 || newBox.height < 1) return oldBox;
             return newBox;
           }}
@@ -125,7 +125,8 @@ export const SymbolRect: React.FC<{ size?: number; stroke?: string; strokeWidth?
       aria-label="Biểu tượng công cụ vẽ hình chữ nhật"
       title="Công cụ: Hình chữ nhật"
     >
-      <Stage width={size} height={size} style={{ display: 'block', borderRadius: 6 }}>
+  {/* @ts-ignore: Stage children typing issue */}
+  <Stage width={size} height={size} style={{ display: 'block', borderRadius: 6 }}>
         <Layer>
           <KonvaRect
             x={pad}

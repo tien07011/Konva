@@ -1,6 +1,8 @@
 import React from 'react';
 import { SymbolLine } from './shapes/SymbolLine';
 import { SymbolRect } from './shapes/SymbolRect';
+import { SymbolQuadratic } from './shapes/SymbolQuadratic';
+import { SymbolCubic } from './shapes/SymbolCubic';
 import type { ToolType } from '../types/drawing';
 
 interface MenuBarProps {
@@ -75,6 +77,34 @@ export const MenuBar: React.FC<MenuBarProps> = ({
           }}
         >
           <SymbolRect stroke={strokeColor} strokeWidth={strokeWidth} />
+        </button>
+        <button
+          type="button"
+          onClick={() => onToolChange?.('qcurve')}
+          aria-pressed={tool === 'qcurve'}
+          title="Công cụ: Đường cong bậc 2"
+          style={{
+            padding: 4,
+            border: tool === 'qcurve' ? '2px solid #2563eb' : '1px solid #e5e7eb',
+            borderRadius: 8,
+            background: tool === 'qcurve' ? '#eff6ff' : '#ffffff',
+          }}
+        >
+          <SymbolQuadratic stroke={strokeColor} strokeWidth={strokeWidth} />
+        </button>
+        <button
+          type="button"
+          onClick={() => onToolChange?.('ccurve')}
+          aria-pressed={tool === 'ccurve'}
+          title="Công cụ: Đường cong bậc 3"
+          style={{
+            padding: 4,
+            border: tool === 'ccurve' ? '2px solid #2563eb' : '1px solid #e5e7eb',
+            borderRadius: 8,
+            background: tool === 'ccurve' ? '#eff6ff' : '#ffffff',
+          }}
+        >
+          <SymbolCubic stroke={strokeColor} strokeWidth={strokeWidth} />
         </button>
       </div>
 

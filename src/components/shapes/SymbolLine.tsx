@@ -39,7 +39,7 @@ export const LineShapeNode: React.FC<{
         }}
         onClick={() => onSelect?.(shape.id)}
         onTap={() => onSelect?.(shape.id)}
-        onDragEnd={(e) => {
+  onDragEnd={(e: any) => {
           if (!onDragEnd) return;
           const node = e.target as any; // Konva.Line
           const pos = node.position();
@@ -161,7 +161,8 @@ export const SymbolLine: React.FC<{ size?: number; stroke?: string; strokeWidth?
       aria-label="Biểu tượng công cụ vẽ đường"
       title="Công cụ: Vẽ đường"
     >
-      <Stage width={size} height={size} style={{ display: 'block', borderRadius: 6 }}>
+  {/* @ts-ignore: Stage children typing issue */}
+  <Stage width={size} height={size} style={{ display: 'block', borderRadius: 6 }}>
         <Layer>
           <KonvaLine
             points={points}

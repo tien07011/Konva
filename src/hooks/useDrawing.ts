@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState, useEffect } from 'react';
-import type { AnyShape, DraftShape, HistoryState, LineShape, RectShape, ToolType, ShapeGroup } from '../types/drawing';
+import type { AnyShape, DraftShape, HistoryState, LineShape, RectShape, ToolType, ShapeGroup, QuadraticCurveShape, CubicCurveShape } from '../types/drawing';
 
 export interface UseDrawingOptions {
   tool?: ToolType; // default 'line'
@@ -81,6 +81,24 @@ export function useDrawing({ tool = 'line', stroke, strokeWidth, onHistoryChange
         height: 0,
       };
       setDraft(d);
+    } else if (tool === 'qcurve') {
+      const d: QuadraticCurveShape = {
+        id: nextId(),
+        type: 'qcurve',
+        stroke,
+        strokeWidth,
+        points: [x, y, x, y, x, y], // start, control, end (initially overlapping)
+      };
+      setDraft(d);
+    } else if (tool === 'ccurve') {
+      const d: CubicCurveShape = {
+        id: nextId(),
+        type: 'ccurve',
+        stroke,
+        strokeWidth,
+        points: [x, y, x, y, x, y, x, y], // start, c1, c2, end (initially overlapping)
+      };
+      setDraft(d);
     }
   }, [stroke, strokeWidth, tool]);
 
@@ -96,6 +114,22 @@ export function useDrawing({ tool = 'line', stroke, strokeWidth, onHistoryChange
       const w = Math.abs(x - x0);
       const h = Math.abs(y - y0);
       setDraft({ ...(draft as RectShape), x: nx, y: ny, width: w, height: h });
+    } else if (draft.type === 'qcurve') {
+      // keep start fixed, update end, derive control as midpoint
+      const p0x = draft.points[0];
+      const p0y = draft.points[1];
+      const cx = (p0x + x) / 2;
+      const cy = (p0y + y) / 2;
+      setDraft({ ...draft, points: [p0x, p0y, cx, cy, x, y] });
+    } else if (draft.type === 'ccurve') {
+      // derive control points at 1/3 & 2/3 along straight line initial
+      const p0x = draft.points[0];
+      const p0y = draft.points[1];
+      const cx1 = p0x + (x - p0x) / 3;
+      const cy1 = p0y + (y - p0y) / 3;
+      const cx2 = p0x + 2 * (x - p0x) / 3;
+      const cy2 = p0y + 2 * (y - p0y) / 3;
+      setDraft({ ...draft, points: [p0x, p0y, cx1, cy1, cx2, cy2, x, y] });
     }
   }, [draft]);
 
@@ -109,7 +143,11 @@ export function useDrawing({ tool = 'line', stroke, strokeWidth, onHistoryChange
 
   const onLineDragEnd = useCallback((payload: { id: string; points: number[] }) => {
     setShapes((prev) =>
-      prev.map((s) => (s.id === payload.id && s.type === 'line' ? { ...s, points: payload.points } : s))
+      prev.map((s) => (
+        s.id === payload.id && (s.type === 'line' || s.type === 'qcurve' || s.type === 'ccurve')
+          ? { ...s, points: payload.points }
+          : s
+      ))
     );
     // dragging is a new action; clear redo stack
     redoStack.current = [];
@@ -119,7 +157,7 @@ export function useDrawing({ tool = 'line', stroke, strokeWidth, onHistoryChange
   const onLineChange = useCallback((payload: { id: string; points?: number[]; rotation?: number }) => {
     setShapes((prev) =>
       prev.map((s) =>
-        s.id === payload.id && s.type === 'line'
+        s.id === payload.id && (s.type === 'line' || s.type === 'qcurve' || s.type === 'ccurve')
           ? { ...s, ...(payload.points ? { points: payload.points } : {}), ...(payload.rotation != null ? { rotation: payload.rotation } : {}) }
           : s
       )
@@ -128,7 +166,11 @@ export function useDrawing({ tool = 'line', stroke, strokeWidth, onHistoryChange
 
   const onLineStyleChange = useCallback((payload: { id: string; lineJoin?: 'miter' | 'round' | 'bevel' }) => {
     setShapes((prev) =>
-      prev.map((s) => (s.id === payload.id && s.type === 'line' ? { ...s, ...(payload.lineJoin ? { lineJoin: payload.lineJoin } : {}) } : s))
+      prev.map((s) => (
+        s.id === payload.id && s.type === 'line'
+          ? { ...s, ...(payload.lineJoin ? { lineJoin: payload.lineJoin } : {}) }
+          : s
+      ))
     );
   }, []);
 

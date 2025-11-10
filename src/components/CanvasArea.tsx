@@ -132,13 +132,13 @@ export const CanvasArea = React.forwardRef<CanvasAreaHandle, CanvasAreaProps>(
 							);
 						})}
 					</KonvaGroup>
-					{isSelected && (
+								{isSelected && (
 						<Transformer
 							ref={trRef}
 							rotateEnabled
 							resizeEnabled
 							keepRatio={false}
-							boundBoxFunc={(oldBox, newBox) => {
+										boundBoxFunc={(oldBox: any, newBox: any) => {
 								if (newBox.width < 1 || newBox.height < 1) return oldBox;
 								return newBox;
 							}}
@@ -161,6 +161,7 @@ export const CanvasArea = React.forwardRef<CanvasAreaHandle, CanvasAreaProps>(
 				ref={containerRef}
 				style={{ position: 'relative', width: '100%', height: '100%', background: '#ffffff' }}
 			>
+				{/* @ts-expect-error: react-konva Stage children typing workaround */}
 				<Stage
 					ref={stageRef}
 					width={size.width}

@@ -33,7 +33,7 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({ shapes, groups, select
   const canGroup = selectedIds.length >= 2;
 
   return (
-    <div style={{ width: 240, borderLeft: '1px solid #e5e7eb', background: '#ffffff', display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div style={{ width: 240, borderRight: '1px solid #e5e7eb', background: '#ffffff', display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div style={{ padding: '8px 12px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: 8 }}>
         <strong style={{ fontSize: 13 }}>Layers</strong>
         <button type="button" style={{ fontSize: 11, marginLeft: 'auto' }} onClick={onClearSelection}>Clear Sel</button>

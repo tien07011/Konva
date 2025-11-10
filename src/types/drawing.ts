@@ -1,6 +1,6 @@
 // Common drawing types for shapes and tools
 
-export type ToolType = 'none' | 'line' | 'rect'; // extend: 'ellipse' | 'arrow' | 'pen' | ...
+export type ToolType = 'none' | 'line' | 'rect' | 'qcurve' | 'ccurve'; // mở rộng thêm: đường cong bậc 2 (qcurve) & bậc 3 (ccurve)
 
 export interface BaseShape {
   id: string;
@@ -16,6 +16,18 @@ export interface LineShape extends BaseShape {
   lineJoin?: 'miter' | 'round' | 'bevel'; // kiểu nối giữa các đoạn
 }
 
+// Quadratic Bézier curve: [x0, y0, cx, cy, x1, y1]
+export interface QuadraticCurveShape extends BaseShape {
+  type: 'qcurve';
+  points: number[]; // phải có length = 6
+}
+
+// Cubic Bézier curve: [x0, y0, cx1, cy1, cx2, cy2, x1, y1]
+export interface CubicCurveShape extends BaseShape {
+  type: 'ccurve';
+  points: number[]; // phải có length = 8
+}
+
 export interface RectShape extends BaseShape {
   type: 'rect';
   x: number;
@@ -24,7 +36,7 @@ export interface RectShape extends BaseShape {
   height: number;
 }
 
-export type AnyShape = LineShape | RectShape; // | CircleShape | ...
+export type AnyShape = LineShape | RectShape | QuadraticCurveShape | CubicCurveShape; // mở rộng thêm các dạng cong
 
 // Group tree for layer panel
 export interface ShapeGroup {

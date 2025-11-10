@@ -1,7 +1,9 @@
 import React from 'react';
-import type { AnyShape, LineShape, RectShape } from '../../types/drawing';
+import type { AnyShape, LineShape, RectShape, QuadraticCurveShape, CubicCurveShape } from '../../types/drawing';
 import { LineShapeNode } from './SymbolLine';
 import { RectShapeNode } from './SymbolRect';
+import { QuadraticCurveShapeNode } from './SymbolQuadratic';
+import { CubicCurveShapeNode } from './SymbolCubic';
 
 interface ShapeNodeProps {
   shape: AnyShape;
@@ -40,6 +42,34 @@ export const ShapeNode: React.FC<ShapeNodeProps> = ({ shape, isDraft = false, is
         onSelect={onSelect}
         onDragEnd={onRectDragEnd}
         onChange={onRectChange}
+      />
+    );
+  }
+
+  if (shape.type === 'qcurve') {
+    return (
+      <QuadraticCurveShapeNode
+        shape={shape as QuadraticCurveShape}
+        dashed={isDraft}
+        draggable={!isDraft}
+        isSelected={isSelected}
+        onSelect={onSelect}
+        onDragEnd={onLineDragEnd}
+        onChange={onLineChange}
+      />
+    );
+  }
+
+  if (shape.type === 'ccurve') {
+    return (
+      <CubicCurveShapeNode
+        shape={shape as CubicCurveShape}
+        dashed={isDraft}
+        draggable={!isDraft}
+        isSelected={isSelected}
+        onSelect={onSelect}
+        onDragEnd={onLineDragEnd}
+        onChange={onLineChange}
       />
     );
   }
