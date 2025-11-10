@@ -39,6 +39,14 @@ interface CanvasAreaProps {
     height?: number;
     rotation?: number;
   }) => void;
+  onCircleDragEnd?: (payload: { id: string; cx: number; cy: number }) => void;
+  onCircleChange?: (payload: {
+    id: string;
+    cx?: number;
+    cy?: number;
+    r?: number;
+    rotation?: number;
+  }) => void;
   selectedId?: string | null;
   onSelectShape?: (id: string | null) => void;
   onGroupDragEnd?: (payload: { id: string; x: number; y: number }) => void;
@@ -73,6 +81,8 @@ export const CanvasArea = React.forwardRef<CanvasAreaHandle, CanvasAreaProps>(
       onLineChange,
       onRectDragEnd,
       onRectChange,
+      onCircleDragEnd,
+      onCircleChange,
       selectedId = null,
       onSelectShape,
       onGroupDragEnd,
@@ -226,6 +236,8 @@ export const CanvasArea = React.forwardRef<CanvasAreaHandle, CanvasAreaProps>(
                   onLineChange={onLineChange}
                   onRectDragEnd={onRectDragEnd}
                   onRectChange={onRectChange}
+                  onCircleDragEnd={onCircleDragEnd}
+                  onCircleChange={onCircleChange}
                 />
               );
             })}
@@ -271,6 +283,10 @@ export const CanvasArea = React.forwardRef<CanvasAreaHandle, CanvasAreaProps>(
         const minY = Math.min(...ys);
         const maxY = Math.max(...ys);
         return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+      }
+      if (s.type === 'circle') {
+        const c = s as any;
+        return { x: c.cx - c.r, y: c.cy - c.r, w: c.r * 2, h: c.r * 2 };
       }
       if (s.type === 'path') {
         // approximate path bbox from commands
@@ -407,6 +423,8 @@ export const CanvasArea = React.forwardRef<CanvasAreaHandle, CanvasAreaProps>(
                   onLineChange={onLineChange}
                   onRectDragEnd={onRectDragEnd}
                   onRectChange={onRectChange}
+                  onCircleDragEnd={onCircleDragEnd}
+                  onCircleChange={onCircleChange}
                 />
               ))}
 
@@ -425,7 +443,7 @@ export const CanvasArea = React.forwardRef<CanvasAreaHandle, CanvasAreaProps>(
               />
             )}
           </Layer>
-  </StageAny>
+        </StageAny>
 
         {/* custom context menu */}
         {ctxMenu && (

@@ -44,6 +44,8 @@ export const DrawingCanvas = React.forwardRef<DrawingCanvasHandle, DrawingCanvas
       onShapeUpdate,
       onRectDragEnd,
       onRectChange,
+      onCircleDragEnd,
+      onCircleChange,
       groupShapes,
       ungroupGroup,
       groupDragEnd,
@@ -131,6 +133,8 @@ export const DrawingCanvas = React.forwardRef<DrawingCanvasHandle, DrawingCanvas
             onLineChange={onLineChange}
             onRectDragEnd={onRectDragEnd}
             onRectChange={onRectChange}
+            onCircleDragEnd={onCircleDragEnd}
+            onCircleChange={onCircleChange}
             onSelectShape={(id: string | null) => setSelectedId(id)}
             onMarqueeSelect={(ids) => {
               setSelectedShapeIds(ids);

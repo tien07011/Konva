@@ -3,6 +3,7 @@ import type {
   AnyShape,
   LineShape,
   RectShape,
+  CircleShape,
   QuadraticCurveShape,
   CubicCurveShape,
 } from '../../types/drawing';
@@ -10,6 +11,7 @@ import { LineShapeNode } from './SymbolLine';
 import { RectShapeNode } from './SymbolRect';
 import { QuadraticCurveShapeNode } from './SymbolQuadratic';
 import { CubicCurveShapeNode } from './SymbolCubic';
+import { CircleShapeNode } from './SymbolCircle';
 
 interface ShapeNodeProps {
   shape: AnyShape;
@@ -27,6 +29,14 @@ interface ShapeNodeProps {
     height?: number;
     rotation?: number;
   }) => void;
+  onCircleDragEnd?: (payload: { id: string; cx: number; cy: number }) => void;
+  onCircleChange?: (payload: {
+    id: string;
+    cx?: number;
+    cy?: number;
+    r?: number;
+    rotation?: number;
+  }) => void;
 }
 
 // Centralized shape renderer. Register new shapes here.
@@ -39,6 +49,8 @@ export const ShapeNode: React.FC<ShapeNodeProps> = ({
   onLineChange,
   onRectDragEnd,
   onRectChange,
+  onCircleDragEnd,
+  onCircleChange,
 }) => {
   if (shape.type === 'line') {
     return (
@@ -64,6 +76,20 @@ export const ShapeNode: React.FC<ShapeNodeProps> = ({
         onSelect={onSelect}
         onDragEnd={onRectDragEnd}
         onChange={onRectChange}
+      />
+    );
+  }
+
+  if (shape.type === 'circle') {
+    return (
+      <CircleShapeNode
+        shape={shape as CircleShape}
+        dashed={isDraft}
+        draggable={!isDraft}
+        isSelected={isSelected}
+        onSelect={onSelect}
+        onDragEnd={onCircleDragEnd}
+        onChange={onCircleChange}
       />
     );
   }

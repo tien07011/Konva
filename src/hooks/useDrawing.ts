@@ -5,6 +5,7 @@ import type {
   HistoryState,
   LineShape,
   RectShape,
+  CircleShape,
   ToolType,
   ShapeGroup,
   QuadraticCurveShape,
@@ -49,6 +50,14 @@ export interface UseDrawingResult {
     y?: number;
     width?: number;
     height?: number;
+    rotation?: number;
+  }) => void;
+  onCircleDragEnd: (payload: { id: string; cx: number; cy: number }) => void;
+  onCircleChange: (payload: {
+    id: string;
+    cx?: number;
+    cy?: number;
+    r?: number;
     rotation?: number;
   }) => void;
   // grouping
@@ -116,6 +125,17 @@ export function useDrawing({
           height: 0,
         };
         setDraft(d);
+      } else if (tool === 'circle') {
+        const d: CircleShape = {
+          id: nextId(),
+          type: 'circle',
+          stroke,
+          strokeWidth,
+          cx: x,
+          cy: y,
+          r: 0,
+        };
+        setDraft(d);
       } else if (tool === 'qcurve') {
         const d: QuadraticCurveShape = {
           id: nextId(),
@@ -152,6 +172,12 @@ export function useDrawing({
         const w = Math.abs(x - x0);
         const h = Math.abs(y - y0);
         setDraft({ ...(draft as RectShape), x: nx, y: ny, width: w, height: h });
+      } else if (draft.type === 'circle') {
+        // radius is distance from center to current pointer
+        const cx = (draft as CircleShape).cx;
+        const cy = (draft as CircleShape).cy;
+        const r = Math.sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
+        setDraft({ ...(draft as CircleShape), r });
       } else if (draft.type === 'qcurve') {
         // keep start fixed, update end, derive control as midpoint
         const p0x = draft.points[0];
@@ -242,6 +268,21 @@ export function useDrawing({
     [notifyHistory],
   );
 
+  const onCircleDragEnd = useCallback(
+    (payload: { id: string; cx: number; cy: number }) => {
+      setShapes((prev) =>
+        prev.map((s) =>
+          s.id === payload.id && s.type === 'circle'
+            ? { ...(s as CircleShape), cx: payload.cx, cy: payload.cy }
+            : s,
+        ),
+      );
+      redoStack.current = [];
+      notifyHistory();
+    },
+    [notifyHistory],
+  );
+
   const onRectChange = useCallback(
     (payload: {
       id: string;
@@ -260,6 +301,25 @@ export function useDrawing({
                 ...(payload.y !== undefined ? { y: payload.y } : {}),
                 ...(payload.width !== undefined ? { width: payload.width } : {}),
                 ...(payload.height !== undefined ? { height: payload.height } : {}),
+                ...(payload.rotation !== undefined ? { rotation: payload.rotation } : {}),
+              }
+            : s,
+        ),
+      );
+    },
+    [],
+  );
+
+  const onCircleChange = useCallback(
+    (payload: { id: string; cx?: number; cy?: number; r?: number; rotation?: number }) => {
+      setShapes((prev) =>
+        prev.map((s) =>
+          s.id === payload.id && s.type === 'circle'
+            ? {
+                ...(s as CircleShape),
+                ...(payload.cx !== undefined ? { cx: payload.cx } : {}),
+                ...(payload.cy !== undefined ? { cy: payload.cy } : {}),
+                ...(payload.r !== undefined ? { r: Math.max(1, payload.r) } : {}),
                 ...(payload.rotation !== undefined ? { rotation: payload.rotation } : {}),
               }
             : s,
@@ -439,6 +499,8 @@ export function useDrawing({
       onShapeUpdate,
       onRectDragEnd,
       onRectChange,
+      onCircleDragEnd,
+      onCircleChange,
       groupShapes,
       ungroupGroup,
       groupDragEnd,
@@ -461,6 +523,8 @@ export function useDrawing({
       onShapeUpdate,
       onRectDragEnd,
       onRectChange,
+      onCircleDragEnd,
+      onCircleChange,
       groupShapes,
       ungroupGroup,
       groupDragEnd,

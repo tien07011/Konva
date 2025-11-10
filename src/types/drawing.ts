@@ -1,6 +1,6 @@
 // Common drawing types for shapes and tools
 
-export type ToolType = 'none' | 'line' | 'rect' | 'qcurve' | 'ccurve' | 'path'; // thêm custom path
+export type ToolType = 'none' | 'line' | 'rect' | 'circle' | 'qcurve' | 'ccurve' | 'path'; // thêm custom path
 
 export interface BaseShape {
   id: string;
@@ -36,6 +36,13 @@ export interface RectShape extends BaseShape {
   height: number;
 }
 
+export interface CircleShape extends BaseShape {
+  type: 'circle';
+  cx: number;
+  cy: number;
+  r: number;
+}
+
 // Custom Path
 export type PathCommand =
   | { cmd: 'M'; x: number; y: number }
@@ -49,7 +56,13 @@ export interface PathShape extends BaseShape {
   commands: PathCommand[];
 }
 
-export type AnyShape = LineShape | RectShape | QuadraticCurveShape | CubicCurveShape | PathShape; // mở rộng thêm các dạng cong
+export type AnyShape =
+  | LineShape
+  | RectShape
+  | CircleShape
+  | QuadraticCurveShape
+  | CubicCurveShape
+  | PathShape; // mở rộng thêm các dạng cong
 
 // Group tree for layer panel
 export interface ShapeGroup {

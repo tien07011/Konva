@@ -5,6 +5,7 @@ import type {
   PathCommand,
   LineShape,
   RectShape,
+  CircleShape,
   QuadraticCurveShape,
   CubicCurveShape,
 } from '../types/drawing';
@@ -239,7 +240,7 @@ function shapeToOutShape(
   let verbose: VerboseCommand[] = [];
   let translate: { x: number; y: number } | undefined;
   if (s.type === 'line') {
-  const pts = (s as LineShape).points.slice();
+    const pts = (s as LineShape).points.slice();
     if (normalize === 'translateMinToOrigin' && pts.length >= 2) {
       let minX = pts[0];
       let minY = pts[1];
@@ -260,6 +261,29 @@ function shapeToOutShape(
     const res = rectShapeToCommands(s as RectShape, precision);
     commands = res.compact;
     verbose = res.verbose;
+  } else if (s.type === 'circle') {
+    // Approximate circle as a 4-point path (or export as a centered translate with radius as scale).
+    // We'll output as a path: move to rightmost point, then use 4 cubic curves could be heavy; instead, use a polygonal approximation.
+    const c = s as CircleShape;
+    const steps = 16;
+    const pts: OutPathCommand[] = [];
+    const vOps: VerboseCommand[] = [];
+    for (let i = 0; i < steps; i++) {
+      const ang = (i / steps) * Math.PI * 2;
+      const x = c.cx + c.r * Math.cos(ang);
+      const y = c.cy + c.r * Math.sin(ang);
+      if (i === 0) {
+        pts.push({ cmd: 'M', x: round(x, precision), y: round(y, precision) });
+        vOps.push({ type: 'moveTo', x: round(x, precision), y: round(y, precision) });
+      } else {
+        pts.push({ cmd: 'L', x: round(x, precision), y: round(y, precision) });
+        vOps.push({ type: 'lineTo', x: round(x, precision), y: round(y, precision) });
+      }
+    }
+    pts.push({ cmd: 'Z' });
+    vOps.push({ type: 'closePath' });
+    commands = pts;
+    verbose = vOps;
   } else if (s.type === 'qcurve') {
     const res = qCurveToCommands(s as QuadraticCurveShape, precision);
     commands = res.compact;

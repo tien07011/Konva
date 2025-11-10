@@ -1,6 +1,7 @@
 import React from 'react';
 import { SymbolLine } from './shapes/SymbolLine';
 import { SymbolRect } from './shapes/SymbolRect';
+import { SymbolCircle } from './shapes/SymbolCircle';
 import { SymbolQuadratic } from './shapes/SymbolQuadratic';
 import { SymbolCubic } from './shapes/SymbolCubic';
 import type { ToolType } from '../types/drawing';
@@ -50,6 +51,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({
         background: '#fafafa',
         position: 'sticky',
         top: 0,
+        height: 44,
         zIndex: 10,
       }}
     >
@@ -81,6 +83,20 @@ export const MenuBar: React.FC<MenuBarProps> = ({
           }}
         >
           <SymbolRect stroke={strokeColor} strokeWidth={strokeWidth} />
+        </button>
+        <button
+          type="button"
+          onClick={() => onToolChange?.('circle')}
+          aria-pressed={tool === 'circle'}
+          title="Công cụ: Hình tròn"
+          style={{
+            padding: 4,
+            border: tool === 'circle' ? '2px solid #2563eb' : '1px solid #e5e7eb',
+            borderRadius: 8,
+            background: tool === 'circle' ? '#eff6ff' : '#ffffff',
+          }}
+        >
+          <SymbolCircle stroke={strokeColor} strokeWidth={strokeWidth} />
         </button>
         <button
           type="button"

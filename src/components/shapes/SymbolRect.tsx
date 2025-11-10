@@ -147,7 +147,7 @@ export const SymbolRect: React.FC<{ size?: number; stroke?: string; strokeWidth?
       aria-label="Biểu tượng công cụ vẽ hình chữ nhật"
       title="Công cụ: Hình chữ nhật"
     >
-          <StageAny width={size} height={size} style={{ display: 'block', borderRadius: 6 }}>
+      <StageAny width={size} height={size} style={{ display: 'block', borderRadius: 6 }}>
         <Layer>
           <KonvaRect
             x={pad}
@@ -158,7 +158,7 @@ export const SymbolRect: React.FC<{ size?: number; stroke?: string; strokeWidth?
             strokeWidth={strokeWidth}
           />
         </Layer>
-          </StageAny>
+      </StageAny>
     </div>
   );
 };
