@@ -18,9 +18,9 @@ export type VerboseCommand =
 export interface Shape {
   id: string;
   // type: 'line' | 'rectangle' | 'path' | ... (tự do hoá ở layer trên)
-  commands?: PathCommand[];     // Custom path commands
-  ops?: VerboseCommand[];       // Bản dễ đọc hơn (ưu tiên sử dụng)
-  d?: string;                   // Back-compat: chuỗi SVG nếu cần
+  commands?: PathCommand[]; // Custom path commands
+  ops?: VerboseCommand[]; // Bản dễ đọc hơn (ưu tiên sử dụng)
+  d?: string; // Back-compat: chuỗi SVG nếu cần
   stroke?: string;
   strokeWidth?: number;
   fill?: string;

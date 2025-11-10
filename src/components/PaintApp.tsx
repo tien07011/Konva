@@ -52,7 +52,7 @@ export const PaintApp: React.FC = () => {
           URL.revokeObjectURL(url);
         }}
         showGrid={showGrid}
-        onToggleGrid={() => setShowGrid(g => !g)}
+        onToggleGrid={() => setShowGrid((g) => !g)}
       />
 
       <div style={{ display: 'flex', flex: 1 }}>

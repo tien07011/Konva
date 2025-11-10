@@ -11,7 +11,15 @@ export const QuadraticCurveShapeNode: React.FC<{
   isSelected?: boolean;
   onSelect?: (id: string) => void;
   onChange?: (payload: { id: string; points?: number[]; rotation?: number }) => void;
-}> = ({ shape, dashed = false, draggable = false, onDragEnd, isSelected = false, onSelect, onChange }) => {
+}> = ({
+  shape,
+  dashed = false,
+  draggable = false,
+  onDragEnd,
+  isSelected = false,
+  onSelect,
+  onChange,
+}) => {
   const pts = shape.points; // [x0,y0,cx,cy,x1,y1]
   const anchors = [
     { x: pts[0], y: pts[1], idx: 0, role: 'start' },
@@ -21,8 +29,12 @@ export const QuadraticCurveShapeNode: React.FC<{
   return (
     <KonvaGroup
       draggable={!dashed && draggable}
-      onMouseDown={(e: any) => { e.cancelBubble = true; }}
-      onTouchStart={(e: any) => { e.cancelBubble = true; }}
+      onMouseDown={(e: any) => {
+        e.cancelBubble = true;
+      }}
+      onTouchStart={(e: any) => {
+        e.cancelBubble = true;
+      }}
       onClick={() => onSelect?.(shape.id)}
       onTap={() => onSelect?.(shape.id)}
       onDragEnd={(e: any) => {
@@ -34,8 +46,14 @@ export const QuadraticCurveShapeNode: React.FC<{
         node.position({ x: 0, y: 0 });
         onDragEnd({ id: shape.id, points: next });
       }}
-      onMouseEnter={(e: any) => { const st = e.target.getStage(); if (st) st.container().style.cursor = 'pointer'; }}
-      onMouseLeave={(e: any) => { const st = e.target.getStage(); if (st) st.container().style.cursor = 'default'; }}
+      onMouseEnter={(e: any) => {
+        const st = e.target.getStage();
+        if (st) st.container().style.cursor = 'pointer';
+      }}
+      onMouseLeave={(e: any) => {
+        const st = e.target.getStage();
+        if (st) st.container().style.cursor = 'default';
+      }}
     >
       <KonvaShape
         stroke={shape.stroke}
@@ -69,40 +87,52 @@ export const QuadraticCurveShapeNode: React.FC<{
           }}
         />
       )}
-      {!dashed && isSelected && anchors.map((a, i) => (
-        <Circle
-          key={`qc-anchor-${shape.id}-${i}`}
-          x={a.x}
-          y={a.y}
-          radius={a.role === 'control' ? 5 : 6}
-          fill={a.role === 'control' ? '#fef3c7' : '#ffffff'}
-          stroke={a.role === 'control' ? '#d97706' : '#2563eb'}
-          strokeWidth={2}
-          draggable
-          perfectDrawEnabled={false}
-          shadowForStrokeEnabled={false}
-          onMouseDown={(e: any) => { e.cancelBubble = true; }}
-          onTouchStart={(e: any) => { e.cancelBubble = true; }}
-          onDragMove={(e: any) => {
-            if (!onChange) return;
-            const stage = e.target.getStage();
-            if (!stage) return;
-            const pos = stage.getPointerPosition();
-            if (!pos) return;
-            const next = pts.slice();
-            next[a.idx] = pos.x;
-            next[a.idx + 1] = pos.y;
-            onChange({ id: shape.id, points: next });
-          }}
-          onDragEnd={(e: any) => { e.cancelBubble = true; }}
-        />
-      ))}
+      {!dashed &&
+        isSelected &&
+        anchors.map((a, i) => (
+          <Circle
+            key={`qc-anchor-${shape.id}-${i}`}
+            x={a.x}
+            y={a.y}
+            radius={a.role === 'control' ? 5 : 6}
+            fill={a.role === 'control' ? '#fef3c7' : '#ffffff'}
+            stroke={a.role === 'control' ? '#d97706' : '#2563eb'}
+            strokeWidth={2}
+            draggable
+            perfectDrawEnabled={false}
+            shadowForStrokeEnabled={false}
+            onMouseDown={(e: any) => {
+              e.cancelBubble = true;
+            }}
+            onTouchStart={(e: any) => {
+              e.cancelBubble = true;
+            }}
+            onDragMove={(e: any) => {
+              if (!onChange) return;
+              const stage = e.target.getStage();
+              if (!stage) return;
+              const pos = stage.getPointerPosition();
+              if (!pos) return;
+              const next = pts.slice();
+              next[a.idx] = pos.x;
+              next[a.idx + 1] = pos.y;
+              onChange({ id: shape.id, points: next });
+            }}
+            onDragEnd={(e: any) => {
+              e.cancelBubble = true;
+            }}
+          />
+        ))}
     </KonvaGroup>
   );
 };
 
 // Icon preview for quadratic curve tool
-export const SymbolQuadratic: React.FC<{ size?: number; stroke?: string; strokeWidth?: number }> = ({ size = 36, stroke = '#111827', strokeWidth = 4 }) => {
+export const SymbolQuadratic: React.FC<{
+  size?: number;
+  stroke?: string;
+  strokeWidth?: number;
+}> = ({ size = 36, stroke = '#111827', strokeWidth = 4 }) => {
   const pad = Math.max(3, Math.ceil(strokeWidth / 2) + 2);
   const x0 = pad;
   const y0 = size - pad;

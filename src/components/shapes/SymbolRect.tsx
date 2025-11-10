@@ -10,9 +10,23 @@ export const RectShapeNode: React.FC<{
   onDragEnd?: (payload: { id: string; x: number; y: number }) => void;
   isSelected?: boolean;
   onSelect?: (id: string) => void;
-  onChange?: (payload: { id: string; x?: number; y?: number; width?: number; height?: number; rotation?: number }) => void;
-}>
-  = ({ shape, dashed = false, draggable = false, onDragEnd, isSelected = false, onSelect, onChange }) => {
+  onChange?: (payload: {
+    id: string;
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+    rotation?: number;
+  }) => void;
+}> = ({
+  shape,
+  dashed = false,
+  draggable = false,
+  onDragEnd,
+  isSelected = false,
+  onSelect,
+  onChange,
+}) => {
   const rectRef = useRef<any>(null);
   const trRef = useRef<any>(null);
 
@@ -42,8 +56,12 @@ export const RectShapeNode: React.FC<{
         draggable={!dashed && draggable}
         perfectDrawEnabled={false}
         shadowForStrokeEnabled={false}
-        onMouseDown={(e: any) => { e.cancelBubble = true; }}
-        onTouchStart={(e: any) => { e.cancelBubble = true; }}
+        onMouseDown={(e: any) => {
+          e.cancelBubble = true;
+        }}
+        onTouchStart={(e: any) => {
+          e.cancelBubble = true;
+        }}
         onClick={() => onSelect?.(shape.id)}
         onTap={() => onSelect?.(shape.id)}
         onDragEnd={(e: any) => {
@@ -106,8 +124,11 @@ export const RectShapeNode: React.FC<{
 };
 
 // Small icon component to preview a rectangle tool
-export const SymbolRect: React.FC<{ size?: number; stroke?: string; strokeWidth?: number }>
-  = ({ size = 36, stroke = '#111827', strokeWidth = 4 }) => {
+export const SymbolRect: React.FC<{ size?: number; stroke?: string; strokeWidth?: number }> = ({
+  size = 36,
+  stroke = '#111827',
+  strokeWidth = 4,
+}) => {
   const pad = Math.max(3, Math.ceil(strokeWidth / 2) + 3);
   const s = size - pad * 2;
   return (
@@ -125,8 +146,8 @@ export const SymbolRect: React.FC<{ size?: number; stroke?: string; strokeWidth?
       aria-label="Biểu tượng công cụ vẽ hình chữ nhật"
       title="Công cụ: Hình chữ nhật"
     >
-  {/* @ts-ignore: Stage children typing issue */}
-  <Stage width={size} height={size} style={{ display: 'block', borderRadius: 6 }}>
+      {/* @ts-ignore: Stage children typing issue */}
+      <Stage width={size} height={size} style={{ display: 'block', borderRadius: 6 }}>
         <Layer>
           <KonvaRect
             x={pad}

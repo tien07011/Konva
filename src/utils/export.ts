@@ -1,5 +1,20 @@
-import type { AnyShape, ShapeGroup, PathShape, PathCommand, LineShape, RectShape, QuadraticCurveShape, CubicCurveShape } from '../types/drawing';
-import type { Screen as OutScreen, Shape as OutShape, Group as OutGroup, PathCommand as OutPathCommand, VerboseCommand } from '../types/interface';
+import type {
+  AnyShape,
+  ShapeGroup,
+  PathShape,
+  PathCommand,
+  LineShape,
+  RectShape,
+  QuadraticCurveShape,
+  CubicCurveShape,
+} from '../types/drawing';
+import type {
+  Screen as OutScreen,
+  Shape as OutShape,
+  Group as OutGroup,
+  PathCommand as OutPathCommand,
+  VerboseCommand,
+} from '../types/interface';
 
 export interface ExportOptions {
   id?: string;
@@ -15,7 +30,10 @@ function round(n: number, p: number) {
 }
 
 // Helpers to convert runtime shapes into PathCommand[]
-function lineShapeToCommands(s: LineShape, precision: number): { compact: OutPathCommand[]; verbose: VerboseCommand[] } {
+function lineShapeToCommands(
+  s: LineShape,
+  precision: number,
+): { compact: OutPathCommand[]; verbose: VerboseCommand[] } {
   const r = (v: number) => (Number.isFinite(v) ? round(v, precision) : 0);
   const pts = s.points;
   if (pts.length < 2) return { compact: [], verbose: [] };
@@ -28,7 +46,10 @@ function lineShapeToCommands(s: LineShape, precision: number): { compact: OutPat
   return { compact, verbose };
 }
 
-function rectShapeToCommands(s: RectShape, precision: number): { compact: OutPathCommand[]; verbose: VerboseCommand[] } {
+function rectShapeToCommands(
+  s: RectShape,
+  precision: number,
+): { compact: OutPathCommand[]; verbose: VerboseCommand[] } {
   const r = (v: number) => (Number.isFinite(v) ? round(v, precision) : 0);
   const x = r(s.x);
   const y = r(s.y);
@@ -52,7 +73,10 @@ function rectShapeToCommands(s: RectShape, precision: number): { compact: OutPat
   };
 }
 
-function qCurveToCommands(s: QuadraticCurveShape, precision: number): { compact: OutPathCommand[]; verbose: VerboseCommand[] } {
+function qCurveToCommands(
+  s: QuadraticCurveShape,
+  precision: number,
+): { compact: OutPathCommand[]; verbose: VerboseCommand[] } {
   const p = s.points;
   if (p.length !== 6) return { compact: [], verbose: [] };
   const r = (v: number) => (Number.isFinite(v) ? round(v, precision) : 0);
@@ -68,7 +92,10 @@ function qCurveToCommands(s: QuadraticCurveShape, precision: number): { compact:
   };
 }
 
-function cCurveToCommands(s: CubicCurveShape, precision: number): { compact: OutPathCommand[]; verbose: VerboseCommand[] } {
+function cCurveToCommands(
+  s: CubicCurveShape,
+  precision: number,
+): { compact: OutPathCommand[]; verbose: VerboseCommand[] } {
   const p = s.points;
   if (p.length !== 8) return { compact: [], verbose: [] };
   const r = (v: number) => (Number.isFinite(v) ? round(v, precision) : 0);
@@ -79,12 +106,23 @@ function cCurveToCommands(s: CubicCurveShape, precision: number): { compact: Out
     ],
     verbose: [
       { type: 'moveTo', x: r(p[0]), y: r(p[1]) },
-      { type: 'cubicCurveTo', x1: r(p[2]), y1: r(p[3]), x2: r(p[4]), y2: r(p[5]), x: r(p[6]), y: r(p[7]) },
+      {
+        type: 'cubicCurveTo',
+        x1: r(p[2]),
+        y1: r(p[3]),
+        x2: r(p[4]),
+        y2: r(p[5]),
+        x: r(p[6]),
+        y: r(p[7]),
+      },
     ],
   };
 }
 
-function pathShapeToCommands(s: PathShape, precision: number): { compact: OutPathCommand[]; verbose: VerboseCommand[] } {
+function pathShapeToCommands(
+  s: PathShape,
+  precision: number,
+): { compact: OutPathCommand[]; verbose: VerboseCommand[] } {
   // Already absolute; just round values
   const r = (v: number) => (Number.isFinite(v) ? round(v, precision) : 0);
   const compact: OutPathCommand[] = [];
@@ -104,8 +142,24 @@ function pathShapeToCommands(s: PathShape, precision: number): { compact: OutPat
         verbose.push({ type: 'quadraticCurveTo', cx: r(c.cx), cy: r(c.cy), x: r(c.x), y: r(c.y) });
         break;
       case 'C':
-        compact.push({ cmd: 'C', x1: r(c.x1), y1: r(c.y1), x2: r(c.x2), y2: r(c.y2), x: r(c.x), y: r(c.y) });
-        verbose.push({ type: 'cubicCurveTo', x1: r(c.x1), y1: r(c.y1), x2: r(c.x2), y2: r(c.y2), x: r(c.x), y: r(c.y) });
+        compact.push({
+          cmd: 'C',
+          x1: r(c.x1),
+          y1: r(c.y1),
+          x2: r(c.x2),
+          y2: r(c.y2),
+          x: r(c.x),
+          y: r(c.y),
+        });
+        verbose.push({
+          type: 'cubicCurveTo',
+          x1: r(c.x1),
+          y1: r(c.y1),
+          x2: r(c.x2),
+          y2: r(c.y2),
+          x: r(c.x),
+          y: r(c.y),
+        });
         break;
       case 'Z':
         compact.push({ cmd: 'Z' });
@@ -117,22 +171,38 @@ function pathShapeToCommands(s: PathShape, precision: number): { compact: OutPat
 }
 
 export function buildScreenFromShapes(shapes: AnyShape[], opts: ExportOptions = {}): OutScreen {
-  const { id = 'screen_1', name = 'Canvas', background = '#ffffff', precision = 2, normalize = 'none' } = opts;
+  const {
+    id = 'screen_1',
+    name = 'Canvas',
+    background = '#ffffff',
+    precision = 2,
+    normalize = 'none',
+  } = opts;
 
   const outShapes: OutShape[] = shapes.map((s) => shapeToOutShape(s, precision, normalize));
   return { id, name, shapes: outShapes, groups: [], background };
 }
 
 // New: build screen with groups and shapes (shapes inside groups are not duplicated at root)
-export function buildScreen(shapes: AnyShape[], groups: ShapeGroup[], opts: ExportOptions = {}): OutScreen {
-  const { id = 'screen_1', name = 'Canvas', background = '#ffffff', precision = 2, normalize = 'none' } = opts;
+export function buildScreen(
+  shapes: AnyShape[],
+  groups: ShapeGroup[],
+  opts: ExportOptions = {},
+): OutScreen {
+  const {
+    id = 'screen_1',
+    name = 'Canvas',
+    background = '#ffffff',
+    precision = 2,
+    normalize = 'none',
+  } = opts;
   const shapeMap = new Map<string, AnyShape>();
-  shapes.forEach(s => shapeMap.set(s.id, s));
+  shapes.forEach((s) => shapeMap.set(s.id, s));
 
   const groupedIds = new Set<string>();
   const collect = (list: ShapeGroup[]) => {
-    list.forEach(g => {
-      g.shapeIds.forEach(id => groupedIds.add(id));
+    list.forEach((g) => {
+      g.shapeIds.forEach((id) => groupedIds.add(id));
       collect(g.groups);
     });
   };
@@ -140,24 +210,31 @@ export function buildScreen(shapes: AnyShape[], groups: ShapeGroup[], opts: Expo
 
   const toOutGroup = (g: ShapeGroup): OutGroup => {
     const childShapes: OutShape[] = g.shapeIds
-      .map(id => shapeMap.get(id))
+      .map((id) => shapeMap.get(id))
       .filter(Boolean)
-      .map(s => shapeToOutShape(s!, precision, normalize));
-    const childGroups: OutGroup[] = g.groups.map(child => toOutGroup(child));
+      .map((s) => shapeToOutShape(s!, precision, normalize));
+    const childGroups: OutGroup[] = g.groups.map((child) => toOutGroup(child));
     const out: OutGroup = { id: g.id, shapes: childShapes, groups: childGroups };
     if (g.rotation != null) out.rotation = round(g.rotation, precision);
-    if (g.translate) out.translate = { x: round(g.translate.x, precision), y: round(g.translate.y, precision) };
+    if (g.translate)
+      out.translate = { x: round(g.translate.x, precision), y: round(g.translate.y, precision) };
     if (g.scale) out.scale = round(g.scale.x, precision); // uniform scale
     return out;
   };
 
-  const outShapes: OutShape[] = shapes.filter(s => !groupedIds.has(s.id)).map(s => shapeToOutShape(s, precision, normalize));
-  const outGroups: OutGroup[] = groups.map(g => toOutGroup(g));
+  const outShapes: OutShape[] = shapes
+    .filter((s) => !groupedIds.has(s.id))
+    .map((s) => shapeToOutShape(s, precision, normalize));
+  const outGroups: OutGroup[] = groups.map((g) => toOutGroup(g));
   return { id, name, shapes: outShapes, groups: outGroups, background };
 }
 
 // Core conversion for single shape
-function shapeToOutShape(s: AnyShape, precision: number, normalize: ExportOptions['normalize']): OutShape {
+function shapeToOutShape(
+  s: AnyShape,
+  precision: number,
+  normalize: ExportOptions['normalize'],
+): OutShape {
   let commands: OutPathCommand[] = [];
   let verbose: VerboseCommand[] = [];
   let translate: { x: number; y: number } | undefined;
@@ -176,27 +253,33 @@ function shapeToOutShape(s: AnyShape, precision: number, normalize: ExportOption
       }
       translate = { x: round(minX, precision), y: round(minY, precision) };
     }
-  const res = lineShapeToCommands({ ...(s as LineShape), points: pts }, precision);
-  commands = res.compact;
-  verbose = res.verbose;
+    const res = lineShapeToCommands({ ...(s as LineShape), points: pts }, precision);
+    commands = res.compact;
+    verbose = res.verbose;
   } else if (s.type === 'rect') {
-  const res = rectShapeToCommands(s as RectShape, precision);
-  commands = res.compact;
-  verbose = res.verbose;
+    const res = rectShapeToCommands(s as RectShape, precision);
+    commands = res.compact;
+    verbose = res.verbose;
   } else if (s.type === 'qcurve') {
-  const res = qCurveToCommands(s as QuadraticCurveShape, precision);
-  commands = res.compact;
-  verbose = res.verbose;
+    const res = qCurveToCommands(s as QuadraticCurveShape, precision);
+    commands = res.compact;
+    verbose = res.verbose;
   } else if (s.type === 'ccurve') {
-  const res = cCurveToCommands(s as CubicCurveShape, precision);
-  commands = res.compact;
-  verbose = res.verbose;
+    const res = cCurveToCommands(s as CubicCurveShape, precision);
+    commands = res.compact;
+    verbose = res.verbose;
   } else if (s.type === 'path') {
     const res = pathShapeToCommands(s as PathShape, precision);
     commands = res.compact;
     verbose = res.verbose;
   }
-  const out: OutShape = { id: s.id, commands, ops: verbose, stroke: s.stroke, strokeWidth: s.strokeWidth };
+  const out: OutShape = {
+    id: s.id,
+    commands,
+    ops: verbose,
+    stroke: s.stroke,
+    strokeWidth: s.strokeWidth,
+  };
   if (s.rotation != null) out.rotation = round(s.rotation, precision);
   if (translate) out.translate = translate;
   return out;

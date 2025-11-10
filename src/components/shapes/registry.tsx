@@ -1,5 +1,11 @@
 import React from 'react';
-import type { AnyShape, LineShape, RectShape, QuadraticCurveShape, CubicCurveShape } from '../../types/drawing';
+import type {
+  AnyShape,
+  LineShape,
+  RectShape,
+  QuadraticCurveShape,
+  CubicCurveShape,
+} from '../../types/drawing';
 import { LineShapeNode } from './SymbolLine';
 import { RectShapeNode } from './SymbolRect';
 import { QuadraticCurveShapeNode } from './SymbolQuadratic';
@@ -13,11 +19,27 @@ interface ShapeNodeProps {
   onLineDragEnd?: (payload: { id: string; points: number[] }) => void;
   onLineChange?: (payload: { id: string; points?: number[]; rotation?: number }) => void;
   onRectDragEnd?: (payload: { id: string; x: number; y: number }) => void;
-  onRectChange?: (payload: { id: string; x?: number; y?: number; width?: number; height?: number; rotation?: number }) => void;
+  onRectChange?: (payload: {
+    id: string;
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+    rotation?: number;
+  }) => void;
 }
 
 // Centralized shape renderer. Register new shapes here.
-export const ShapeNode: React.FC<ShapeNodeProps> = ({ shape, isDraft = false, isSelected = false, onSelect, onLineDragEnd, onLineChange, onRectDragEnd, onRectChange }) => {
+export const ShapeNode: React.FC<ShapeNodeProps> = ({
+  shape,
+  isDraft = false,
+  isSelected = false,
+  onSelect,
+  onLineDragEnd,
+  onLineChange,
+  onRectDragEnd,
+  onRectChange,
+}) => {
   if (shape.type === 'line') {
     return (
       <LineShapeNode

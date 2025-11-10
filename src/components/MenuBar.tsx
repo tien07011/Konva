@@ -123,25 +123,6 @@ export const MenuBar: React.FC<MenuBarProps> = ({
           title="Màu viền"
         />
       </label>
-
-      {/* <label
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 6,
-          minWidth: 220,
-        }}
-      >
-        Nét: {strokeWidth}px
-        <input
-          type="range"
-          min={1}
-          max={50}
-          value={strokeWidth}
-          onChange={(e) => onStrokeWidthChange(parseInt(e.target.value, 10))}
-        />
-      </label> */}
-
       <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
         <button
           type="button"

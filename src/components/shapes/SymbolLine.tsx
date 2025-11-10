@@ -11,8 +11,15 @@ export const LineShapeNode: React.FC<{
   isSelected?: boolean;
   onSelect?: (id: string) => void;
   onChange?: (payload: { id: string; points?: number[]; rotation?: number }) => void;
-}>
-  = ({ shape, dashed = false, draggable = false, onDragEnd, isSelected = false, onSelect, onChange }) => {
+}> = ({
+  shape,
+  dashed = false,
+  draggable = false,
+  onDragEnd,
+  isSelected = false,
+  onSelect,
+  onChange,
+}) => {
   const points = shape.points;
   const anchors: Array<{ x: number; y: number; idx: number }> = [];
   for (let i = 0; i < points.length; i += 2) {
@@ -39,7 +46,7 @@ export const LineShapeNode: React.FC<{
         }}
         onClick={() => onSelect?.(shape.id)}
         onTap={() => onSelect?.(shape.id)}
-  onDragEnd={(e: any) => {
+        onDragEnd={(e: any) => {
           if (!onDragEnd) return;
           const node = e.target as any; // Konva.Line
           const pos = node.position();
@@ -69,8 +76,12 @@ export const LineShapeNode: React.FC<{
               draggable
               perfectDrawEnabled={false}
               shadowForStrokeEnabled={false}
-              onMouseDown={(e: any) => { e.cancelBubble = true; }}
-              onTouchStart={(e: any) => { e.cancelBubble = true; }}
+              onMouseDown={(e: any) => {
+                e.cancelBubble = true;
+              }}
+              onTouchStart={(e: any) => {
+                e.cancelBubble = true;
+              }}
               onDblClick={() => {
                 if (!onChange) return;
                 if (points.length <= 4) return; // keep at least 2 points
@@ -89,7 +100,9 @@ export const LineShapeNode: React.FC<{
                 next[a.idx + 1] = pos.y;
                 onChange({ id: shape.id, points: next });
               }}
-              onDragEnd={(e: any) => { e.cancelBubble = true; }}
+              onDragEnd={(e: any) => {
+                e.cancelBubble = true;
+              }}
             />
           ))}
           {/* Midpoints for insertion */}
@@ -109,8 +122,12 @@ export const LineShapeNode: React.FC<{
                 draggable
                 perfectDrawEnabled={false}
                 shadowForStrokeEnabled={false}
-                onMouseDown={(e: any) => { e.cancelBubble = true; }}
-                onTouchStart={(e: any) => { e.cancelBubble = true; }}
+                onMouseDown={(e: any) => {
+                  e.cancelBubble = true;
+                }}
+                onTouchStart={(e: any) => {
+                  e.cancelBubble = true;
+                }}
                 onDragEnd={(e: any) => {
                   if (!onChange) return;
                   const stage = e.target.getStage();
@@ -141,8 +158,11 @@ export const LineShapeNode: React.FC<{
 };
 
 // Small icon component to preview a line tool
-export const SymbolLine: React.FC<{ size?: number; stroke?: string; strokeWidth?: number }>
-  = ({ size = 36, stroke = '#111827', strokeWidth = 4 }) => {
+export const SymbolLine: React.FC<{ size?: number; stroke?: string; strokeWidth?: number }> = ({
+  size = 36,
+  stroke = '#111827',
+  strokeWidth = 4,
+}) => {
   const padding = Math.max(3, Math.ceil(strokeWidth / 2) + 2);
   const points = [padding, size - padding, size - padding, padding];
 
@@ -161,8 +181,8 @@ export const SymbolLine: React.FC<{ size?: number; stroke?: string; strokeWidth?
       aria-label="Biểu tượng công cụ vẽ đường"
       title="Công cụ: Vẽ đường"
     >
-  {/* @ts-ignore: Stage children typing issue */}
-  <Stage width={size} height={size} style={{ display: 'block', borderRadius: 6 }}>
+      {/* @ts-ignore: Stage children typing issue */}
+      <Stage width={size} height={size} style={{ display: 'block', borderRadius: 6 }}>
         <Layer>
           <KonvaLine
             points={points}

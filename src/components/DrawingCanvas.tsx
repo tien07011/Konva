@@ -22,13 +22,40 @@ interface DrawingCanvasProps {
 }
 
 export const DrawingCanvas = React.forwardRef<DrawingCanvasHandle, DrawingCanvasProps>(
-  ({ strokeColor, strokeWidth, onHistoryChange, tool = 'line', onToolChange, showGrid = false }, ref) => {
-    const { shapes, groups, draft, canUndo, canRedo, clear, undo, redo, onMouseDown, onMouseMove, onMouseUp, onLineDragEnd, onLineChange, onLineStyleChange, onShapeUpdate, onRectDragEnd, onRectChange, groupShapes, ungroupGroup, groupDragEnd, groupChange } =
-      useDrawing({ tool, stroke: strokeColor, strokeWidth, onHistoryChange });
+  (
+    { strokeColor, strokeWidth, onHistoryChange, tool = 'line', onToolChange, showGrid = false },
+    ref,
+  ) => {
+    const {
+      shapes,
+      groups,
+      draft,
+      canUndo,
+      canRedo,
+      clear,
+      undo,
+      redo,
+      onMouseDown,
+      onMouseMove,
+      onMouseUp,
+      onLineDragEnd,
+      onLineChange,
+      onLineStyleChange,
+      onShapeUpdate,
+      onRectDragEnd,
+      onRectChange,
+      groupShapes,
+      ungroupGroup,
+      groupDragEnd,
+      groupChange,
+    } = useDrawing({ tool, stroke: strokeColor, strokeWidth, onHistoryChange });
 
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [selectedShapeIds, setSelectedShapeIds] = useState<string[]>([]); // multi-select (layers or marquee)
-  const selectedShape = useMemo(() => (selectedId ? shapes.find((s) => s.id === selectedId) || null : null), [shapes, selectedId]);
+    const [selectedId, setSelectedId] = useState<string | null>(null);
+    const [selectedShapeIds, setSelectedShapeIds] = useState<string[]>([]); // multi-select (layers or marquee)
+    const selectedShape = useMemo(
+      () => (selectedId ? shapes.find((s) => s.id === selectedId) || null : null),
+      [shapes, selectedId],
+    );
 
     useEffect(() => {
       onHistoryChange?.({ canUndo, canRedo });
@@ -51,7 +78,7 @@ export const DrawingCanvas = React.forwardRef<DrawingCanvasHandle, DrawingCanvas
           return JSON.stringify(screen, null, 2);
         },
       }),
-      [clear, undo, redo]
+      [clear, undo, redo],
     );
 
     return (
@@ -63,9 +90,14 @@ export const DrawingCanvas = React.forwardRef<DrawingCanvasHandle, DrawingCanvas
           selectedIds={selectedShapeIds}
           onToggleSelect={(id) => {
             setSelectedId(id); // also reflect highlight in canvas
-            setSelectedShapeIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+            setSelectedShapeIds((prev) =>
+              prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+            );
           }}
-          onClearSelection={() => { setSelectedShapeIds([]); setSelectedId(null); }}
+          onClearSelection={() => {
+            setSelectedShapeIds([]);
+            setSelectedId(null);
+          }}
           onGroup={(ids) => {
             const gid = groupShapes(ids, `Group ${ids.length}`);
             if (gid) setSelectedShapeIds([]);
@@ -119,7 +151,7 @@ export const DrawingCanvas = React.forwardRef<DrawingCanvasHandle, DrawingCanvas
           />
         </div>
         {/* Properties panel */}
-        {selectedShape && selectedId && !groups.some(g => g.id === selectedId) && (
+        {selectedShape && selectedId && !groups.some((g) => g.id === selectedId) && (
           <div
             style={{
               width: 260,
@@ -133,7 +165,9 @@ export const DrawingCanvas = React.forwardRef<DrawingCanvasHandle, DrawingCanvas
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <strong>Thuộc tính</strong>
-              <button type="button" onClick={() => setSelectedId(null)} style={{ fontSize: 12 }}>Bỏ chọn</button>
+              <button type="button" onClick={() => setSelectedId(null)} style={{ fontSize: 12 }}>
+                Bỏ chọn
+              </button>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -153,9 +187,13 @@ export const DrawingCanvas = React.forwardRef<DrawingCanvasHandle, DrawingCanvas
                 min={1}
                 max={50}
                 value={selectedShape.strokeWidth}
-                onChange={(e) => onShapeUpdate({ id: selectedShape.id, strokeWidth: parseInt(e.target.value, 10) })}
+                onChange={(e) =>
+                  onShapeUpdate({ id: selectedShape.id, strokeWidth: parseInt(e.target.value, 10) })
+                }
               />
-              <span style={{ fontSize: 12, color: '#4b5563', minWidth: 28, textAlign: 'right' }}>{selectedShape.strokeWidth}px</span>
+              <span style={{ fontSize: 12, color: '#4b5563', minWidth: 28, textAlign: 'right' }}>
+                {selectedShape.strokeWidth}px
+              </span>
             </div>
             {/* Rotation control */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -164,7 +202,9 @@ export const DrawingCanvas = React.forwardRef<DrawingCanvasHandle, DrawingCanvas
                 type="number"
                 style={{ width: 70 }}
                 value={selectedShape.rotation ?? 0}
-                onChange={(e) => onShapeUpdate({ id: selectedShape.id, rotation: parseFloat(e.target.value) || 0 })}
+                onChange={(e) =>
+                  onShapeUpdate({ id: selectedShape.id, rotation: parseFloat(e.target.value) || 0 })
+                }
                 title="Góc xoay (độ)"
               />
               <button
@@ -186,14 +226,18 @@ export const DrawingCanvas = React.forwardRef<DrawingCanvasHandle, DrawingCanvas
                     type="number"
                     style={{ width: 70 }}
                     value={(selectedShape as any).x}
-                    onChange={(e) => onRectChange({ id: selectedShape.id, x: parseFloat(e.target.value) || 0 })}
+                    onChange={(e) =>
+                      onRectChange({ id: selectedShape.id, x: parseFloat(e.target.value) || 0 })
+                    }
                   />
                   <label style={{ fontSize: 12, color: '#374151' }}>Y</label>
                   <input
                     type="number"
                     style={{ width: 70 }}
                     value={(selectedShape as any).y}
-                    onChange={(e) => onRectChange({ id: selectedShape.id, y: parseFloat(e.target.value) || 0 })}
+                    onChange={(e) =>
+                      onRectChange({ id: selectedShape.id, y: parseFloat(e.target.value) || 0 })
+                    }
                   />
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
@@ -202,14 +246,24 @@ export const DrawingCanvas = React.forwardRef<DrawingCanvasHandle, DrawingCanvas
                     type="number"
                     style={{ width: 70 }}
                     value={(selectedShape as any).width}
-                    onChange={(e) => onRectChange({ id: selectedShape.id, width: Math.max(1, parseFloat(e.target.value) || 1) })}
+                    onChange={(e) =>
+                      onRectChange({
+                        id: selectedShape.id,
+                        width: Math.max(1, parseFloat(e.target.value) || 1),
+                      })
+                    }
                   />
                   <label style={{ fontSize: 12, color: '#374151' }}>H</label>
                   <input
                     type="number"
                     style={{ width: 70 }}
                     value={(selectedShape as any).height}
-                    onChange={(e) => onRectChange({ id: selectedShape.id, height: Math.max(1, parseFloat(e.target.value) || 1) })}
+                    onChange={(e) =>
+                      onRectChange({
+                        id: selectedShape.id,
+                        height: Math.max(1, parseFloat(e.target.value) || 1),
+                      })
+                    }
                   />
                 </div>
               </>
@@ -219,7 +273,9 @@ export const DrawingCanvas = React.forwardRef<DrawingCanvasHandle, DrawingCanvas
                 <label style={{ fontSize: 12, color: '#374151' }}>Line Join</label>
                 <select
                   value={(selectedShape as any).lineJoin || 'miter'}
-                  onChange={(e) => onLineStyleChange({ id: selectedShape.id, lineJoin: e.target.value as any })}
+                  onChange={(e) =>
+                    onLineStyleChange({ id: selectedShape.id, lineJoin: e.target.value as any })
+                  }
                   style={{ fontSize: 12 }}
                   title="Kiểu nối giữa các đoạn"
                 >
@@ -232,80 +288,112 @@ export const DrawingCanvas = React.forwardRef<DrawingCanvasHandle, DrawingCanvas
           </div>
         )}
         {/* Group properties panel */}
-        {selectedId && groups.some(g => g.id === selectedId) && (() => {
-          const g = groups.find(gr => gr.id === selectedId)!;
-          return (
-            <div
-              style={{
-                width: 260,
-                borderLeft: '1px solid #e5e7eb',
-                background: '#ffffff',
-                padding: 12,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 12,
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <strong>Group</strong>
-                <button type="button" onClick={() => setSelectedId(null)} style={{ fontSize: 12 }}>Bỏ chọn</button>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <label style={{ fontSize: 12, color: '#374151' }}>Vị trí</label>
-                <div style={{ display: 'flex', gap: 6 }}>
+        {selectedId &&
+          groups.some((g) => g.id === selectedId) &&
+          (() => {
+            const g = groups.find((gr) => gr.id === selectedId)!;
+            return (
+              <div
+                style={{
+                  width: 260,
+                  borderLeft: '1px solid #e5e7eb',
+                  background: '#ffffff',
+                  padding: 12,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 12,
+                }}
+              >
+                <div
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                >
+                  <strong>Group</strong>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedId(null)}
+                    style={{ fontSize: 12 }}
+                  >
+                    Bỏ chọn
+                  </button>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <label style={{ fontSize: 12, color: '#374151' }}>Vị trí</label>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <input
+                      type="number"
+                      style={{ width: 70 }}
+                      value={g.translate?.x || 0}
+                      onChange={(e) =>
+                        groupChange({ id: g.id, x: parseFloat(e.target.value) || 0 })
+                      }
+                      title="X"
+                    />
+                    <input
+                      type="number"
+                      style={{ width: 70 }}
+                      value={g.translate?.y || 0}
+                      onChange={(e) =>
+                        groupChange({ id: g.id, y: parseFloat(e.target.value) || 0 })
+                      }
+                      title="Y"
+                    />
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <label style={{ fontSize: 12, color: '#374151' }}>Góc xoay</label>
                   <input
                     type="number"
                     style={{ width: 70 }}
-                    value={g.translate?.x || 0}
-                    onChange={(e) => groupChange({ id: g.id, x: parseFloat(e.target.value) || 0 })}
-                    title="X"
+                    value={g.rotation || 0}
+                    onChange={(e) =>
+                      groupChange({ id: g.id, rotation: parseFloat(e.target.value) || 0 })
+                    }
+                    title="Góc xoay (độ)"
+                  />
+                  <button
+                    type="button"
+                    style={{ fontSize: 11 }}
+                    onClick={() => groupChange({ id: g.id, rotation: 0 })}
+                  >
+                    Reset
+                  </button>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <label style={{ fontSize: 12, color: '#374151' }}>Scale</label>
+                  <input
+                    type="number"
+                    style={{ width: 70 }}
+                    step={0.01}
+                    value={g.scale?.x ?? 1}
+                    onChange={(e) =>
+                      groupChange({ id: g.id, scaleX: parseFloat(e.target.value) || 1 })
+                    }
+                    title="Scale X"
                   />
                   <input
                     type="number"
                     style={{ width: 70 }}
-                    value={g.translate?.y || 0}
-                    onChange={(e) => groupChange({ id: g.id, y: parseFloat(e.target.value) || 0 })}
-                    title="Y"
+                    step={0.01}
+                    value={g.scale?.y ?? 1}
+                    onChange={(e) =>
+                      groupChange({ id: g.id, scaleY: parseFloat(e.target.value) || 1 })
+                    }
+                    title="Scale Y"
                   />
+                  <button
+                    type="button"
+                    style={{ fontSize: 11 }}
+                    onClick={() => groupChange({ id: g.id, scaleX: 1, scaleY: 1 })}
+                  >
+                    Reset
+                  </button>
                 </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <label style={{ fontSize: 12, color: '#374151' }}>Góc xoay</label>
-                <input
-                  type="number"
-                  style={{ width: 70 }}
-                  value={g.rotation || 0}
-                  onChange={(e) => groupChange({ id: g.id, rotation: parseFloat(e.target.value) || 0 })}
-                  title="Góc xoay (độ)"
-                />
-                <button type="button" style={{ fontSize: 11 }} onClick={() => groupChange({ id: g.id, rotation: 0 })}>Reset</button>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <label style={{ fontSize: 12, color: '#374151' }}>Scale</label>
-                <input
-                  type="number"
-                  style={{ width: 70 }}
-                  step={0.01}
-                  value={g.scale?.x ?? 1}
-                  onChange={(e) => groupChange({ id: g.id, scaleX: parseFloat(e.target.value) || 1 })}
-                  title="Scale X"
-                />
-                <input
-                  type="number"
-                  style={{ width: 70 }}
-                  step={0.01}
-                  value={g.scale?.y ?? 1}
-                  onChange={(e) => groupChange({ id: g.id, scaleY: parseFloat(e.target.value) || 1 })}
-                  title="Scale Y"
-                />
-                <button type="button" style={{ fontSize: 11 }} onClick={() => groupChange({ id: g.id, scaleX: 1, scaleY: 1 })}>Reset</button>
-              </div>
-            </div>
-          );
-        })()}
+            );
+          })()}
       </div>
     );
-  }
+  },
 );
 
 DrawingCanvas.displayName = 'DrawingCanvas';

@@ -48,6 +48,7 @@ To learn React, check out the [React documentation](https://reactjs.org/).
 ## MilitarySymbolEditor
 
 A simple Konva-based editor component `MilitarySymbolEditor` with shape logic split by file:
+
 - `src/shapes/RectangleShape.tsx`
 - `src/shapes/EllipseShape.tsx`
 - `src/shapes/LineShape.tsx`

@@ -1,0 +1,14 @@
+# Directories
+node_modules/
+build/
+dist/
+coverage/
+
+# Lockfiles
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Misc
+.tmp/
+.DS_Store

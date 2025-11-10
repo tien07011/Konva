@@ -21,7 +21,17 @@ function walkGroups(groups: ShapeGroup[], fn: (g: ShapeGroup) => void) {
   });
 }
 
-export const LayersPanel: React.FC<LayersPanelProps> = ({ shapes, groups, selectedIds, onToggleSelect, onClearSelection, onGroup, onUngroup, selectedGroupId = null, onSelectGroup }) => {
+export const LayersPanel: React.FC<LayersPanelProps> = ({
+  shapes,
+  groups,
+  selectedIds,
+  onToggleSelect,
+  onClearSelection,
+  onGroup,
+  onUngroup,
+  selectedGroupId = null,
+  onSelectGroup,
+}) => {
   const shapeMap = useMemo(() => new Map(shapes.map((s) => [s.id, s])), [shapes]);
 
   const groupedShapeIds = useMemo(() => {
@@ -33,12 +43,44 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({ shapes, groups, select
   const canGroup = selectedIds.length >= 2;
 
   return (
-    <div style={{ width: 240, borderRight: '1px solid #e5e7eb', background: '#ffffff', display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ padding: '8px 12px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: 8 }}>
+    <div
+      style={{
+        width: 240,
+        borderRight: '1px solid #e5e7eb',
+        background: '#ffffff',
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+      }}
+    >
+      <div
+        style={{
+          padding: '8px 12px',
+          borderBottom: '1px solid #e5e7eb',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+        }}
+      >
         <strong style={{ fontSize: 13 }}>Layers</strong>
-        <button type="button" style={{ fontSize: 11, marginLeft: 'auto' }} onClick={onClearSelection}>Clear Sel</button>
+        <button
+          type="button"
+          style={{ fontSize: 11, marginLeft: 'auto' }}
+          onClick={onClearSelection}
+        >
+          Clear Sel
+        </button>
       </div>
-      <div style={{ padding: 10, flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div
+        style={{
+          padding: 10,
+          flex: 1,
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 6,
+        }}
+      >
         {/* Groups tree */}
         {groups.map((g) => (
           <GroupNode
@@ -54,19 +96,31 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({ shapes, groups, select
         ))}
 
         {/* Ungrouped shapes */}
-        {shapes.filter((s) => !groupedShapeIds.has(s.id)).map((s) => (
-          <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <input
-              type="checkbox"
-              checked={selectedIds.includes(s.id)}
-              onChange={() => onToggleSelect(s.id)}
-              title="Select shape"
-            />
-            <span style={{ fontSize: 12, flex: 1 }}>{s.type}:{s.id}</span>
-          </div>
-        ))}
+        {shapes
+          .filter((s) => !groupedShapeIds.has(s.id))
+          .map((s) => (
+            <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <input
+                type="checkbox"
+                checked={selectedIds.includes(s.id)}
+                onChange={() => onToggleSelect(s.id)}
+                title="Select shape"
+              />
+              <span style={{ fontSize: 12, flex: 1 }}>
+                {s.type}:{s.id}
+              </span>
+            </div>
+          ))}
       </div>
-      <div style={{ padding: 10, borderTop: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div
+        style={{
+          padding: 10,
+          borderTop: '1px solid #e5e7eb',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 6,
+        }}
+      >
         <button
           type="button"
           disabled={!canGroup}
@@ -90,21 +144,47 @@ interface GroupNodeProps {
   selectedGroupId?: string | null;
 }
 
-const GroupNode: React.FC<GroupNodeProps> = ({ group, shapeMap, selectedIds, onToggleSelect, onUngroup, onSelectGroup, selectedGroupId }) => {
+const GroupNode: React.FC<GroupNodeProps> = ({
+  group,
+  shapeMap,
+  selectedIds,
+  onToggleSelect,
+  onUngroup,
+  onSelectGroup,
+  selectedGroupId,
+}) => {
   return (
-    <div style={{ border: '1px solid #e5e7eb', borderRadius: 6, padding: 6, display: 'flex', flexDirection: 'column', gap: 6 }}>
+    <div
+      style={{
+        border: '1px solid #e5e7eb',
+        borderRadius: 6,
+        padding: 6,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 6,
+      }}
+    >
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <span
-          style={{ fontSize: 12, fontWeight: 600, cursor: 'pointer', color: selectedGroupId === group.id ? '#2563eb' : '#111827' }}
+          style={{
+            fontSize: 12,
+            fontWeight: 600,
+            cursor: 'pointer',
+            color: selectedGroupId === group.id ? '#2563eb' : '#111827',
+          }}
           onClick={() => onSelectGroup?.(group.id)}
           title="Select group"
-        >Group: {group.name}</span>
+        >
+          Group: {group.name}
+        </span>
         <button
           type="button"
           style={{ fontSize: 10, marginLeft: 'auto' }}
           onClick={() => onUngroup(group.id)}
           title="Ungroup"
-        >Ungroup</button>
+        >
+          Ungroup
+        </button>
       </div>
       {group.shapeIds.map((sid) => {
         const s = shapeMap.get(sid);
@@ -117,7 +197,9 @@ const GroupNode: React.FC<GroupNodeProps> = ({ group, shapeMap, selectedIds, onT
               onChange={() => onToggleSelect(sid)}
               title="Select shape"
             />
-            <span style={{ fontSize: 12 }}>{s.type}:{sid}</span>
+            <span style={{ fontSize: 12 }}>
+              {s.type}:{sid}
+            </span>
           </div>
         );
       })}
