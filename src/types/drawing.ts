@@ -8,6 +8,7 @@ export interface BaseShape {
   stroke: string;
   strokeWidth: number;
   rotation?: number;
+  fill?: string; // màu bên trong (áp dụng cho các shape kín như rect, circle)
 }
 
 export interface LineShape extends BaseShape {

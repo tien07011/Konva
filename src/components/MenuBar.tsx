@@ -11,6 +11,8 @@ interface MenuBarProps {
   onStrokeColorChange: (c: string) => void;
   strokeWidth: number;
   onStrokeWidthChange: (n: number) => void;
+  fillColor?: string;
+  onFillColorChange?: (c: string) => void;
   tool?: ToolType;
   onToolChange?: (t: ToolType) => void;
   canUndo?: boolean;
@@ -29,6 +31,8 @@ export const MenuBar: React.FC<MenuBarProps> = ({
   onStrokeColorChange,
   strokeWidth,
   onStrokeWidthChange,
+  fillColor = 'transparent',
+  onFillColorChange,
   tool = 'line',
   onToolChange,
   canUndo = false,
@@ -82,7 +86,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({
             background: tool === 'rect' ? '#eff6ff' : '#ffffff',
           }}
         >
-          <SymbolRect stroke={strokeColor} strokeWidth={strokeWidth} />
+          <SymbolRect stroke={strokeColor} strokeWidth={strokeWidth} fill={fillColor} />
         </button>
         <button
           type="button"
@@ -96,7 +100,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({
             background: tool === 'circle' ? '#eff6ff' : '#ffffff',
           }}
         >
-          <SymbolCircle stroke={strokeColor} strokeWidth={strokeWidth} />
+          <SymbolCircle stroke={strokeColor} strokeWidth={strokeWidth} fill={fillColor} />
         </button>
         <button
           type="button"
@@ -138,6 +142,23 @@ export const MenuBar: React.FC<MenuBarProps> = ({
           onChange={(e) => onStrokeColorChange(e.target.value)}
           title="Màu viền"
         />
+      </label>
+      <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        Màu trong
+        <input
+          type="color"
+          value={fillColor === 'transparent' ? '#ffffff' : fillColor}
+          onChange={(e) => onFillColorChange?.(e.target.value)}
+          title="Màu tô bên trong"
+        />
+        <button
+          type="button"
+          style={{ fontSize: 11 }}
+          onClick={() => onFillColorChange?.('transparent')}
+          title="Không tô màu"
+        >
+          Xoá
+        </button>
       </label>
       <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
         <button

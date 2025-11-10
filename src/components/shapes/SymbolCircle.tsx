@@ -26,84 +26,91 @@ export const CircleShapeNode: React.FC<{
   onSelect,
   onChange,
 }) => {
-  const circleRef = useRef<any>(null);
-  const trRef = useRef<any>(null);
+    const circleRef = useRef<any>(null);
+    const trRef = useRef<any>(null);
 
-  useEffect(() => {
-    if (!trRef.current || !circleRef.current) return;
-    if (isSelected && !dashed) {
-      trRef.current.nodes([circleRef.current]);
-      trRef.current.getLayer()?.batchDraw();
-    } else {
-      trRef.current.nodes([]);
-      trRef.current.getLayer()?.batchDraw();
-    }
-  }, [isSelected, dashed]);
+    useEffect(() => {
+      if (!trRef.current || !circleRef.current) return;
+      if (isSelected && !dashed) {
+        trRef.current.nodes([circleRef.current]);
+        trRef.current.getLayer()?.batchDraw();
+      } else {
+        trRef.current.nodes([]);
+        trRef.current.getLayer()?.batchDraw();
+      }
+    }, [isSelected, dashed]);
 
-  return (
-    <>
-      <KonvaCircle
-        ref={circleRef}
-        x={shape.cx}
-        y={shape.cy}
-        radius={shape.r}
-        rotation={shape.rotation || 0}
-        stroke={shape.stroke}
-        strokeWidth={shape.strokeWidth}
-        dash={dashed ? [8, 6] : undefined}
-        draggable={!dashed && draggable}
-        perfectDrawEnabled={false}
-        shadowForStrokeEnabled={false}
-        onMouseDown={(e: any) => {
-          e.cancelBubble = true;
-        }}
-        onTouchStart={(e: any) => {
-          e.cancelBubble = true;
-        }}
-        onClick={() => onSelect?.(shape.id)}
-        onTap={() => onSelect?.(shape.id)}
-        onDragEnd={(e: any) => {
-          if (!onDragEnd) return;
-          const node = e.target as any; // Konva.Circle
-          const nx = node.x();
-          const ny = node.y();
-          onDragEnd({ id: shape.id, cx: nx, cy: ny });
-        }}
-        onTransformEnd={() => {
-          if (!onChange || !circleRef.current) return;
-          const node = circleRef.current;
-          const scaleX = node.scaleX();
-          // assume uniform scaling -> radius scales by scaleX
-          let r = node.radius() * scaleX;
-          if (scaleX < 0) r = Math.abs(r);
-          r = Math.max(1, r);
-          node.scaleX(1);
-          node.scaleY(1);
-          onChange({ id: shape.id, r, rotation: node.rotation() });
-        }}
-      />
-      {!dashed && isSelected && (
-        <Transformer
-          ref={trRef}
-          rotateEnabled
-          resizeEnabled
-          keepRatio
-          enabledAnchors={['top-left', 'top-right', 'bottom-left', 'bottom-right']}
-          boundBoxFunc={(oldBox: any, newBox: any) => {
-            if (newBox.width < 2 || newBox.height < 2) return oldBox;
-            return newBox;
+    return (
+      <>
+        <KonvaCircle
+          ref={circleRef}
+          x={shape.cx}
+          y={shape.cy}
+          radius={shape.r}
+          rotation={shape.rotation || 0}
+          fill={shape.fill}
+          stroke={shape.stroke}
+          strokeWidth={shape.strokeWidth}
+          dash={dashed ? [8, 6] : undefined}
+          draggable={!dashed && draggable}
+          perfectDrawEnabled={false}
+          shadowForStrokeEnabled={false}
+          onMouseDown={(e: any) => {
+            e.cancelBubble = true;
+          }}
+          onTouchStart={(e: any) => {
+            e.cancelBubble = true;
+          }}
+          onClick={() => onSelect?.(shape.id)}
+          onTap={() => onSelect?.(shape.id)}
+          onDragEnd={(e: any) => {
+            if (!onDragEnd) return;
+            const node = e.target as any; // Konva.Circle
+            const nx = node.x();
+            const ny = node.y();
+            onDragEnd({ id: shape.id, cx: nx, cy: ny });
+          }}
+          onTransformEnd={() => {
+            if (!onChange || !circleRef.current) return;
+            const node = circleRef.current;
+            const scaleX = node.scaleX();
+            // assume uniform scaling -> radius scales by scaleX
+            let r = node.radius() * scaleX;
+            if (scaleX < 0) r = Math.abs(r);
+            r = Math.max(1, r);
+            node.scaleX(1);
+            node.scaleY(1);
+            onChange({ id: shape.id, r, rotation: node.rotation() });
           }}
         />
-      )}
-    </>
-  );
-};
+        {!dashed && isSelected && (
+          <Transformer
+            ref={trRef}
+            rotateEnabled
+            resizeEnabled
+            keepRatio
+            enabledAnchors={['top-left', 'top-right', 'bottom-left', 'bottom-right']}
+            boundBoxFunc={(oldBox: any, newBox: any) => {
+              if (newBox.width < 2 || newBox.height < 2) return oldBox;
+              return newBox;
+            }}
+          />
+        )}
+      </>
+    );
+  };
 
 // Icon preview for circle tool
-export const SymbolCircle: React.FC<{ size?: number; stroke?: string; strokeWidth?: number }> = ({
+  export const SymbolCircle: React.FC<{
+    size?: number;
+    stroke?: string;
+    strokeWidth?: number;
+    fill?: string;
+  }> = ({
   size = 36,
   stroke = '#111827',
   strokeWidth = 4,
+    fill = 'transparent',
 }) => {
   const StageAny = Stage as unknown as React.ComponentType<any>;
   const pad = Math.max(4, Math.ceil(strokeWidth / 2) + 4);
@@ -129,6 +136,7 @@ export const SymbolCircle: React.FC<{ size?: number; stroke?: string; strokeWidt
             x={size / 2}
             y={size / 2}
             radius={r}
+            fill={fill}
             stroke={stroke}
             strokeWidth={strokeWidth}
           />

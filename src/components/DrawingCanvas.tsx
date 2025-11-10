@@ -19,11 +19,20 @@ interface DrawingCanvasProps {
   tool?: ToolType; // default 'line'
   onToolChange?: (t: ToolType) => void;
   showGrid?: boolean;
+  fillColor?: string; // màu fill mặc định khi tạo rect/circle
 }
 
 export const DrawingCanvas = React.forwardRef<DrawingCanvasHandle, DrawingCanvasProps>(
   (
-    { strokeColor, strokeWidth, onHistoryChange, tool = 'line', onToolChange, showGrid = false },
+    {
+      strokeColor,
+      strokeWidth,
+      onHistoryChange,
+      tool = 'line',
+      onToolChange,
+      showGrid = false,
+      fillColor = 'transparent',
+    },
     ref,
   ) => {
     const {
@@ -50,7 +59,7 @@ export const DrawingCanvas = React.forwardRef<DrawingCanvasHandle, DrawingCanvas
       ungroupGroup,
       groupDragEnd,
       groupChange,
-    } = useDrawing({ tool, stroke: strokeColor, strokeWidth, onHistoryChange });
+  } = useDrawing({ tool, stroke: strokeColor, strokeWidth, fill: fillColor, onHistoryChange });
 
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [selectedShapeIds, setSelectedShapeIds] = useState<string[]>([]); // multi-select (layers or marquee)
@@ -183,6 +192,35 @@ export const DrawingCanvas = React.forwardRef<DrawingCanvasHandle, DrawingCanvas
                 title="Màu viền"
               />
             </div>
+
+            {/* Fill color (áp dụng cho rect, circle) */}
+            {(selectedShape.type === 'rect' || selectedShape.type === 'circle') && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <label style={{ fontSize: 12, color: '#374151' }}>Màu trong</label>
+                <input
+                  type="color"
+                  value={
+                    selectedShape.fill && selectedShape.fill !== 'transparent'
+                      ? (selectedShape.fill as string)
+                      : '#ffffff'
+                  }
+                  onChange={(e) =>
+                    onShapeUpdate({ id: selectedShape.id, fill: e.target.value })
+                  }
+                  title="Màu tô bên trong"
+                />
+                {selectedShape.fill && (
+                  <button
+                    type="button"
+                    style={{ fontSize: 11 }}
+                    title="Không tô màu"
+                    onClick={() => onShapeUpdate({ id: selectedShape.id, fill: 'transparent' })}
+                  >
+                    Xoá
+                  </button>
+                )}
+              </div>
+            )}
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <label style={{ fontSize: 12, color: '#374151' }}>Độ dày</label>

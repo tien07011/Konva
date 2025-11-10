@@ -50,6 +50,7 @@ export const RectShapeNode: React.FC<{
         width={shape.width}
         height={shape.height}
         rotation={shape.rotation || 0}
+        fill={shape.fill}
         stroke={shape.stroke}
         strokeWidth={shape.strokeWidth}
         dash={dashed ? [8, 6] : undefined}
@@ -124,10 +125,16 @@ export const RectShapeNode: React.FC<{
 };
 
 // Small icon component to preview a rectangle tool
-export const SymbolRect: React.FC<{ size?: number; stroke?: string; strokeWidth?: number }> = ({
+export const SymbolRect: React.FC<{
+  size?: number;
+  stroke?: string;
+  strokeWidth?: number;
+  fill?: string;
+}> = ({
   size = 36,
   stroke = '#111827',
   strokeWidth = 4,
+  fill = 'transparent',
 }) => {
   const StageAny = Stage as unknown as React.ComponentType<any>;
   const pad = Math.max(3, Math.ceil(strokeWidth / 2) + 3);
@@ -154,6 +161,7 @@ export const SymbolRect: React.FC<{ size?: number; stroke?: string; strokeWidth?
             y={pad}
             width={s}
             height={s}
+            fill={fill}
             stroke={stroke}
             strokeWidth={strokeWidth}
           />

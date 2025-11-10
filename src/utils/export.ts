@@ -304,6 +304,7 @@ function shapeToOutShape(
     stroke: s.stroke,
     strokeWidth: s.strokeWidth,
   };
+  if (s.fill) (out as any).fill = s.fill;
   if (s.rotation != null) out.rotation = round(s.rotation, precision);
   if (translate) out.translate = translate;
   return out;

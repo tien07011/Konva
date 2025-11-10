@@ -16,6 +16,7 @@ export interface UseDrawingOptions {
   tool?: ToolType; // default 'line'
   stroke: string;
   strokeWidth: number;
+  fill?: string; // màu fill mặc định cho các shape kín
   onHistoryChange?: (info: HistoryState) => void;
 }
 
@@ -42,6 +43,7 @@ export interface UseDrawingResult {
     stroke?: string;
     strokeWidth?: number;
     rotation?: number;
+    fill?: string;
   }) => void;
   onRectDragEnd: (payload: { id: string; x: number; y: number }) => void;
   onRectChange: (payload: {
@@ -81,6 +83,7 @@ export function useDrawing({
   tool = 'line',
   stroke,
   strokeWidth,
+  fill = 'transparent',
   onHistoryChange,
 }: UseDrawingOptions): UseDrawingResult {
   const [shapes, setShapes] = useState<AnyShape[]>([]);
@@ -109,6 +112,7 @@ export function useDrawing({
           type: 'line',
           stroke,
           strokeWidth,
+          fill, // lines không dùng fill nhưng giữ structure thống nhất
           points: [x, y, x, y],
           lineJoin: 'miter',
         };
@@ -119,6 +123,7 @@ export function useDrawing({
           type: 'rect',
           stroke,
           strokeWidth,
+          fill,
           x,
           y,
           width: 0,
@@ -131,6 +136,7 @@ export function useDrawing({
           type: 'circle',
           stroke,
           strokeWidth,
+          fill,
           cx: x,
           cy: y,
           r: 0,
@@ -142,6 +148,7 @@ export function useDrawing({
           type: 'qcurve',
           stroke,
           strokeWidth,
+          fill,
           points: [x, y, x, y, x, y], // start, control, end (initially overlapping)
         };
         setDraft(d);
@@ -151,12 +158,13 @@ export function useDrawing({
           type: 'ccurve',
           stroke,
           strokeWidth,
+          fill,
           points: [x, y, x, y, x, y, x, y], // start, c1, c2, end (initially overlapping)
         };
         setDraft(d);
       }
     },
-    [stroke, strokeWidth, tool],
+    [stroke, strokeWidth, fill, tool],
   );
 
   const updateDraft = useCallback(
@@ -330,7 +338,7 @@ export function useDrawing({
   );
 
   const onShapeUpdate = useCallback(
-    (payload: { id: string; stroke?: string; strokeWidth?: number; rotation?: number }) => {
+    (payload: { id: string; stroke?: string; strokeWidth?: number; rotation?: number; fill?: string }) => {
       setShapes((prev) =>
         prev.map((s) =>
           s.id === payload.id
@@ -339,6 +347,7 @@ export function useDrawing({
                 ...(payload.stroke !== undefined ? { stroke: payload.stroke } : {}),
                 ...(payload.strokeWidth !== undefined ? { strokeWidth: payload.strokeWidth } : {}),
                 ...(payload.rotation !== undefined ? { rotation: payload.rotation } : {}),
+                ...(payload.fill !== undefined ? { fill: payload.fill } : {}),
               }
             : s,
         ),

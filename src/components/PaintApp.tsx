@@ -7,6 +7,7 @@ export const PaintApp: React.FC = () => {
   // UI state only (chỉ vẽ đường)
   const [strokeColor, setStrokeColor] = useState<string>('#111827');
   const [strokeWidth, setStrokeWidth] = useState<number>(3);
+  const [fillColor, setFillColor] = useState<string>('transparent');
   const [tool, setTool] = useState<ToolType>('line');
   const [showGrid, setShowGrid] = useState<boolean>(true);
 
@@ -30,6 +31,8 @@ export const PaintApp: React.FC = () => {
         onStrokeColorChange={setStrokeColor}
         strokeWidth={strokeWidth}
         onStrokeWidthChange={setStrokeWidth}
+        fillColor={fillColor}
+        onFillColorChange={setFillColor}
         tool={tool}
         onToolChange={setTool}
         canUndo={canUndo}
@@ -60,6 +63,7 @@ export const PaintApp: React.FC = () => {
           ref={canvasRef}
           strokeColor={strokeColor}
           strokeWidth={strokeWidth}
+          fillColor={fillColor}
           tool={tool}
           onToolChange={setTool}
           onHistoryChange={({ canUndo, canRedo }) => {
