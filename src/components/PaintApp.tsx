@@ -6,7 +6,7 @@ import type { ToolType } from '../types/drawing';
 export const PaintApp: React.FC = () => {
   // UI state only (chỉ vẽ đường)
   const [strokeColor, setStrokeColor] = useState<string>('#111827');
-  const [strokeWidth, setStrokeWidth] = useState<number>(4);
+  const [strokeWidth, setStrokeWidth] = useState<number>(3);
   const [tool, setTool] = useState<ToolType>('line');
 
   // History flags

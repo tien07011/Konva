@@ -120,7 +120,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({
         />
       </label>
 
-      <label
+      {/* <label
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -136,7 +136,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({
           value={strokeWidth}
           onChange={(e) => onStrokeWidthChange(parseInt(e.target.value, 10))}
         />
-      </label>
+      </label> */}
 
       <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
         <button type="button" onClick={onUndo} disabled={!canUndo}>

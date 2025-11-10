@@ -1,5 +1,5 @@
 import React from 'react';
-import { Stage, Layer, Shape as KonvaShape, Circle } from 'react-konva';
+import { Stage, Layer, Shape as KonvaShape, Circle, Group as KonvaGroup } from 'react-konva';
 import type { CubicCurveShape } from '../../types/drawing';
 
 // Renderer for a Cubic Bézier curve
@@ -20,37 +20,36 @@ export const CubicCurveShapeNode: React.FC<{
     { x: pts[6], y: pts[7], idx: 6, role: 'end' },
   ];
   return (
-    <>
+    <KonvaGroup
+      draggable={!dashed && draggable}
+      onMouseDown={(e: any) => { e.cancelBubble = true; }}
+      onTouchStart={(e: any) => { e.cancelBubble = true; }}
+      onClick={() => onSelect?.(shape.id)}
+      onTap={() => onSelect?.(shape.id)}
+      onDragEnd={(e: any) => {
+        if (!onDragEnd) return;
+        const node = e.target as any;
+        const pos = node.position();
+        const next: number[] = [];
+        for (let i = 0; i < pts.length; i += 2) next.push(pts[i] + pos.x, pts[i + 1] + pos.y);
+        node.position({ x: 0, y: 0 });
+        onDragEnd({ id: shape.id, points: next });
+      }}
+      onMouseEnter={(e: any) => { const st = e.target.getStage(); if (st) st.container().style.cursor = 'pointer'; }}
+      onMouseLeave={(e: any) => { const st = e.target.getStage(); if (st) st.container().style.cursor = 'default'; }}
+    >
       <KonvaShape
         stroke={shape.stroke}
         strokeWidth={shape.strokeWidth}
         hitStrokeWidth={Math.max(8, shape.strokeWidth * 2)}
         dash={dashed ? [8, 6] : undefined}
-        draggable={!dashed && draggable}
         perfectDrawEnabled={false}
         shadowForStrokeEnabled={false}
-        onMouseEnter={(e: any) => { const st = e.target.getStage(); if (st) st.container().style.cursor = 'pointer'; }}
-        onMouseLeave={(e: any) => { const st = e.target.getStage(); if (st) st.container().style.cursor = 'default'; }}
-        onMouseDown={(e: any) => { e.cancelBubble = true; }}
-        onTouchStart={(e: any) => { e.cancelBubble = true; }}
-        onClick={() => onSelect?.(shape.id)}
-        onTap={() => onSelect?.(shape.id)}
         sceneFunc={(ctx: any, node: any) => {
           ctx.beginPath();
           ctx.moveTo(pts[0], pts[1]);
           ctx.bezierCurveTo(pts[2], pts[3], pts[4], pts[5], pts[6], pts[7]);
           ctx.fillStrokeShape(node);
-        }}
-  onDragEnd={(e: any) => {
-          if (!onDragEnd) return;
-          const node = e.target as any;
-          const pos = node.position();
-          const next: number[] = [];
-          for (let i = 0; i < pts.length; i += 2) {
-            next.push(pts[i] + pos.x, pts[i + 1] + pos.y);
-          }
-          node.position({ x: 0, y: 0 });
-          onDragEnd({ id: shape.id, points: next });
         }}
       />
       {/* Helper guides: start->c1 and end->c2 */}
@@ -99,7 +98,7 @@ export const CubicCurveShapeNode: React.FC<{
           onDragEnd={(e: any) => { e.cancelBubble = true; }}
         />
       ))}
-    </>
+    </KonvaGroup>
   );
 };
 
