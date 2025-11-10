@@ -161,7 +161,8 @@ export const CanvasArea = React.forwardRef<CanvasAreaHandle, CanvasAreaProps>(
 				ref={containerRef}
 				style={{ position: 'relative', width: '100%', height: '100%', background: '#ffffff' }}
 			>
-				{/* @ts-expect-error: react-konva Stage children typing workaround */}
+				{/* react-konva Stage typing workaround: cast as any to satisfy TS generic children issue */}
+				{/** @ts-ignore */}
 				<Stage
 					ref={stageRef}
 					width={size.width}
