@@ -133,6 +133,7 @@ export const SymbolQuadratic: React.FC<{
   stroke?: string;
   strokeWidth?: number;
 }> = ({ size = 36, stroke = '#111827', strokeWidth = 4 }) => {
+  const StageAny = Stage as unknown as React.ComponentType<any>;
   const pad = Math.max(3, Math.ceil(strokeWidth / 2) + 2);
   const x0 = pad;
   const y0 = size - pad;
@@ -155,8 +156,7 @@ export const SymbolQuadratic: React.FC<{
       aria-label="Biểu tượng công cụ: Đường cong bậc 2"
       title="Công cụ: Đường cong bậc 2"
     >
-      {/* @ts-ignore: Stage children typing issue */}
-      <Stage width={size} height={size} style={{ display: 'block', borderRadius: 6 }}>
+      <StageAny width={size} height={size} style={{ display: 'block', borderRadius: 6 }}>
         <Layer>
           <KonvaShape
             stroke={stroke}
@@ -170,7 +170,7 @@ export const SymbolQuadratic: React.FC<{
             }}
           />
         </Layer>
-      </Stage>
+      </StageAny>
     </div>
   );
 };

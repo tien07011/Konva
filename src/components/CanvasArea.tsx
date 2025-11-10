@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useImperativeHandle } from 'react';
 import {
   Stage,
   Layer,
@@ -10,9 +10,14 @@ import {
 import type { AnyShape, DraftShape, ShapeGroup } from '../types/drawing';
 import { ShapeNode } from './shapes/registry';
 
+// Temporary typing shim for Stage children typing issue in react-konva
+const StageAny = Stage as unknown as React.ComponentType<any>;
+
 type PointerHandler = (e: any) => void;
 
-export interface CanvasAreaHandle {}
+export interface CanvasAreaHandle {
+  getStage: () => any | null;
+}
 
 interface CanvasAreaProps {
   shapes: AnyShape[];
@@ -82,6 +87,8 @@ export const CanvasArea = React.forwardRef<CanvasAreaHandle, CanvasAreaProps>(
     const containerRef = useRef<HTMLDivElement | null>(null);
     const stageRef = useRef<any>(null);
     const [size, setSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
+    // expose minimal imperative handle for parent refs
+    useImperativeHandle(ref, () => ({ getStage: () => stageRef.current }), []);
     // marquee selection state
     const [marquee, setMarquee] = useState<null | {
       x: number;
@@ -331,9 +338,7 @@ export const CanvasArea = React.forwardRef<CanvasAreaHandle, CanvasAreaProps>(
         ref={containerRef}
         style={{ position: 'relative', width: '100%', height: '100%', background: '#ffffff' }}
       >
-        {/* react-konva Stage typing workaround: cast as any to satisfy TS generic children issue */}
-        {/** @ts-ignore */}
-        <Stage
+        <StageAny
           ref={stageRef}
           width={size.width}
           height={size.height}
@@ -420,7 +425,7 @@ export const CanvasArea = React.forwardRef<CanvasAreaHandle, CanvasAreaProps>(
               />
             )}
           </Layer>
-        </Stage>
+  </StageAny>
 
         {/* custom context menu */}
         {ctxMenu && (

@@ -239,7 +239,7 @@ function shapeToOutShape(
   let verbose: VerboseCommand[] = [];
   let translate: { x: number; y: number } | undefined;
   if (s.type === 'line') {
-    let pts = (s as LineShape).points.slice();
+  const pts = (s as LineShape).points.slice();
     if (normalize === 'translateMinToOrigin' && pts.length >= 2) {
       let minX = pts[0];
       let minY = pts[1];

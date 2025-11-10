@@ -129,6 +129,7 @@ export const SymbolRect: React.FC<{ size?: number; stroke?: string; strokeWidth?
   stroke = '#111827',
   strokeWidth = 4,
 }) => {
+  const StageAny = Stage as unknown as React.ComponentType<any>;
   const pad = Math.max(3, Math.ceil(strokeWidth / 2) + 3);
   const s = size - pad * 2;
   return (
@@ -146,8 +147,7 @@ export const SymbolRect: React.FC<{ size?: number; stroke?: string; strokeWidth?
       aria-label="Biểu tượng công cụ vẽ hình chữ nhật"
       title="Công cụ: Hình chữ nhật"
     >
-      {/* @ts-ignore: Stage children typing issue */}
-      <Stage width={size} height={size} style={{ display: 'block', borderRadius: 6 }}>
+          <StageAny width={size} height={size} style={{ display: 'block', borderRadius: 6 }}>
         <Layer>
           <KonvaRect
             x={pad}
@@ -158,7 +158,7 @@ export const SymbolRect: React.FC<{ size?: number; stroke?: string; strokeWidth?
             strokeWidth={strokeWidth}
           />
         </Layer>
-      </Stage>
+          </StageAny>
     </div>
   );
 };

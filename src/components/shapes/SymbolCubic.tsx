@@ -134,6 +134,7 @@ export const SymbolCubic: React.FC<{ size?: number; stroke?: string; strokeWidth
   stroke = '#111827',
   strokeWidth = 4,
 }) => {
+  const StageAny = Stage as unknown as React.ComponentType<any>;
   const pad = Math.max(3, Math.ceil(strokeWidth / 2) + 2);
   const x0 = pad;
   const y0 = size - pad;
@@ -158,8 +159,7 @@ export const SymbolCubic: React.FC<{ size?: number; stroke?: string; strokeWidth
       aria-label="Biểu tượng công cụ: Đường cong bậc 3"
       title="Công cụ: Đường cong bậc 3"
     >
-      {/* @ts-ignore: Stage children typing issue */}
-      <Stage width={size} height={size} style={{ display: 'block', borderRadius: 6 }}>
+      <StageAny width={size} height={size} style={{ display: 'block', borderRadius: 6 }}>
         <Layer>
           <KonvaShape
             stroke={stroke}
@@ -172,7 +172,7 @@ export const SymbolCubic: React.FC<{ size?: number; stroke?: string; strokeWidth
             }}
           />
         </Layer>
-      </Stage>
+      </StageAny>
     </div>
   );
 };
