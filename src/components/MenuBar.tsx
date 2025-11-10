@@ -18,6 +18,8 @@ interface MenuBarProps {
   onRedo: () => void;
   onClear: () => void;
   onExport: () => void;
+  showGrid?: boolean;
+  onToggleGrid?: () => void;
 }
 
 // Khu vực chứa thanh công cụ (UI only)
@@ -34,6 +36,8 @@ export const MenuBar: React.FC<MenuBarProps> = ({
   onRedo,
   onClear,
   onExport,
+  showGrid = false,
+  onToggleGrid,
 }) => {
   return (
     <div
@@ -139,6 +143,20 @@ export const MenuBar: React.FC<MenuBarProps> = ({
       </label> */}
 
       <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+        <button
+          type="button"
+          onClick={onToggleGrid}
+          aria-pressed={showGrid}
+          title="Bật/tắt lưới"
+          style={{
+            padding: '4px 10px',
+            border: showGrid ? '2px solid #2563eb' : '1px solid #e5e7eb',
+            borderRadius: 6,
+            background: showGrid ? '#eff6ff' : '#ffffff',
+          }}
+        >
+          Lưới
+        </button>
         <button type="button" onClick={onUndo} disabled={!canUndo}>
           Undo
         </button>

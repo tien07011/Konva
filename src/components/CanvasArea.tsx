@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { Stage, Layer, Group as KonvaGroup, Transformer, Rect as KonvaRect } from 'react-konva';
+import { Stage, Layer, Group as KonvaGroup, Transformer, Rect as KonvaRect, Line as KonvaLine } from 'react-konva';
 import type { AnyShape, DraftShape, ShapeGroup } from '../types/drawing';
 import { ShapeNode } from './shapes/registry';
 
@@ -15,6 +15,8 @@ interface CanvasAreaProps {
 	onMouseDown: PointerHandler;
 	onMouseMove: PointerHandler;
 	onMouseUp: PointerHandler;
+	showGrid?: boolean;
+	gridSize?: number;
 	onLineDragEnd?: (payload: { id: string; points: number[] }) => void;
 	onLineChange?: (payload: { id: string; points?: number[]; rotation?: number }) => void;
 	onRectDragEnd?: (payload: { id: string; x: number; y: number }) => void;
@@ -40,6 +42,8 @@ export const CanvasArea = React.forwardRef<CanvasAreaHandle, CanvasAreaProps>(
 			onMouseDown,
 			onMouseMove,
 			onMouseUp,
+			showGrid = false,
+			gridSize = 20,
 			onLineDragEnd,
 			onLineChange,
 			onRectDragEnd,
@@ -63,6 +67,41 @@ export const CanvasArea = React.forwardRef<CanvasAreaHandle, CanvasAreaProps>(
     const isMarqueeActive = !!marquee;
     // context menu state
     const [ctxMenu, setCtxMenu] = useState<null | { x: number; y: number }>(null);
+
+		// Precompute grid lines
+			const gridLines = React.useMemo((): React.ReactElement[] | null => {
+			if (!showGrid || size.width <= 0 || size.height <= 0 || gridSize <= 0) return null;
+				const lines: React.ReactElement[] = [];
+			// vertical
+			for (let x = 0, i = 0; x <= size.width; x += gridSize, i++) {
+				const isMajor = i % 5 === 0;
+				lines.push(
+					<KonvaLine
+						key={`v-${x}`}
+						points={[x, 0, x, size.height]}
+						stroke={isMajor ? '#e5e7eb' : '#f3f4f6'}
+						strokeWidth={isMajor ? 1 : 0.5}
+						listening={false}
+						perfectDrawEnabled={false as any}
+					/>
+				);
+			}
+			// horizontal
+			for (let y = 0, i = 0; y <= size.height; y += gridSize, i++) {
+				const isMajor = i % 5 === 0;
+				lines.push(
+					<KonvaLine
+						key={`h-${y}`}
+						points={[0, y, size.width, y]}
+						stroke={isMajor ? '#e5e7eb' : '#f3f4f6'}
+						strokeWidth={isMajor ? 1 : 0.5}
+						listening={false}
+						perfectDrawEnabled={false as any}
+					/>
+				);
+			}
+			return lines;
+		}, [showGrid, size.width, size.height, gridSize]);
 
 		// Auto-resize to fill container
 		useEffect(() => {
@@ -281,6 +320,9 @@ export const CanvasArea = React.forwardRef<CanvasAreaHandle, CanvasAreaProps>(
 						}
 					}}
 				>
+					<Layer listening={false}>
+						{gridLines}
+					</Layer>
 					<Layer>
 						{/* groups */}
 						{groups.map((g) => (

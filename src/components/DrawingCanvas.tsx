@@ -18,10 +18,11 @@ interface DrawingCanvasProps {
   onHistoryChange?: (info: { canUndo: boolean; canRedo: boolean }) => void;
   tool?: ToolType; // default 'line'
   onToolChange?: (t: ToolType) => void;
+  showGrid?: boolean;
 }
 
 export const DrawingCanvas = React.forwardRef<DrawingCanvasHandle, DrawingCanvasProps>(
-  ({ strokeColor, strokeWidth, onHistoryChange, tool = 'line', onToolChange }, ref) => {
+  ({ strokeColor, strokeWidth, onHistoryChange, tool = 'line', onToolChange, showGrid = false }, ref) => {
     const { shapes, groups, draft, canUndo, canRedo, clear, undo, redo, onMouseDown, onMouseMove, onMouseUp, onLineDragEnd, onLineChange, onLineStyleChange, onShapeUpdate, onRectDragEnd, onRectChange, groupShapes, ungroupGroup, groupDragEnd, groupChange } =
       useDrawing({ tool, stroke: strokeColor, strokeWidth, onHistoryChange });
 
@@ -81,6 +82,7 @@ export const DrawingCanvas = React.forwardRef<DrawingCanvasHandle, DrawingCanvas
             groups={groups}
             draft={draft}
             tool={tool}
+            showGrid={showGrid}
             selectedId={selectedId}
             selectedIds={selectedShapeIds}
             onMouseDown={onMouseDown}

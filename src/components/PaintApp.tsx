@@ -8,6 +8,7 @@ export const PaintApp: React.FC = () => {
   const [strokeColor, setStrokeColor] = useState<string>('#111827');
   const [strokeWidth, setStrokeWidth] = useState<number>(3);
   const [tool, setTool] = useState<ToolType>('line');
+  const [showGrid, setShowGrid] = useState<boolean>(true);
 
   // History flags
   const [canUndo, setCanUndo] = useState(false);
@@ -50,6 +51,8 @@ export const PaintApp: React.FC = () => {
           a.click();
           URL.revokeObjectURL(url);
         }}
+        showGrid={showGrid}
+        onToggleGrid={() => setShowGrid(g => !g)}
       />
 
       <div style={{ display: 'flex', flex: 1 }}>
@@ -63,6 +66,7 @@ export const PaintApp: React.FC = () => {
             setCanUndo(canUndo);
             setCanRedo(canRedo);
           }}
+          showGrid={showGrid}
         />
       </div>
     </div>
