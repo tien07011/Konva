@@ -1,4 +1,3 @@
-// Kiểu cho các lệnh vẽ custom (absolute). Đơn giản hoá theo chuẩn SVG:
 export type PathCommand =
   | { cmd: 'M'; x: number; y: number }
   | { cmd: 'L'; x: number; y: number }
@@ -6,7 +5,6 @@ export type PathCommand =
   | { cmd: 'C'; x1: number; y1: number; x2: number; y2: number; x: number; y: number }
   | { cmd: 'Z' };
 
-// Dễ đọc hơn: tên đầy đủ thay vì ký tự M/L/Q/C/Z
 export type VerboseCommand =
   | { type: 'moveTo'; x: number; y: number }
   | { type: 'lineTo'; x: number; y: number }
@@ -14,13 +12,11 @@ export type VerboseCommand =
   | { type: 'cubicCurveTo'; x1: number; y1: number; x2: number; y2: number; x: number; y: number }
   | { type: 'closePath' };
 
-// Kiểu Shape với d là array các lệnh vẽ custom
 export interface Shape {
   id: string;
-  // type: 'line' | 'rectangle' | 'path' | ... (tự do hoá ở layer trên)
-  commands?: PathCommand[]; // Custom path commands
-  ops?: VerboseCommand[]; // Bản dễ đọc hơn (ưu tiên sử dụng)
-  d?: string; // Back-compat: chuỗi SVG nếu cần
+  commands?: PathCommand[];
+  ops?: VerboseCommand[];
+  d?: string;
   stroke?: string;
   strokeWidth?: number;
   fill?: string;
@@ -29,11 +25,13 @@ export interface Shape {
   translate?: { x: number; y: number };
 }
 
-// Group vẫn giữ nguyên
+// Hỗ trợ group lồng nhau và trộn lẫn shape/group theo thứ tự bất kỳ
+export type GroupChild = Shape | Group;
+
 export interface Group {
   id: string;
-  shapes?: Shape[];
-  groups?: Group[];
+  name?: string;
+  children?: GroupChild[];
   stroke?: string;
   fill?: string;
   rotation?: number;
@@ -41,11 +39,9 @@ export interface Group {
   translate?: { x: number; y: number };
 }
 
-// Màn hình chứa các shapes/groups
 export interface Screen {
   id: string;
   name?: string;
-  shapes?: Shape[];
-  groups?: Group[];
+  children?: GroupChild[];
   background?: string;
 }

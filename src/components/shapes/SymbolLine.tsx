@@ -31,7 +31,7 @@ export const LineShapeNode: React.FC<{
         points={points}
         stroke={shape.stroke}
         strokeWidth={shape.strokeWidth}
-        lineCap="round"
+        lineCap={shape.lineCap || 'round'}
         lineJoin={shape.lineJoin || 'miter'}
         dash={dashed ? [8, 6] : undefined}
         draggable={!dashed && draggable}
@@ -158,10 +158,18 @@ export const LineShapeNode: React.FC<{
 };
 
 // Small icon component to preview a line tool
-export const SymbolLine: React.FC<{ size?: number; stroke?: string; strokeWidth?: number }> = ({
+export const SymbolLine: React.FC<{
+  size?: number;
+  stroke?: string;
+  strokeWidth?: number;
+  lineCap?: 'butt' | 'round' | 'square';
+  lineJoin?: 'miter' | 'round' | 'bevel';
+}> = ({
   size = 36,
   stroke = '#111827',
   strokeWidth = 4,
+  lineCap = 'round',
+  lineJoin = 'round',
 }) => {
   const StageAny = Stage as unknown as React.ComponentType<any>;
   const padding = Math.max(3, Math.ceil(strokeWidth / 2) + 2);
@@ -188,8 +196,8 @@ export const SymbolLine: React.FC<{ size?: number; stroke?: string; strokeWidth?
             points={points}
             stroke={stroke}
             strokeWidth={strokeWidth}
-            lineCap="round"
-            lineJoin="round"
+            lineCap={lineCap}
+            lineJoin={lineJoin}
           />
         </Layer>
       </StageAny>

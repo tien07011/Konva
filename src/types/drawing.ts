@@ -1,5 +1,3 @@
-// Common drawing types for shapes and tools
-
 export type ToolType = 'none' | 'line' | 'rect' | 'circle' | 'qcurve' | 'ccurve' | 'path'; // thêm custom path
 
 export interface BaseShape {
@@ -8,12 +6,13 @@ export interface BaseShape {
   stroke: string;
   strokeWidth: number;
   rotation?: number;
-  fill?: string; // màu bên trong (áp dụng cho các shape kín như rect, circle)
+  fill?: string;
 }
-
+   
 export interface LineShape extends BaseShape {
   type: 'line';
   points: number[]; // [x1, y1, x2, y2]
+  lineCap?: 'butt' | 'round' | 'square' // kiểu mũi đầu cuối
   lineJoin?: 'miter' | 'round' | 'bevel'; // kiểu nối giữa các đoạn
 }
 
@@ -44,7 +43,6 @@ export interface CircleShape extends BaseShape {
   r: number;
 }
 
-// Custom Path
 export type PathCommand =
   | { cmd: 'M'; x: number; y: number }
   | { cmd: 'L'; x: number; y: number }
@@ -63,19 +61,24 @@ export type AnyShape =
   | CircleShape
   | QuadraticCurveShape
   | CubicCurveShape
-  | PathShape; // mở rộng thêm các dạng cong
+  | PathShape;
 
-// Group tree for layer panel
+export interface ShapeRef {
+  kind: 'shape';
+  shapeId: string;
+}
+
+export type GroupChild = ShapeRef | ShapeGroup;
+
 export interface ShapeGroup {
   id: string;
   name: string;
-  // Children can be shapes or nested groups
-  shapeIds: string[]; // maintain ordering of shapes
-  groups: ShapeGroup[]; // nested groups
-  // visibility / lock state
+  children?: GroupChild[];
+  shapeIds: string[];
+  groups: ShapeGroup[];
+
   visible: boolean;
   locked: boolean;
-  // optional transform for the group (future)
   rotation?: number;
   translate?: { x: number; y: number };
   scale?: { x: number; y: number };

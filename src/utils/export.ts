@@ -13,6 +13,7 @@ import type {
   Screen as OutScreen,
   Shape as OutShape,
   Group as OutGroup,
+  GroupChild as OutGroupChild,
   PathCommand as OutPathCommand,
   VerboseCommand,
 } from '../types/interface';
@@ -181,7 +182,8 @@ export function buildScreenFromShapes(shapes: AnyShape[], opts: ExportOptions = 
   } = opts;
 
   const outShapes: OutShape[] = shapes.map((s) => shapeToOutShape(s, precision, normalize));
-  return { id, name, shapes: outShapes, groups: [], background };
+  const children: OutGroupChild[] = outShapes;
+  return { id, name, children, background };
 }
 
 // New: build screen with groups and shapes (shapes inside groups are not duplicated at root)
@@ -215,7 +217,8 @@ export function buildScreen(
       .filter(Boolean)
       .map((s) => shapeToOutShape(s!, precision, normalize));
     const childGroups: OutGroup[] = g.groups.map((child) => toOutGroup(child));
-    const out: OutGroup = { id: g.id, shapes: childShapes, groups: childGroups };
+    const children: OutGroupChild[] = [...childShapes, ...childGroups];
+    const out: OutGroup = { id: g.id, name: g.name, children } as OutGroup;
     if (g.rotation != null) out.rotation = round(g.rotation, precision);
     if (g.translate)
       out.translate = { x: round(g.translate.x, precision), y: round(g.translate.y, precision) };
@@ -227,7 +230,8 @@ export function buildScreen(
     .filter((s) => !groupedIds.has(s.id))
     .map((s) => shapeToOutShape(s, precision, normalize));
   const outGroups: OutGroup[] = groups.map((g) => toOutGroup(g));
-  return { id, name, shapes: outShapes, groups: outGroups, background };
+  const children: OutGroupChild[] = [...outShapes, ...outGroups];
+  return { id, name, children, background };
 }
 
 // Core conversion for single shape

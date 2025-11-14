@@ -37,7 +37,12 @@ export interface UseDrawingResult {
   // shape interactions
   onLineDragEnd: (payload: { id: string; points: number[] }) => void;
   onLineChange: (payload: { id: string; points?: number[]; rotation?: number }) => void;
-  onLineStyleChange: (payload: { id: string; lineJoin?: 'miter' | 'round' | 'bevel' }) => void;
+  // extended style change including lineCap
+  onLineStyleChange: (payload: {
+    id: string;
+    lineJoin?: 'miter' | 'round' | 'bevel';
+    lineCap?: 'butt' | 'round' | 'square';
+  }) => void;
   onShapeUpdate: (payload: {
     id: string;
     stroke?: string;
@@ -115,6 +120,7 @@ export function useDrawing({
           fill, // lines không dùng fill nhưng giữ structure thống nhất
           points: [x, y, x, y],
           lineJoin: 'miter',
+          lineCap: 'round',
         };
         setDraft(d);
       } else if (tool === 'rect') {
@@ -249,11 +255,19 @@ export function useDrawing({
   );
 
   const onLineStyleChange = useCallback(
-    (payload: { id: string; lineJoin?: 'miter' | 'round' | 'bevel' }) => {
+    (payload: {
+      id: string;
+      lineJoin?: 'miter' | 'round' | 'bevel';
+      lineCap?: 'butt' | 'round' | 'square';
+    }) => {
       setShapes((prev) =>
         prev.map((s) =>
           s.id === payload.id && s.type === 'line'
-            ? { ...s, ...(payload.lineJoin ? { lineJoin: payload.lineJoin } : {}) }
+            ? {
+                ...s,
+                ...(payload.lineJoin ? { lineJoin: payload.lineJoin } : {}),
+                ...(payload.lineCap ? { lineCap: payload.lineCap } : {}),
+              }
             : s,
         ),
       );

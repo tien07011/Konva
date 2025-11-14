@@ -311,21 +311,38 @@ export const DrawingCanvas = React.forwardRef<DrawingCanvasHandle, DrawingCanvas
               </>
             )}
             {selectedShape.type === 'line' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <label style={{ fontSize: 12, color: '#374151' }}>Line Join</label>
-                <select
-                  value={(selectedShape as any).lineJoin || 'miter'}
-                  onChange={(e) =>
-                    onLineStyleChange({ id: selectedShape.id, lineJoin: e.target.value as any })
-                  }
-                  style={{ fontSize: 12 }}
-                  title="Kiểu nối giữa các đoạn"
-                >
-                  <option value="miter">miter</option>
-                  <option value="round">round</option>
-                  <option value="bevel">bevel</option>
-                </select>
-              </div>
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <label style={{ fontSize: 12, color: '#374151' }}>Line Join</label>
+                  <select
+                    value={(selectedShape as any).lineJoin || 'miter'}
+                    onChange={(e) =>
+                      onLineStyleChange({ id: selectedShape.id, lineJoin: e.target.value as any })
+                    }
+                    style={{ fontSize: 12 }}
+                    title="Kiểu nối giữa các đoạn"
+                  >
+                    <option value="miter">miter</option>
+                    <option value="round">round</option>
+                    <option value="bevel">bevel</option>
+                  </select>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <label style={{ fontSize: 12, color: '#374151' }}>Line Cap</label>
+                  <select
+                    value={(selectedShape as any).lineCap || 'round'}
+                    onChange={(e) =>
+                      onLineStyleChange({ id: selectedShape.id, lineCap: e.target.value as any })
+                    }
+                    style={{ fontSize: 12 }}
+                    title="Kiểu đầu mút đường"
+                  >
+                    <option value="butt">butt</option>
+                    <option value="round">round</option>
+                    <option value="square">square</option>
+                  </select>
+                </div>
+              </>
             )}
           </div>
         )}
