@@ -1,5 +1,5 @@
 import React from 'react';
-import { Stage, Layer, Line as KonvaLine, Circle } from 'react-konva';
+import { Stage, Layer, Line as KonvaLine, Circle, Group } from 'react-konva';
 import type { LineShape } from '../../types/drawing';
 
 // Renderer for a LineShape in the canvas
@@ -27,39 +27,38 @@ export const LineShapeNode: React.FC<{
   }
   return (
     <>
-      <KonvaLine
-        points={points}
-        stroke={shape.stroke}
-        strokeWidth={shape.strokeWidth}
-        lineCap={shape.lineCap || 'round'}
-        lineJoin={shape.lineJoin || 'miter'}
-        dash={dashed ? [8, 6] : undefined}
+      <Group
         draggable={!dashed && draggable}
-        perfectDrawEnabled={false}
-        shadowForStrokeEnabled={false}
         onMouseDown={(e: any) => {
-          // avoid triggering Stage's onMouseDown (which starts drafting)
           e.cancelBubble = true;
         }}
         onTouchStart={(e: any) => {
           e.cancelBubble = true;
         }}
-        onClick={() => onSelect?.(shape.id)}
-        onTap={() => onSelect?.(shape.id)}
         onDragEnd={(e: any) => {
           if (!onDragEnd) return;
-          const node = e.target as any; // Konva.Line
+          const node = e.target as any; // Konva.Group
           const pos = node.position();
-          // translate absolute points by node's drag offset
           const next: number[] = [];
-          for (let i = 0; i < points.length; i += 2) {
-            next.push(points[i] + pos.x, points[i + 1] + pos.y);
-          }
-          // reset node offset to avoid visual double-transform; state update will re-render
+            for (let i = 0; i < points.length; i += 2) {
+              next.push(points[i] + pos.x, points[i + 1] + pos.y);
+            }
           node.position({ x: 0, y: 0 });
           onDragEnd({ id: shape.id, points: next });
         }}
-      />
+      >
+        <KonvaLine
+          points={points}
+          stroke={shape.stroke}
+          strokeWidth={shape.strokeWidth}
+          lineCap={shape.lineCap || 'round'}
+          lineJoin={shape.lineJoin || 'miter'}
+          dash={dashed ? [8, 6] : undefined}
+          perfectDrawEnabled={false}
+          shadowForStrokeEnabled={false}
+          onClick={() => onSelect?.(shape.id)}
+          onTap={() => onSelect?.(shape.id)}
+        />
 
       {/* Handles and midpoints: only when selected and not draft */}
       {!dashed && isSelected && (
@@ -153,6 +152,7 @@ export const LineShapeNode: React.FC<{
           })}
         </>
       )}
+      </Group>
     </>
   );
 };

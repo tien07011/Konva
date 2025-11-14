@@ -1,15 +1,17 @@
-import { useCallback, useMemo, useRef, useState, useEffect } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import { useLineHandlers } from './drawing/useLineHandlers';
+import { useRectHandlers } from './drawing/useRectHandlers';
+import { useCircleHandlers } from './drawing/useCircleHandlers';
+import { useGrouping } from './drawing/useGrouping';
+import { useHistory } from './drawing/useHistory';
+import { useDraft } from './drawing/useDraft';
+import { useShapeUpdate } from './drawing/useShapeUpdate';
 import type {
   AnyShape,
   DraftShape,
   HistoryState,
-  LineShape,
-  RectShape,
-  CircleShape,
   ToolType,
   ShapeGroup,
-  QuadraticCurveShape,
-  CubicCurveShape,
 } from '../types/drawing';
 
 export interface UseDrawingOptions {
@@ -93,360 +95,55 @@ export function useDrawing({
 }: UseDrawingOptions): UseDrawingResult {
   const [shapes, setShapes] = useState<AnyShape[]>([]);
   const [groups, setGroups] = useState<ShapeGroup[]>([]);
-  const [draft, setDraft] = useState<DraftShape>(null);
-  const redoStack = useRef<AnyShape[]>([]);
 
-  const notifyHistory = useCallback(() => {
-    const info: HistoryState = {
-      canUndo: shapes.length > 0,
-      canRedo: redoStack.current.length > 0,
-    };
-    onHistoryChange?.(info);
-  }, [onHistoryChange, shapes.length]);
+  // history hook encapsulates redoStack & notify
+  const { clear, undo, redo, canUndo, canRedo, redoStack, notifyHistory } = useHistory({
+    shapes,
+    setShapes,
+    setDraft: () => {}, // replaced by useDraft's internal state; placeholder will be overwritten below
+    onHistoryChange,
+  });
 
-  useEffect(() => {
-    notifyHistory();
-  }, [notifyHistory]);
+  // draft hook manages draft state (override setDraft in history usage not needed)
+  const { draft, startDraft, updateDraft, commitDraft } = useDraft({
+    tool,
+    stroke,
+    strokeWidth,
+    fill,
+    nextId,
+    setShapes,
+    redoStack,
+    notifyHistory,
+  });
 
-  const startDraft = useCallback(
-    (x: number, y: number) => {
-      if (tool === 'none') return;
-      if (tool === 'line') {
-        const d: LineShape = {
-          id: nextId(),
-          type: 'line',
-          stroke,
-          strokeWidth,
-          fill, // lines không dùng fill nhưng giữ structure thống nhất
-          points: [x, y, x, y],
-          lineJoin: 'miter',
-          lineCap: 'round',
-        };
-        setDraft(d);
-      } else if (tool === 'rect') {
-        const d: RectShape = {
-          id: nextId(),
-          type: 'rect',
-          stroke,
-          strokeWidth,
-          fill,
-          x,
-          y,
-          width: 0,
-          height: 0,
-        };
-        setDraft(d);
-      } else if (tool === 'circle') {
-        const d: CircleShape = {
-          id: nextId(),
-          type: 'circle',
-          stroke,
-          strokeWidth,
-          fill,
-          cx: x,
-          cy: y,
-          r: 0,
-        };
-        setDraft(d);
-      } else if (tool === 'qcurve') {
-        const d: QuadraticCurveShape = {
-          id: nextId(),
-          type: 'qcurve',
-          stroke,
-          strokeWidth,
-          fill,
-          points: [x, y, x, y, x, y], // start, control, end (initially overlapping)
-        };
-        setDraft(d);
-      } else if (tool === 'ccurve') {
-        const d: CubicCurveShape = {
-          id: nextId(),
-          type: 'ccurve',
-          stroke,
-          strokeWidth,
-          fill,
-          points: [x, y, x, y, x, y, x, y], // start, c1, c2, end (initially overlapping)
-        };
-        setDraft(d);
-      }
-    },
-    [stroke, strokeWidth, fill, tool],
-  );
+  // shape style/update hook
+  const { onShapeUpdate } = useShapeUpdate(setShapes);
 
-  const updateDraft = useCallback(
-    (x: number, y: number) => {
-      if (!draft) return;
-      if (draft.type === 'line') {
-        setDraft({ ...draft, points: [draft.points[0], draft.points[1], x, y] });
-      } else if (draft.type === 'rect') {
-        const x0 = (draft as RectShape).x;
-        const y0 = (draft as RectShape).y;
-        const nx = Math.min(x0, x);
-        const ny = Math.min(y0, y);
-        const w = Math.abs(x - x0);
-        const h = Math.abs(y - y0);
-        setDraft({ ...(draft as RectShape), x: nx, y: ny, width: w, height: h });
-      } else if (draft.type === 'circle') {
-        // radius is distance from center to current pointer
-        const cx = (draft as CircleShape).cx;
-        const cy = (draft as CircleShape).cy;
-        const r = Math.sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
-        setDraft({ ...(draft as CircleShape), r });
-      } else if (draft.type === 'qcurve') {
-        // keep start fixed, update end, derive control as midpoint
-        const p0x = draft.points[0];
-        const p0y = draft.points[1];
-        const cx = (p0x + x) / 2;
-        const cy = (p0y + y) / 2;
-        setDraft({ ...draft, points: [p0x, p0y, cx, cy, x, y] });
-      } else if (draft.type === 'ccurve') {
-        // derive control points at 1/3 & 2/3 along straight line initial
-        const p0x = draft.points[0];
-        const p0y = draft.points[1];
-        const cx1 = p0x + (x - p0x) / 3;
-        const cy1 = p0y + (y - p0y) / 3;
-        const cx2 = p0x + (2 * (x - p0x)) / 3;
-        const cy2 = p0y + (2 * (y - p0y)) / 3;
-        setDraft({ ...draft, points: [p0x, p0y, cx1, cy1, cx2, cy2, x, y] });
-      }
-    },
-    [draft],
-  );
+  // Extracted handlers
+  const { onLineDragEnd, onLineChange, onLineStyleChange } = useLineHandlers({
+    setShapes,
+    notifyHistory,
+    redoStack,
+  });
+  const { onRectDragEnd, onRectChange } = useRectHandlers({
+    setShapes,
+    notifyHistory,
+    redoStack,
+  });
+  const { onCircleDragEnd, onCircleChange } = useCircleHandlers({
+    setShapes,
+    notifyHistory,
+    redoStack,
+  });
 
-  const commitDraft = useCallback(() => {
-    if (!draft) return;
-    setShapes((prev) => [...prev, draft as AnyShape]);
-    setDraft(null);
-    redoStack.current = [];
-    notifyHistory();
-  }, [draft, notifyHistory]);
+  // (removed inline onShapeUpdate; now from hook)
 
-  const onLineDragEnd = useCallback(
-    (payload: { id: string; points: number[] }) => {
-      setShapes((prev) =>
-        prev.map((s) =>
-          s.id === payload.id && (s.type === 'line' || s.type === 'qcurve' || s.type === 'ccurve')
-            ? { ...s, points: payload.points }
-            : s,
-        ),
-      );
-      // dragging is a new action; clear redo stack
-      redoStack.current = [];
-      notifyHistory();
-    },
-    [notifyHistory],
-  );
-
-  const onLineChange = useCallback(
-    (payload: { id: string; points?: number[]; rotation?: number }) => {
-      setShapes((prev) =>
-        prev.map((s) =>
-          s.id === payload.id && (s.type === 'line' || s.type === 'qcurve' || s.type === 'ccurve')
-            ? {
-                ...s,
-                ...(payload.points ? { points: payload.points } : {}),
-                ...(payload.rotation != null ? { rotation: payload.rotation } : {}),
-              }
-            : s,
-        ),
-      );
-    },
-    [],
-  );
-
-  const onLineStyleChange = useCallback(
-    (payload: {
-      id: string;
-      lineJoin?: 'miter' | 'round' | 'bevel';
-      lineCap?: 'butt' | 'round' | 'square';
-    }) => {
-      setShapes((prev) =>
-        prev.map((s) =>
-          s.id === payload.id && s.type === 'line'
-            ? {
-                ...s,
-                ...(payload.lineJoin ? { lineJoin: payload.lineJoin } : {}),
-                ...(payload.lineCap ? { lineCap: payload.lineCap } : {}),
-              }
-            : s,
-        ),
-      );
-    },
-    [],
-  );
-
-  const onRectDragEnd = useCallback(
-    (payload: { id: string; x: number; y: number }) => {
-      setShapes((prev) =>
-        prev.map((s) =>
-          s.id === payload.id && s.type === 'rect'
-            ? { ...(s as RectShape), x: payload.x, y: payload.y }
-            : s,
-        ),
-      );
-      redoStack.current = [];
-      notifyHistory();
-    },
-    [notifyHistory],
-  );
-
-  const onCircleDragEnd = useCallback(
-    (payload: { id: string; cx: number; cy: number }) => {
-      setShapes((prev) =>
-        prev.map((s) =>
-          s.id === payload.id && s.type === 'circle'
-            ? { ...(s as CircleShape), cx: payload.cx, cy: payload.cy }
-            : s,
-        ),
-      );
-      redoStack.current = [];
-      notifyHistory();
-    },
-    [notifyHistory],
-  );
-
-  const onRectChange = useCallback(
-    (payload: {
-      id: string;
-      x?: number;
-      y?: number;
-      width?: number;
-      height?: number;
-      rotation?: number;
-    }) => {
-      setShapes((prev) =>
-        prev.map((s) =>
-          s.id === payload.id && s.type === 'rect'
-            ? {
-                ...(s as RectShape),
-                ...(payload.x !== undefined ? { x: payload.x } : {}),
-                ...(payload.y !== undefined ? { y: payload.y } : {}),
-                ...(payload.width !== undefined ? { width: payload.width } : {}),
-                ...(payload.height !== undefined ? { height: payload.height } : {}),
-                ...(payload.rotation !== undefined ? { rotation: payload.rotation } : {}),
-              }
-            : s,
-        ),
-      );
-    },
-    [],
-  );
-
-  const onCircleChange = useCallback(
-    (payload: { id: string; cx?: number; cy?: number; r?: number; rotation?: number }) => {
-      setShapes((prev) =>
-        prev.map((s) =>
-          s.id === payload.id && s.type === 'circle'
-            ? {
-                ...(s as CircleShape),
-                ...(payload.cx !== undefined ? { cx: payload.cx } : {}),
-                ...(payload.cy !== undefined ? { cy: payload.cy } : {}),
-                ...(payload.r !== undefined ? { r: Math.max(1, payload.r) } : {}),
-                ...(payload.rotation !== undefined ? { rotation: payload.rotation } : {}),
-              }
-            : s,
-        ),
-      );
-    },
-    [],
-  );
-
-  const onShapeUpdate = useCallback(
-    (payload: { id: string; stroke?: string; strokeWidth?: number; rotation?: number; fill?: string }) => {
-      setShapes((prev) =>
-        prev.map((s) =>
-          s.id === payload.id
-            ? {
-                ...s,
-                ...(payload.stroke !== undefined ? { stroke: payload.stroke } : {}),
-                ...(payload.strokeWidth !== undefined ? { strokeWidth: payload.strokeWidth } : {}),
-                ...(payload.rotation !== undefined ? { rotation: payload.rotation } : {}),
-                ...(payload.fill !== undefined ? { fill: payload.fill } : {}),
-              }
-            : s,
-        ),
-      );
-    },
-    [],
-  );
-
-  // Group helpers
-  const isInAnyGroup = useCallback((id: string, groupsList: ShapeGroup[]): boolean => {
-    for (const g of groupsList) {
-      if (g.shapeIds.includes(id)) return true;
-      if (isInAnyGroup(id, g.groups)) return true;
-    }
-    return false;
-  }, []);
-
-  const groupShapes = useCallback(
-    (ids: string[], name = 'Group'): string | null => {
-      const unique = Array.from(new Set(ids.filter(Boolean)));
-      if (unique.length < 2) return null; // need at least two shapes to group
-      // ensure all ids exist
-      const allExist = unique.every((id) => shapes.some((s) => s.id === id));
-      if (!allExist) return null;
-      // remove ids already grouped (top-level only for now)
-      const topLevelIds = unique.filter((id) => !isInAnyGroup(id, groups));
-      if (topLevelIds.length < 2) return null;
-      const newGroup: ShapeGroup = {
-        id: nextId(),
-        name,
-        shapeIds: topLevelIds,
-        groups: [],
-        visible: true,
-        locked: false,
-      };
-      setGroups((prev) => [newGroup, ...prev]);
-      return newGroup.id;
-    },
-    [groups, isInAnyGroup, shapes],
-  );
-
-  const ungroupGroup = useCallback((groupId: string) => {
-    const removeRec = (list: ShapeGroup[]): ShapeGroup[] =>
-      list.filter((g) => g.id !== groupId).map((g) => ({ ...g, groups: removeRec(g.groups) }));
-    setGroups((prev) => removeRec(prev));
-  }, []);
-
-  const groupDragEnd = useCallback((payload: { id: string; x: number; y: number }) => {
-    setGroups((prev) =>
-      prev.map((g) =>
-        g.id === payload.id ? { ...g, translate: { x: payload.x, y: payload.y } } : g,
-      ),
-    );
-  }, []);
-
-  const groupChange = useCallback(
-    (payload: {
-      id: string;
-      x?: number;
-      y?: number;
-      rotation?: number;
-      scaleX?: number;
-      scaleY?: number;
-    }) => {
-      setGroups((prev) =>
-        prev.map((g) => {
-          if (g.id !== payload.id) return g;
-          const next: ShapeGroup = { ...g };
-          if (payload.x != null || payload.y != null) {
-            const tx = payload.x != null ? payload.x : g.translate?.x || 0;
-            const ty = payload.y != null ? payload.y : g.translate?.y || 0;
-            next.translate = { x: tx, y: ty };
-          }
-          if (payload.rotation != null) next.rotation = payload.rotation;
-          if (payload.scaleX != null || payload.scaleY != null) {
-            const sx = payload.scaleX != null ? payload.scaleX : g.scale?.x || 1;
-            const sy = payload.scaleY != null ? payload.scaleY : g.scale?.y || 1;
-            next.scale = { x: sx, y: sy };
-          }
-          return next;
-        }),
-      );
-    },
-    [],
-  );
+  const { groupShapes, ungroupGroup, groupDragEnd, groupChange } = useGrouping({
+    shapes,
+    groups,
+    setGroups,
+    nextId,
+  });
 
   const onMouseDown = useCallback(
     (e: any) => {
@@ -475,33 +172,7 @@ export function useDrawing({
     commitDraft();
   }, [commitDraft]);
 
-  const clear = useCallback(() => {
-    setShapes([]);
-    setDraft(null);
-    redoStack.current = [];
-    notifyHistory();
-  }, [notifyHistory]);
-
-  const undo = useCallback(() => {
-    setShapes((prev) => {
-      if (prev.length === 0) return prev;
-      const copy = [...prev];
-      const popped = copy.pop()!;
-      redoStack.current.push(popped);
-      return copy;
-    });
-    notifyHistory();
-  }, [notifyHistory]);
-
-  const redo = useCallback(() => {
-    if (redoStack.current.length === 0) return;
-    const last = redoStack.current.pop()!;
-    setShapes((prev) => [...prev, last]);
-    notifyHistory();
-  }, [notifyHistory]);
-
-  const canUndo = shapes.length > 0;
-  const canRedo = redoStack.current.length > 0;
+  // (history now provided by useHistory)
 
   return useMemo(
     () => ({
