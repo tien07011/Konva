@@ -48,6 +48,7 @@ export type PathCommand =
   | { cmd: 'L'; x: number; y: number }
   | { cmd: 'Q'; cx: number; cy: number; x: number; y: number }
   | { cmd: 'C'; x1: number; y1: number; x2: number; y2: number; x: number; y: number }
+  | { cmd: 'A'; rx: number; ry: number; xAxisRotation: number; largeArcFlag: 0 | 1; sweepFlag: 0 | 1; x: number; y: number }
   | { cmd: 'Z' };
 
 export interface PathShape extends BaseShape {
@@ -75,18 +76,12 @@ export interface ShapeGroup {
   name: string;
   children?: GroupChild[];
   shapeIds: string[];
-  groups: ShapeGroup[];
-
+  // groups: ShapeGroup[];
   visible: boolean;
   locked: boolean;
   rotation?: number;
   translate?: { x: number; y: number };
   scale?: { x: number; y: number };
-}
-
-export interface DrawingTree {
-  shapes: AnyShape[]; // flat store of all shapes
-  groups: ShapeGroup[]; // top-level groups
 }
 
 export type DraftShape = AnyShape | null;

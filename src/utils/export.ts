@@ -163,6 +163,28 @@ function pathShapeToCommands(
           y: r(c.y),
         });
         break;
+      case 'A':
+        compact.push({
+          cmd: 'A',
+          rx: r(c.rx),
+          ry: r(c.ry),
+          xAxisRotation: r(c.xAxisRotation),
+          largeArcFlag: c.largeArcFlag,
+          sweepFlag: c.sweepFlag,
+          x: r(c.x),
+          y: r(c.y),
+        });
+        verbose.push({
+          type: 'arcTo',
+          rx: r(c.rx),
+          ry: r(c.ry),
+          xAxisRotation: r(c.xAxisRotation),
+          largeArcFlag: c.largeArcFlag,
+          sweepFlag: c.sweepFlag,
+          x: r(c.x),
+          y: r(c.y),
+        });
+        break;
       case 'Z':
         compact.push({ cmd: 'Z' });
         verbose.push({ type: 'closePath' });
@@ -206,9 +228,14 @@ export function buildScreen(
   const collect = (list: ShapeGroup[]) => {
     list.forEach((g) => {
       g.shapeIds.forEach((id) => groupedIds.add(id));
-      collect(g.groups);
+      if (g.children) {
+        g.children.forEach((child) => {
+          if (isShapeGroup(child)) collect([child]);
+        });
+      }
     });
   };
+  const isShapeGroup = (c: any): c is ShapeGroup => c && Array.isArray(c.shapeIds);
   collect(groups);
 
   const toOutGroup = (g: ShapeGroup): OutGroup => {
@@ -216,7 +243,9 @@ export function buildScreen(
       .map((id) => shapeMap.get(id))
       .filter(Boolean)
       .map((s) => shapeToOutShape(s!, precision, normalize));
-    const childGroups: OutGroup[] = g.groups.map((child) => toOutGroup(child));
+    const childGroups: OutGroup[] = (g.children || [])
+      .filter((c) => isShapeGroup(c))
+      .map((cg) => toOutGroup(cg as ShapeGroup));
     const children: OutGroupChild[] = [...childShapes, ...childGroups];
     const out: OutGroup = { id: g.id, name: g.name, children } as OutGroup;
     if (g.rotation != null) out.rotation = round(g.rotation, precision);
@@ -266,28 +295,70 @@ function shapeToOutShape(
     commands = res.compact;
     verbose = res.verbose;
   } else if (s.type === 'circle') {
-    // Approximate circle as a 4-point path (or export as a centered translate with radius as scale).
-    // We'll output as a path: move to rightmost point, then use 4 cubic curves could be heavy; instead, use a polygonal approximation.
+    // Export circle using SVG Arc commands (two arcs form full circle)
     const c = s as CircleShape;
-    const steps = 16;
+    const rcx = round(c.cx, precision);
+    const rcy = round(c.cy, precision);
+    const rr = round(c.r, precision);
+    let cx0 = rcx;
+    let cy0 = rcy;
+    if (normalize === 'translateMinToOrigin') {
+      translate = { x: rcx, y: rcy };
+      cx0 = 0;
+      cy0 = 0;
+    }
     const pts: OutPathCommand[] = [];
     const vOps: VerboseCommand[] = [];
-    for (let i = 0; i < steps; i++) {
-      const ang = (i / steps) * Math.PI * 2;
-      const x = c.cx + c.r * Math.cos(ang);
-      const y = c.cy + c.r * Math.sin(ang);
-      if (i === 0) {
-        pts.push({ cmd: 'M', x: round(x, precision), y: round(y, precision) });
-        vOps.push({ type: 'moveTo', x: round(x, precision), y: round(y, precision) });
-      } else {
-        pts.push({ cmd: 'L', x: round(x, precision), y: round(y, precision) });
-        vOps.push({ type: 'lineTo', x: round(x, precision), y: round(y, precision) });
-      }
-    }
+    // Move to start (rightmost point)
+    pts.push({ cmd: 'M', x: round(cx0 + rr, precision), y: round(cy0, precision) });
+    vOps.push({ type: 'moveTo', x: round(cx0 + rr, precision), y: round(cy0, precision) });
+    // First arc: right -> left
+    pts.push({
+      cmd: 'A',
+      rx: rr,
+      ry: rr,
+      xAxisRotation: 0,
+      largeArcFlag: 1,
+      sweepFlag: 0,
+      x: round(cx0 - rr, precision),
+      y: round(cy0, precision),
+    });
+    vOps.push({
+      type: 'arcTo',
+      rx: rr,
+      ry: rr,
+      xAxisRotation: 0,
+      largeArcFlag: 1,
+      sweepFlag: 0,
+      x: round(cx0 - rr, precision),
+      y: round(cy0, precision),
+    });
+    // Second arc: left -> right (complete circle)
+    pts.push({
+      cmd: 'A',
+      rx: rr,
+      ry: rr,
+      xAxisRotation: 0,
+      largeArcFlag: 1,
+      sweepFlag: 0,
+      x: round(cx0 + rr, precision),
+      y: round(cy0, precision),
+    });
+    vOps.push({
+      type: 'arcTo',
+      rx: rr,
+      ry: rr,
+      xAxisRotation: 0,
+      largeArcFlag: 1,
+      sweepFlag: 0,
+      x: round(cx0 + rr, precision),
+      y: round(cy0, precision),
+    });
     pts.push({ cmd: 'Z' });
     vOps.push({ type: 'closePath' });
     commands = pts;
     verbose = vOps;
+    (s as any)._exportCircle = { cx: rcx, cy: rcy, r: rr };
   } else if (s.type === 'qcurve') {
     const res = qCurveToCommands(s as QuadraticCurveShape, precision);
     commands = res.compact;
@@ -308,6 +379,13 @@ function shapeToOutShape(
     stroke: s.stroke,
     strokeWidth: s.strokeWidth,
   };
+  // Inject circle center & radius if marked
+  const circleData = (s as any)._exportCircle;
+  if (circleData) {
+    out.cx = circleData.cx;
+    out.cy = circleData.cy;
+    out.r = circleData.r;
+  }
   if (s.fill) (out as any).fill = s.fill;
   if (s.rotation != null) out.rotation = round(s.rotation, precision);
   if (translate) out.translate = translate;
