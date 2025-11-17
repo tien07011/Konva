@@ -100,7 +100,7 @@ export function useDrawing({
   const { clear, undo, redo, canUndo, canRedo, redoStack, notifyHistory } = useHistory({
     shapes,
     setShapes,
-    setDraft: () => {}, // replaced by useDraft's internal state; placeholder will be overwritten below
+    setDraft: (_next) => undefined, // setDraft managed by useDraft; intentional no-op for history.clear
     onHistoryChange,
   });
 

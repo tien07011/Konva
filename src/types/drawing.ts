@@ -76,7 +76,7 @@ export interface ShapeGroup {
   name: string;
   children?: GroupChild[];
   shapeIds: string[];
-  // groups: ShapeGroup[];
+  groups: ShapeGroup[];
   visible: boolean;
   locked: boolean;
   rotation?: number;
