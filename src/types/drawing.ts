@@ -14,6 +14,7 @@ export interface LineShape extends BaseShape {
   points: number[]; // [x1, y1, x2, y2]
   lineCap?: 'butt' | 'round' | 'square' // kiểu mũi đầu cuối
   lineJoin?: 'miter' | 'round' | 'bevel'; // kiểu nối giữa các đoạn
+  dash?: number[]; // mẫu gạch (ví dụ [8,6])
 }
 
 // Quadratic Bézier curve: [x0, y0, cx, cy, x1, y1]

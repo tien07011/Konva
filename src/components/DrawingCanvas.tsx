@@ -342,6 +342,36 @@ export const DrawingCanvas = React.forwardRef<DrawingCanvasHandle, DrawingCanvas
                     <option value="square">square</option>
                   </select>
                 </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <label style={{ fontSize: 12, color: '#374151' }}>Dash</label>
+                  <input
+                    type="text"
+                    style={{ flex: 1, fontSize: 12 }}
+                    placeholder="ví dụ: 8,6"
+                    value={Array.isArray((selectedShape as any).dash) ? (selectedShape as any).dash.join(',') : ''}
+                    onChange={(e) => {
+                      const raw = e.target.value.trim();
+                      if (!raw) {
+                        onLineStyleChange({ id: selectedShape.id, dash: [] });
+                        return;
+                      }
+                      const parts = raw.split(/[ ,]+/).filter(Boolean);
+                      const nums = parts
+                        .map((p) => Math.max(0, parseFloat(p)))
+                        .filter((n) => n > 0);
+                      onLineStyleChange({ id: selectedShape.id, dash: nums });
+                    }}
+                    title="Mẫu gạch (nhập danh sách số dương, cách nhau bởi dấu phẩy hoặc khoảng trắng)"
+                  />
+                  <button
+                    type="button"
+                    style={{ fontSize: 11 }}
+                    onClick={() => onLineStyleChange({ id: selectedShape.id, dash: [] })}
+                    title="Xoá mẫu gạch"
+                  >
+                    Clear
+                  </button>
+                </div>
               </>
             )}
           </div>

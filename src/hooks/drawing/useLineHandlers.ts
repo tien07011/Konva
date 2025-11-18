@@ -77,7 +77,7 @@ export function useLineHandlers({ setShapes, notifyHistory, redoStack }: UseLine
   );
 
   const onLineStyleChange = useCallback(
-    (payload: { id: string; lineJoin?: 'miter' | 'round' | 'bevel'; lineCap?: 'butt' | 'round' | 'square' }) => {
+    (payload: { id: string; lineJoin?: 'miter' | 'round' | 'bevel'; lineCap?: 'butt' | 'round' | 'square'; dash?: number[] }) => {
       replaceShape(payload.id, (s) => {
         if (s.type !== 'line') return null;
         let changed = false;
@@ -89,6 +89,31 @@ export function useLineHandlers({ setShapes, notifyHistory, redoStack }: UseLine
         if (payload.lineCap && s.lineCap !== payload.lineCap) {
           next.lineCap = payload.lineCap;
           changed = true;
+        }
+        if (payload.dash !== undefined) {
+          const current = s.dash || undefined;
+          const incoming = payload.dash && payload.dash.length ? payload.dash : undefined;
+          let same = true;
+          if (current === undefined && incoming === undefined) {
+            same = true;
+          } else if ((current === undefined) !== (incoming === undefined)) {
+            same = false;
+          } else if (current && incoming) {
+            if (current.length !== incoming.length) {
+              same = false;
+            } else {
+              for (let i = 0; i < current.length; i++) {
+                if (current[i] !== incoming[i]) {
+                  same = false;
+                  break;
+                }
+              }
+            }
+          }
+          if (!same) {
+            next.dash = incoming;
+            changed = true;
+          }
         }
         return changed ? next : null;
       });

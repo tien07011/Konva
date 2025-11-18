@@ -53,6 +53,12 @@ const LineShapeNodeBase: React.FC<{
   useEffect(() => () => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
   }, []);
+  // helper set cursor (draw.io style) - inline to avoid extra import churn
+  const setCursor = (target: any, cursor: string) => {
+    const stage = target?.getStage?.();
+    if (stage) stage.container().style.cursor = cursor;
+  };
+
   return (
     <>
       <Group
@@ -63,7 +69,20 @@ const LineShapeNodeBase: React.FC<{
         onTouchStart={(e: any) => {
           e.cancelBubble = true;
         }}
+        onMouseEnter={(e: any) => {
+          setCursor(e.target, 'pointer'); // hover line
+        }}
+        onMouseLeave={(e: any) => {
+          setCursor(e.target, 'default');
+        }}
+        onDragStart={(e: any) => {
+          setCursor(e.target, 'move');
+        }}
+        onDragMove={(e: any) => {
+          setCursor(e.target, 'move');
+        }}
         onDragEnd={(e: any) => {
+          setCursor(e.target, 'pointer');
           if (!onDragEnd) return;
           const node = e.target as any; // Konva.Group
           const pos = node.position();
@@ -81,11 +100,13 @@ const LineShapeNodeBase: React.FC<{
           strokeWidth={shape.strokeWidth}
           lineCap={shape.lineCap || 'round'}
           lineJoin={shape.lineJoin || 'miter'}
-          dash={dashed ? [8, 6] : undefined}
+          dash={dashed ? (shape.dash && shape.dash.length ? shape.dash : [8, 6]) : shape.dash}
           perfectDrawEnabled={false}
           shadowForStrokeEnabled={false}
           onClick={() => onSelect?.(shape.id)}
           onTap={() => onSelect?.(shape.id)}
+          onMouseEnter={(e: any) => setCursor(e.target, 'pointer')}
+          onMouseLeave={(e: any) => setCursor(e.target, 'default')}
         />
 
       {/* Handles and midpoints: only when selected and not draft */}
@@ -105,10 +126,14 @@ const LineShapeNodeBase: React.FC<{
               shadowForStrokeEnabled={false}
               onMouseDown={(e: any) => {
                 e.cancelBubble = true;
+                setCursor(e.target, 'move');
               }}
               onTouchStart={(e: any) => {
                 e.cancelBubble = true;
               }}
+              onMouseEnter={(e: any) => setCursor(e.target, 'move')}
+              onMouseLeave={(e: any) => setCursor(e.target, 'default')}
+              onDragStart={(e: any) => setCursor(e.target, 'move')}
               onDblClick={() => {
                 if (!onChange) return;
                 if (points.length <= 4) return; // keep at least 2 points
@@ -125,6 +150,7 @@ const LineShapeNodeBase: React.FC<{
               }}
               onDragEnd={(e: any) => {
                 e.cancelBubble = true;
+                setCursor(e.target, 'move');
               }}
             />
           ))}
@@ -151,6 +177,8 @@ const LineShapeNodeBase: React.FC<{
                 onTouchStart={(e: any) => {
                   e.cancelBubble = true;
                 }}
+                onMouseEnter={(e: any) => setCursor(e.target, 'crosshair')}
+                onMouseLeave={(e: any) => setCursor(e.target, 'default')}
                 onDragEnd={(e: any) => {
                   if (!onChange) return;
                   const stage = e.target.getStage();
@@ -162,6 +190,7 @@ const LineShapeNodeBase: React.FC<{
                   next.splice(insertAt, 0, pos.x, pos.y);
                   onChange({ id: shape.id, points: next });
                   e.cancelBubble = true;
+                  setCursor(e.target, 'pointer');
                 }}
                 onClick={(e: any) => {
                   if (!onChange) return;
@@ -170,6 +199,7 @@ const LineShapeNodeBase: React.FC<{
                   next.splice(insertAt, 0, mx, my);
                   onChange({ id: shape.id, points: next });
                   e.cancelBubble = true;
+                  setCursor(e.target, 'pointer');
                 }}
               />
             );

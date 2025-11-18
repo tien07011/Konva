@@ -44,6 +44,7 @@ export interface UseDrawingResult {
     id: string;
     lineJoin?: 'miter' | 'round' | 'bevel';
     lineCap?: 'butt' | 'round' | 'square';
+    dash?: number[];
   }) => void;
   onShapeUpdate: (payload: {
     id: string;
