@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useMemo, useRef, useEffect } from 'react';
 import { Stage, Layer, Line as KonvaLine, Circle, Group } from 'react-konva';
 import type { LineShape } from '../../types/drawing';
 
 // Renderer for a LineShape in the canvas
-export const LineShapeNode: React.FC<{
+const LineShapeNodeBase: React.FC<{
   shape: LineShape;
   dashed?: boolean;
   draggable?: boolean;
@@ -21,10 +21,38 @@ export const LineShapeNode: React.FC<{
   onChange,
 }) => {
   const points = shape.points;
-  const anchors: Array<{ x: number; y: number; idx: number }> = [];
-  for (let i = 0; i < points.length; i += 2) {
-    anchors.push({ x: points[i], y: points[i + 1], idx: i });
-  }
+  // Memo hoá tính toán anchors để tránh lặp lại khi props khác thay đổi
+  const anchors = useMemo(() => {
+    const arr: Array<{ x: number; y: number; idx: number }> = [];
+    for (let i = 0; i < points.length; i += 2) {
+      arr.push({ x: points[i], y: points[i + 1], idx: i });
+    }
+    return arr;
+  }, [points]);
+
+  // Throttle cập nhật điểm khi kéo anchor bằng requestAnimationFrame
+  const pendingRef = useRef<{ idx: number; x: number; y: number } | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const scheduleUpdate = (idx: number, x: number, y: number) => {
+    if (!onChange) return;
+    pendingRef.current = { idx, x, y };
+    if (rafRef.current == null) {
+      rafRef.current = requestAnimationFrame(() => {
+        const p = pendingRef.current;
+        if (p) {
+          const next = points.slice();
+          next[p.idx] = p.x;
+          next[p.idx + 1] = p.y;
+          onChange({ id: shape.id, points: next });
+        }
+        rafRef.current = null;
+      });
+    }
+  };
+
+  useEffect(() => () => {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+  }, []);
   return (
     <>
       <Group
@@ -89,15 +117,11 @@ export const LineShapeNode: React.FC<{
                 onChange({ id: shape.id, points: next });
               }}
               onDragMove={(e: any) => {
-                if (!onChange) return;
                 const stage = e.target.getStage();
                 if (!stage) return;
                 const pos = stage.getPointerPosition();
                 if (!pos) return;
-                const next = points.slice();
-                next[a.idx] = pos.x;
-                next[a.idx + 1] = pos.y;
-                onChange({ id: shape.id, points: next });
+                scheduleUpdate(a.idx, pos.x, pos.y);
               }}
               onDragEnd={(e: any) => {
                 e.cancelBubble = true;
@@ -156,6 +180,18 @@ export const LineShapeNode: React.FC<{
     </>
   );
 };
+
+export const LineShapeNode = React.memo(LineShapeNodeBase, (prev, next) => {
+  const p = prev.shape;
+  const n = next.shape;
+  if (prev.isSelected !== next.isSelected) return false;
+  if (prev.dashed !== next.dashed) return false;
+  if (p.id !== n.id) return false;
+  if (p.stroke !== n.stroke || p.strokeWidth !== n.strokeWidth) return false;
+  // Points reference change implies update; shallow compare length for quick exit
+  if (p.points !== n.points) return false;
+  return true; // skip re-render
+});
 
 // Small icon component to preview a line tool
 export const SymbolLine: React.FC<{
