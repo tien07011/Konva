@@ -8,15 +8,15 @@ import type {
   CircleShape,
   QuadraticCurveShape,
   CubicCurveShape,
+  Export,
 } from '../types/drawing';
-import type {
-  Screen as OutScreen,
-  Shape as OutShape,
-  Group as OutGroup,
-  GroupChild as OutGroupChild,
-  PathCommand as OutPathCommand,
-  VerboseCommand,
-} from '../types/interface';
+
+type OutScreen = Export.Screen;
+type OutShape = Export.Shape;
+type OutGroup = Export.Group;
+type OutGroupChild = Export.GroupChild;
+type OutPathCommand = PathCommand;
+type VerboseCommand = Export.VerboseCommand;
 
 export interface ExportOptions {
   id?: string;
