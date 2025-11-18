@@ -20,6 +20,7 @@ export const PaintApp: React.FC = () => {
 
   const canUndo = historyIndex > 0;
   const canRedo = historyIndex < history.length - 1;
+  const selectedShape = selectedId ? shapes.find((s) => s.id === selectedId) ?? null : null;
 
   const handleAddShape = (shape: AnyShape) => {
     dispatch(addShape(shape));
@@ -121,6 +122,8 @@ export const PaintApp: React.FC = () => {
         onRedo={handleRedo}
         onClear={handleClear}
         onExport={handleExport}
+        selectedShape={selectedShape}
+        onUpdateSelectedShape={(shape: AnyShape) => dispatch(updateShape(shape))}
       />
     </div>
   );

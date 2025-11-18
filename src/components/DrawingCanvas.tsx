@@ -64,6 +64,8 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
         strokeWidth,
         lineCap: 'round',
         lineJoin: 'round',
+        closed: false,
+        tension: 0,
       };
 
       setCurrentShape(newLine);

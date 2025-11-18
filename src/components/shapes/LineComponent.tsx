@@ -24,6 +24,9 @@ export const LineComponent: React.FC<LineComponentProps> = ({
       lineCap={shape.lineCap || 'round'}
       lineJoin={shape.lineJoin || 'round'}
       dash={shape.dash}
+      closed={!!shape.closed}
+      tension={shape.tension ?? 0}
+      fill={shape.fill}
       rotation={shape.rotation || 0}
       draggable
       onClick={onSelect}

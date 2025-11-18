@@ -1,7 +1,7 @@
 import React from 'react';
 import { Minus, MousePointer, Circle as CircleIcon, Square as RectIcon, Undo, Redo, Trash2, Download, Grid3x3 } from 'lucide-react';
 import { Button } from './ui/button';
-import type { ToolType } from '../types/drawing';
+import type { ToolType, AnyShape, LineShape } from '../types/drawing';
 
 interface ToolbarProps {
   tool: ToolType;
@@ -20,6 +20,8 @@ interface ToolbarProps {
   onRedo: () => void;
   onClear: () => void;
   onExport: () => void;
+  selectedShape?: AnyShape | null;
+  onUpdateSelectedShape?: (shape: AnyShape) => void;
 }
 
 const commonColors = [
@@ -50,7 +52,16 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onRedo,
   onClear,
   onExport,
+  selectedShape,
+  onUpdateSelectedShape,
 }) => {
+  const selectedLine: LineShape | null = selectedShape && selectedShape.type === 'line' ? (selectedShape as LineShape) : null;
+
+  const updateLine = (patch: Partial<LineShape>) => {
+    if (!selectedLine || !onUpdateSelectedShape) return;
+    onUpdateSelectedShape({ ...selectedLine, ...patch });
+  };
+
   return (
     <div className="w-72 bg-slate-50 border-l border-slate-200 p-4 space-y-6 overflow-y-auto">
       {/* Tools */}
@@ -151,6 +162,107 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           className="w-full"
         />
       </div>
+
+      {/* Line-specific controls */}
+      {selectedLine && (
+        <div>
+          <h3 className="text-sm font-semibold text-slate-700 mb-3">Line</h3>
+          <div className="space-y-4">
+            {/* Line Cap */}
+            <div>
+              <div className="text-xs text-slate-600 mb-2">Line Cap</div>
+              <div className="grid grid-cols-3 gap-2">
+                {(['butt','round','square'] as const).map((cap) => (
+                  <Button
+                    key={cap}
+                    variant={selectedLine.lineCap === cap ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => updateLine({ lineCap: cap })}
+                  >
+                    {cap}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {/* Line Join */}
+            <div>
+              <div className="text-xs text-slate-600 mb-2">Line Join</div>
+              <div className="grid grid-cols-3 gap-2">
+                {(['miter','round','bevel'] as const).map((join) => (
+                  <Button
+                    key={join}
+                    variant={selectedLine.lineJoin === join ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => updateLine({ lineJoin: join })}
+                  >
+                    {join}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {/* Dash presets */}
+            <div>
+              <div className="text-xs text-slate-600 mb-2">Dash</div>
+              <div className="grid grid-cols-4 gap-2">
+                <Button
+                  variant={!selectedLine.dash || selectedLine.dash.length === 0 ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => updateLine({ dash: [] })}
+                >
+                  None
+                </Button>
+                <Button
+                  variant={JSON.stringify(selectedLine.dash) === JSON.stringify([4,4]) ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => updateLine({ dash: [4, 4] })}
+                >
+                  4-4
+                </Button>
+                <Button
+                  variant={JSON.stringify(selectedLine.dash) === JSON.stringify([8,6]) ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => updateLine({ dash: [8, 6] })}
+                >
+                  8-6
+                </Button>
+                <Button
+                  variant={JSON.stringify(selectedLine.dash) === JSON.stringify([12,4,2,4]) ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => updateLine({ dash: [12, 4, 2, 4] })}
+                >
+                  Mix
+                </Button>
+              </div>
+            </div>
+
+            {/* Closed + Tension */}
+            <div className="flex items-center justify-between gap-4">
+              <label className="flex items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={!!selectedLine.closed}
+                  onChange={(e) => updateLine({ closed: e.target.checked })}
+                />
+                Closed (fill)
+              </label>
+              <div className="flex-1">
+                <div className="text-xs text-slate-600 mb-1">Tension: {selectedLine.tension ?? 0}</div>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={selectedLine.tension ?? 0}
+                  onChange={(e) => updateLine({ tension: Number(e.target.value) })}
+                  className="w-full"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Actions */}
       <div>
