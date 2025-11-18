@@ -1,4 +1,4 @@
-
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { LineShape } from '../types/drawing';
 
 export interface LineState {
@@ -8,7 +8,6 @@ export interface LineState {
 const initialState: LineState = {
 	lines: [],
 };
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 const lineSlice = createSlice({
 	name: 'line',

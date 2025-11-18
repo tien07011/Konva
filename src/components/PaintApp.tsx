@@ -1,82 +1,102 @@
-import React, { useRef } from 'react';
-import { MenuBar } from './MenuBar';
-import { DrawingCanvas, type DrawingCanvasHandle } from './DrawingCanvas';
-import type { ToolType } from '../types/drawing';
+import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../store/store';
-import { setStrokeColor, setStrokeWidth, setFillColor, setTool, toggleGrid, setHistoryFlags } from '../store/uiSlice';
+import { DrawingCanvas } from './DrawingCanvas';
+import { Toolbar } from './Toolbar';
+import { setTool, setStrokeColor, setStrokeWidth, setFillColor, toggleGrid } from '../store/uiSlice';
+import { addShape, updateShape, selectShape, clearShapes, undo, redo } from '../store/shapesSlice';
+import type { AnyShape } from '../types/drawing';
 
 export const PaintApp: React.FC = () => {
   const dispatch = useDispatch();
-  const canvasRef = useRef<DrawingCanvasHandle | null>(null);
 
-  const { strokeColor, strokeWidth, fillColor, tool, showGrid, canUndo, canRedo } = useSelector(
+  // UI state
+  const { strokeColor, strokeWidth, fillColor, tool, showGrid } = useSelector(
     (state: RootState) => state.ui,
   );
 
-  const exportJSON = () => {
-    const json = canvasRef.current?.exportJSON();
-    if (!json) return;
+  // Shapes state
+  const { shapes, selectedId, historyIndex, history } = useSelector(
+    (state: RootState) => state.shapes,
+  );
 
-    const blob = new Blob([json], {
-      type: "application/json;charset=utf-8",
-    });
+  const canUndo = historyIndex > 0;
+  const canRedo = historyIndex < history.length - 1;
 
+  // Handlers
+  const handleAddShape = (shape: AnyShape) => {
+    dispatch(addShape(shape));
+  };
+
+  const handleUpdateShape = (shape: AnyShape) => {
+    dispatch(updateShape(shape));
+  };
+
+  const handleSelectShape = (id: string | null) => {
+    dispatch(selectShape(id));
+  };
+
+  const handleUndo = () => {
+    dispatch(undo());
+  };
+
+  const handleRedo = () => {
+    dispatch(redo());
+  };
+
+  const handleClear = () => {
+    if (window.confirm('Are you sure you want to clear all shapes?')) {
+      dispatch(clearShapes());
+    }
+  };
+
+  const handleExport = () => {
+    // TODO: Implement export logic
+    const json = JSON.stringify(shapes, null, 2);
+    console.log('Export JSON:', json);
+    
+    // Download as file
+    const blob = new Blob([json], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-
-    const pad = (n: number) => String(n).padStart(2, "0");
-
-    const t = new Date();
-    const filename = `screen-${
-      t.getFullYear()
-      }${pad(t.getMonth() + 1)}${pad(t.getDate())}-${pad(
-      t.getHours()
-      )}${pad(t.getMinutes())}${pad(t.getSeconds())}.json`;
-
-    a.href = url;
-    a.download = filename;
-    a.click();
-
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `drawing-${Date.now()}.json`;
+    link.click();
     URL.revokeObjectURL(url);
   };
 
-
   return (
-    <div className="flex flex-col h-screen bg-slate-100">
-      <MenuBar
+    <div className="flex h-screen bg-slate-100">
+      <div className="flex-1 flex flex-col">
+        {/* Canvas */}
+        <DrawingCanvas
+          shapes={shapes}
+          onAddShape={handleAddShape}
+          onUpdateShape={handleUpdateShape}
+          selectedId={selectedId}
+          onSelectShape={handleSelectShape}
+        />
+      </div>
+
+      {/* Toolbar */}
+      <Toolbar
+        tool={tool}
+        onToolChange={(t) => dispatch(setTool(t))}
         strokeColor={strokeColor}
         onStrokeColorChange={(c) => dispatch(setStrokeColor(c))}
         strokeWidth={strokeWidth}
         onStrokeWidthChange={(w) => dispatch(setStrokeWidth(w))}
         fillColor={fillColor}
-        onFillColorChange={(f) => dispatch(setFillColor(f))}
-        tool={tool}
-        onToolChange={(t: ToolType) => dispatch(setTool(t))}
-        canUndo={canUndo}
-        canRedo={canRedo}
-        onUndo={() => canvasRef.current?.undo()}
-        onRedo={() => canvasRef.current?.redo()}
-        onClear={() => canvasRef.current?.clear()}
-        onExport={() => exportJSON()}
+        onFillColorChange={(c) => dispatch(setFillColor(c))}
         showGrid={showGrid}
         onToggleGrid={() => dispatch(toggleGrid())}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
+        onClear={handleClear}
+        onExport={handleExport}
       />
-
-      <div className="flex flex-1">
-        <DrawingCanvas
-          ref={canvasRef}
-          strokeColor={strokeColor}
-          strokeWidth={strokeWidth}
-          fillColor={fillColor}
-          tool={tool}
-          onToolChange={(t: ToolType) => dispatch(setTool(t))}
-          onHistoryChange={({ canUndo, canRedo }) => {
-            dispatch(setHistoryFlags({ canUndo, canRedo }));
-          }}
-          showGrid={showGrid}
-        />
-      </div>
     </div>
   );
 };

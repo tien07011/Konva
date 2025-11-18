@@ -7,8 +7,6 @@ export interface UIState {
   fillColor: string;
   tool: ToolType;
   showGrid: boolean;
-  canUndo: boolean;
-  canRedo: boolean;
 }
 
 const initialState: UIState = {
@@ -17,8 +15,6 @@ const initialState: UIState = {
   fillColor: 'transparent',
   tool: 'line',
   showGrid: true,
-  canUndo: false,
-  canRedo: false,
 };
 
 const uiSlice = createSlice({
@@ -40,10 +36,6 @@ const uiSlice = createSlice({
     toggleGrid(state) {
       state.showGrid = !state.showGrid;
     },
-    setHistoryFlags(state, action: PayloadAction<{ canUndo: boolean; canRedo: boolean }>) {
-      state.canUndo = action.payload.canUndo;
-      state.canRedo = action.payload.canRedo;
-    },
   },
 });
 
@@ -53,7 +45,6 @@ export const {
   setFillColor,
   setTool,
   toggleGrid,
-  setHistoryFlags,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

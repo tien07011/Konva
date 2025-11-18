@@ -1,488 +1,141 @@
-import React, { useEffect, useImperativeHandle, useMemo, useState } from 'react';
-import { CanvasArea } from './CanvasArea';
-import { useDrawing } from '../hooks/useDrawing';
-import type { ToolType } from '../types/drawing';
-import { buildScreen, buildScreenFromShapes } from '../utils/export';
-import { LayersPanel } from './LayersPanel';
-
-export interface DrawingCanvasHandle {
-  clear: () => void;
-  undo: () => void;
-  redo: () => void;
-  exportJSON: () => string; // JSON following interface.Screen
-}
+import { useRef, useState } from 'react';
+import { Stage, Layer } from 'react-konva';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../store/store';
+import { LineComponent } from './shapes/LineComponent';
+import type { AnyShape, LineShape } from '../types/drawing';
 
 interface DrawingCanvasProps {
-  strokeColor: string;
-  strokeWidth: number;
-  onHistoryChange?: (info: { canUndo: boolean; canRedo: boolean }) => void;
-  tool?: ToolType; // default 'line'
-  onToolChange?: (t: ToolType) => void;
-  showGrid?: boolean;
-  fillColor?: string; // màu fill mặc định khi tạo rect/circle
+  shapes: AnyShape[];
+  onAddShape: (shape: AnyShape) => void;
+  onUpdateShape: (shape: AnyShape) => void;
+  selectedId: string | null;
+  onSelectShape: (id: string | null) => void;
 }
 
-export const DrawingCanvas = React.forwardRef<DrawingCanvasHandle, DrawingCanvasProps>(
-  (
-    {
-      strokeColor,
+export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
+  shapes,
+  onAddShape,
+  onUpdateShape,
+  selectedId,
+  onSelectShape,
+}) => {
+  const { tool, strokeColor, strokeWidth, showGrid } = useSelector(
+    (state: RootState) => state.ui,
+  );
+
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [currentShape, setCurrentShape] = useState<AnyShape | null>(null);
+  const stageRef = useRef<any>(null);
+
+  const handleMouseDown = (e: any) => {
+    const stage = e.target.getStage();
+    if (!stage) return;
+
+    const pos = stage.getPointerPosition();
+    if (!pos) return;
+
+    // Deselect when clicking on empty area
+    if (e.target === stage) {
+      onSelectShape(null);
+    }
+
+    if (tool !== 'line') return;
+
+    setIsDrawing(true);
+
+    const id = `line-${Date.now()}`;
+    const newLine: LineShape = {
+      id,
+      type: 'line',
+      points: [pos.x, pos.y, pos.x, pos.y],
+      stroke: strokeColor,
       strokeWidth,
-      onHistoryChange,
-      tool = 'line',
-      onToolChange,
-      showGrid = false,
-      fillColor = 'transparent',
-    },
-    ref,
-  ) => {
-    const {
-      shapes,
-      groups,
-      draft,
-      canUndo,
-      canRedo,
-      clear,
-      undo,
-      redo,
-      onMouseDown,
-      onMouseMove,
-      onMouseUp,
-      onLineDragEnd,
-      onLineChange,
-      onLineStyleChange,
-      onShapeUpdate,
-      onRectDragEnd,
-      onRectChange,
-      onCircleDragEnd,
-      onCircleChange,
-      groupShapes,
-      ungroupGroup,
-      groupDragEnd,
-      groupChange,
-  } = useDrawing({ tool, stroke: strokeColor, strokeWidth, fill: fillColor, onHistoryChange });
+      lineCap: 'round',
+      lineJoin: 'round',
+    };
 
-    const [selectedId, setSelectedId] = useState<string | null>(null);
-    const [selectedShapeIds, setSelectedShapeIds] = useState<string[]>([]); // multi-select (layers or marquee)
-    const selectedShape = useMemo(
-      () => (selectedId ? shapes.find((s) => s.id === selectedId) || null : null),
-      [shapes, selectedId],
-    );
+    setCurrentShape(newLine);
+  };
 
-    useEffect(() => {
-      onHistoryChange?.({ canUndo, canRedo });
-    }, [canUndo, canRedo, onHistoryChange]);
+  const handleMouseMove = (e: any) => {
+    if (!isDrawing || !currentShape || tool !== 'line') return;
 
-    useImperativeHandle(
-      ref,
-      () => ({
-        clear,
-        undo,
-        redo,
-        exportJSON: () => {
-          const screen = buildScreen(shapes, groups, {
-            id: 'screen_1',
-            name: 'Canvas',
-            background: '#ffffff',
-            precision: 2,
-            normalize: 'none',
-          });
-          return JSON.stringify(screen, null, 2);
-        },
-      }),
-      [clear, undo, redo],
-    );
+    const stage = e.target.getStage();
+    if (!stage) return;
 
-    return (
-      <div style={{ display: 'flex', width: '100%', height: '100%' }}>
-        {/* Layers panel on the left */}
-        <LayersPanel
-          shapes={shapes}
-          groups={groups}
-          selectedIds={selectedShapeIds}
-          onToggleSelect={(id) => {
-            setSelectedId(id); // also reflect highlight in canvas
-            setSelectedShapeIds((prev) =>
-              prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-            );
-          }}
-          onClearSelection={() => {
-            setSelectedShapeIds([]);
-            setSelectedId(null);
-          }}
-          onGroup={(ids) => {
-            const gid = groupShapes(ids, `Group ${ids.length}`);
-            if (gid) setSelectedShapeIds([]);
-          }}
-          onUngroup={(gid) => {
-            ungroupGroup(gid);
-          }}
-          selectedGroupId={selectedId}
-          onSelectGroup={(gid) => setSelectedId(gid)}
+    const pos = stage.getPointerPosition();
+    if (!pos) return;
+
+    if (currentShape.type === 'line') {
+      const updatedLine: LineShape = {
+        ...currentShape,
+        points: [currentShape.points[0], currentShape.points[1], pos.x, pos.y],
+      };
+      setCurrentShape(updatedLine);
+    }
+  };
+
+  const handleMouseUp = () => {
+    if (!isDrawing || !currentShape) return;
+
+    onAddShape(currentShape);
+    setIsDrawing(false);
+    setCurrentShape(null);
+  };
+
+  const handleDragEnd = (shape: AnyShape) => (e: any) => {
+    const node = e.target;
+    const newPos = { x: node.x(), y: node.y() };
+
+    if (shape.type === 'line') {
+      const deltaX = newPos.x;
+      const deltaY = newPos.y;
+      const updatedShape: LineShape = {
+        ...shape,
+        points: shape.points.map((val, idx) => (idx % 2 === 0 ? val + deltaX : val + deltaY)),
+      };
+      node.position({ x: 0, y: 0 });
+      onUpdateShape(updatedShape);
+    }
+  };
+
+  const renderShape = (shape: AnyShape) => {
+    const isSelected = shape.id === selectedId;
+
+    if (shape.type === 'line') {
+      return (
+        <LineComponent
+          key={shape.id}
+          shape={shape}
+          isSelected={isSelected}
+          onSelect={() => onSelectShape(shape.id)}
+          onDragEnd={handleDragEnd(shape)}
         />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <CanvasArea
-            shapes={shapes}
-            groups={groups}
-            draft={draft}
-            tool={tool}
-            showGrid={showGrid}
-            selectedId={selectedId}
-            selectedIds={selectedShapeIds}
-            onMouseDown={onMouseDown}
-            onMouseMove={onMouseMove}
-            onMouseUp={(e: any) => {
-              const hadDraft = !!draft;
-              onMouseUp(e);
-              if (hadDraft) {
-                setSelectedId(null);
-                onToolChange?.('none');
-              }
-            }}
-            onLineDragEnd={onLineDragEnd}
-            onLineChange={onLineChange}
-            onRectDragEnd={onRectDragEnd}
-            onRectChange={onRectChange}
-            onCircleDragEnd={onCircleDragEnd}
-            onCircleChange={onCircleChange}
-            onSelectShape={(id: string | null) => setSelectedId(id)}
-            onMarqueeSelect={(ids) => {
-              setSelectedShapeIds(ids);
-              // do not override single selectedId unless exactly one id
-              setSelectedId(ids.length === 1 ? ids[0] : null);
-            }}
-            onContextGroupRequest={() => {
-              if (selectedShapeIds.length >= 2) {
-                const gid = groupShapes(selectedShapeIds, `Group ${selectedShapeIds.length}`);
-                if (gid) {
-                  setSelectedShapeIds([]);
-                  setSelectedId(gid);
-                }
-              }
-            }}
-            onGroupDragEnd={groupDragEnd}
-            onGroupChange={groupChange}
-          />
-        </div>
-        {/* Properties panel */}
-        {selectedShape && selectedId && !groups.some((g) => g.id === selectedId) && (
-          <div
-            style={{
-              width: 260,
-              borderLeft: '1px solid #e5e7eb',
-              background: '#ffffff',
-              padding: 12,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 12,
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <strong>Thuộc tính</strong>
-              <button type="button" onClick={() => setSelectedId(null)} style={{ fontSize: 12 }}>
-                Bỏ chọn
-              </button>
-            </div>
+      );
+    }
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <label style={{ fontSize: 12, color: '#374151' }}>Màu viền</label>
-              <input
-                type="color"
-                value={selectedShape.stroke}
-                onChange={(e) => onShapeUpdate({ id: selectedShape.id, stroke: e.target.value })}
-                title="Màu viền"
-              />
-            </div>
+    return null;
+  };
 
-            {/* Fill color (áp dụng cho rect, circle) */}
-            {(selectedShape.type === 'rect' || selectedShape.type === 'circle') && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <label style={{ fontSize: 12, color: '#374151' }}>Màu trong</label>
-                <input
-                  type="color"
-                  value={
-                    selectedShape.fill && selectedShape.fill !== 'transparent'
-                      ? (selectedShape.fill as string)
-                      : '#ffffff'
-                  }
-                  onChange={(e) =>
-                    onShapeUpdate({ id: selectedShape.id, fill: e.target.value })
-                  }
-                  title="Màu tô bên trong"
-                />
-                {selectedShape.fill && (
-                  <button
-                    type="button"
-                    style={{ fontSize: 11 }}
-                    title="Không tô màu"
-                    onClick={() => onShapeUpdate({ id: selectedShape.id, fill: 'transparent' })}
-                  >
-                    Xoá
-                  </button>
-                )}
-              </div>
-            )}
+  const StageComponent = Stage as any;
+  const LayerComponent = Layer as any;
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <label style={{ fontSize: 12, color: '#374151' }}>Độ dày</label>
-              <input
-                type="range"
-                min={1}
-                max={50}
-                value={selectedShape.strokeWidth}
-                onChange={(e) =>
-                  onShapeUpdate({ id: selectedShape.id, strokeWidth: parseInt(e.target.value, 10) })
-                }
-              />
-              <span style={{ fontSize: 12, color: '#4b5563', minWidth: 28, textAlign: 'right' }}>
-                {selectedShape.strokeWidth}px
-              </span>
-            </div>
-            {/* Rotation control */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <label style={{ fontSize: 12, color: '#374151' }}>Góc xoay</label>
-              <input
-                type="number"
-                style={{ width: 70 }}
-                value={selectedShape.rotation ?? 0}
-                onChange={(e) =>
-                  onShapeUpdate({ id: selectedShape.id, rotation: parseFloat(e.target.value) || 0 })
-                }
-                title="Góc xoay (độ)"
-              />
-              <button
-                type="button"
-                style={{ fontSize: 11 }}
-                onClick={() => onShapeUpdate({ id: selectedShape.id, rotation: 0 })}
-                title="Đặt lại góc xoay"
-              >
-                Reset
-              </button>
-            </div>
-
-            {/* Position & size (chỉ cho hình chữ nhật) */}
-            {selectedShape.type === 'rect' && (
-              <>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                  <label style={{ fontSize: 12, color: '#374151' }}>X</label>
-                  <input
-                    type="number"
-                    style={{ width: 70 }}
-                    value={(selectedShape as any).x}
-                    onChange={(e) =>
-                      onRectChange({ id: selectedShape.id, x: parseFloat(e.target.value) || 0 })
-                    }
-                  />
-                  <label style={{ fontSize: 12, color: '#374151' }}>Y</label>
-                  <input
-                    type="number"
-                    style={{ width: 70 }}
-                    value={(selectedShape as any).y}
-                    onChange={(e) =>
-                      onRectChange({ id: selectedShape.id, y: parseFloat(e.target.value) || 0 })
-                    }
-                  />
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                  <label style={{ fontSize: 12, color: '#374151' }}>W</label>
-                  <input
-                    type="number"
-                    style={{ width: 70 }}
-                    value={(selectedShape as any).width}
-                    onChange={(e) =>
-                      onRectChange({
-                        id: selectedShape.id,
-                        width: Math.max(1, parseFloat(e.target.value) || 1),
-                      })
-                    }
-                  />
-                  <label style={{ fontSize: 12, color: '#374151' }}>H</label>
-                  <input
-                    type="number"
-                    style={{ width: 70 }}
-                    value={(selectedShape as any).height}
-                    onChange={(e) =>
-                      onRectChange({
-                        id: selectedShape.id,
-                        height: Math.max(1, parseFloat(e.target.value) || 1),
-                      })
-                    }
-                  />
-                </div>
-              </>
-            )}
-            {selectedShape.type === 'line' && (
-              <>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <label style={{ fontSize: 12, color: '#374151' }}>Line Join</label>
-                  <select
-                    value={(selectedShape as any).lineJoin || 'miter'}
-                    onChange={(e) =>
-                      onLineStyleChange({ id: selectedShape.id, lineJoin: e.target.value as any })
-                    }
-                    style={{ fontSize: 12 }}
-                    title="Kiểu nối giữa các đoạn"
-                  >
-                    <option value="miter">miter</option>
-                    <option value="round">round</option>
-                    <option value="bevel">bevel</option>
-                  </select>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <label style={{ fontSize: 12, color: '#374151' }}>Line Cap</label>
-                  <select
-                    value={(selectedShape as any).lineCap || 'round'}
-                    onChange={(e) =>
-                      onLineStyleChange({ id: selectedShape.id, lineCap: e.target.value as any })
-                    }
-                    style={{ fontSize: 12 }}
-                    title="Kiểu đầu mút đường"
-                  >
-                    <option value="butt">butt</option>
-                    <option value="round">round</option>
-                    <option value="square">square</option>
-                  </select>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <label style={{ fontSize: 12, color: '#374151' }}>Dash</label>
-                  <input
-                    type="text"
-                    style={{ flex: 1, fontSize: 12 }}
-                    placeholder="ví dụ: 8,6"
-                    value={Array.isArray((selectedShape as any).dash) ? (selectedShape as any).dash.join(',') : ''}
-                    onChange={(e) => {
-                      const raw = e.target.value.trim();
-                      if (!raw) {
-                        onLineStyleChange({ id: selectedShape.id, dash: [] });
-                        return;
-                      }
-                      const parts = raw.split(/[ ,]+/).filter(Boolean);
-                      const nums = parts
-                        .map((p) => Math.max(0, parseFloat(p)))
-                        .filter((n) => n > 0);
-                      onLineStyleChange({ id: selectedShape.id, dash: nums });
-                    }}
-                    title="Mẫu gạch (nhập danh sách số dương, cách nhau bởi dấu phẩy hoặc khoảng trắng)"
-                  />
-                  <button
-                    type="button"
-                    style={{ fontSize: 11 }}
-                    onClick={() => onLineStyleChange({ id: selectedShape.id, dash: [] })}
-                    title="Xoá mẫu gạch"
-                  >
-                    Clear
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        )}
-        {/* Group properties panel */}
-        {selectedId &&
-          groups.some((g) => g.id === selectedId) &&
-          (() => {
-            const g = groups.find((gr) => gr.id === selectedId)!;
-            return (
-              <div
-                style={{
-                  width: 260,
-                  borderLeft: '1px solid #e5e7eb',
-                  background: '#ffffff',
-                  padding: 12,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 12,
-                }}
-              >
-                <div
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-                >
-                  <strong>Group</strong>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedId(null)}
-                    style={{ fontSize: 12 }}
-                  >
-                    Bỏ chọn
-                  </button>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <label style={{ fontSize: 12, color: '#374151' }}>Vị trí</label>
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    <input
-                      type="number"
-                      style={{ width: 70 }}
-                      value={g.translate?.x || 0}
-                      onChange={(e) =>
-                        groupChange({ id: g.id, x: parseFloat(e.target.value) || 0 })
-                      }
-                      title="X"
-                    />
-                    <input
-                      type="number"
-                      style={{ width: 70 }}
-                      value={g.translate?.y || 0}
-                      onChange={(e) =>
-                        groupChange({ id: g.id, y: parseFloat(e.target.value) || 0 })
-                      }
-                      title="Y"
-                    />
-                  </div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <label style={{ fontSize: 12, color: '#374151' }}>Góc xoay</label>
-                  <input
-                    type="number"
-                    style={{ width: 70 }}
-                    value={g.rotation || 0}
-                    onChange={(e) =>
-                      groupChange({ id: g.id, rotation: parseFloat(e.target.value) || 0 })
-                    }
-                    title="Góc xoay (độ)"
-                  />
-                  <button
-                    type="button"
-                    style={{ fontSize: 11 }}
-                    onClick={() => groupChange({ id: g.id, rotation: 0 })}
-                  >
-                    Reset
-                  </button>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <label style={{ fontSize: 12, color: '#374151' }}>Scale</label>
-                  <input
-                    type="number"
-                    style={{ width: 70 }}
-                    step={0.01}
-                    value={g.scale?.x ?? 1}
-                    onChange={(e) =>
-                      groupChange({ id: g.id, scaleX: parseFloat(e.target.value) || 1 })
-                    }
-                    title="Scale X"
-                  />
-                  <input
-                    type="number"
-                    style={{ width: 70 }}
-                    step={0.01}
-                    value={g.scale?.y ?? 1}
-                    onChange={(e) =>
-                      groupChange({ id: g.id, scaleY: parseFloat(e.target.value) || 1 })
-                    }
-                    title="Scale Y"
-                  />
-                  <button
-                    type="button"
-                    style={{ fontSize: 11 }}
-                    onClick={() => groupChange({ id: g.id, scaleX: 1, scaleY: 1 })}
-                  >
-                    Reset
-                  </button>
-                </div>
-              </div>
-            );
-          })()}
-      </div>
-    );
-  },
-);
-
-DrawingCanvas.displayName = 'DrawingCanvas';
+  return (
+    <div className={`flex-1 bg-white relative ${showGrid ? 'bg-grid' : ''}`}>
+      <StageComponent
+        ref={stageRef}
+        width={window.innerWidth - 300}
+        height={window.innerHeight - 100}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+      >
+        <LayerComponent>
+          {shapes.map(renderShape)}
+          {currentShape && renderShape(currentShape)}
+        </LayerComponent>
+      </StageComponent>
+    </div>
+  );
+};

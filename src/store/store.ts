@@ -1,11 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit';
 import uiReducer from './uiSlice';
-import lineReducer from './lineSlice';
+import shapesReducer from './shapesSlice';
 
 export const store = configureStore({
   reducer: {
     ui: uiReducer,
-    line: lineReducer,
+    shapes: shapesReducer,
   },
 });
 
