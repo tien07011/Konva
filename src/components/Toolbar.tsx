@@ -1,5 +1,5 @@
 import React from 'react';
-import { Minus, MousePointer, Undo, Redo, Trash2, Download, Grid3x3 } from 'lucide-react';
+import { Minus, MousePointer, Circle as CircleIcon, Square as RectIcon, Undo, Redo, Trash2, Download, Grid3x3 } from 'lucide-react';
 import { Button } from './ui/button';
 import type { ToolType } from '../types/drawing';
 
@@ -56,7 +56,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
       {/* Tools */}
       <div>
         <h3 className="text-sm font-semibold text-slate-700 mb-3">Tools</h3>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           <Button
             variant={tool === 'none' ? 'default' : 'outline'}
             size="sm"
@@ -74,6 +74,42 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           >
             <Minus size={16} />
             <span className="ml-2">Line</span>
+          </Button>
+          <Button
+            variant={tool === 'rect' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => onToolChange('rect')}
+            className="justify-start"
+          >
+            <RectIcon size={16} />
+            <span className="ml-2">Rect</span>
+          </Button>
+          <Button
+            variant={tool === 'circle' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => onToolChange('circle')}
+            className="justify-start"
+          >
+            <CircleIcon size={16} />
+            <span className="ml-2">Circle</span>
+          </Button>
+          <Button
+            variant={tool === 'qcurve' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => onToolChange('qcurve')}
+            className="justify-start"
+          >
+            <Minus size={16} />
+            <span className="ml-2">QCurve</span>
+          </Button>
+          <Button
+            variant={tool === 'ccurve' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => onToolChange('ccurve')}
+            className="justify-start"
+          >
+            <Minus size={16} />
+            <span className="ml-2">CCurve</span>
           </Button>
         </div>
       </div>
