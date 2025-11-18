@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../store/store';
 import { DrawingCanvas } from './DrawingCanvas';
@@ -10,12 +10,10 @@ import type { AnyShape } from '../types/drawing';
 export const PaintApp: React.FC = () => {
   const dispatch = useDispatch();
 
-  // UI state
   const { strokeColor, strokeWidth, fillColor, tool, showGrid } = useSelector(
     (state: RootState) => state.ui,
   );
 
-  // Shapes state
   const { shapes, selectedId, historyIndex, history } = useSelector(
     (state: RootState) => state.shapes,
   );
@@ -23,7 +21,6 @@ export const PaintApp: React.FC = () => {
   const canUndo = historyIndex > 0;
   const canRedo = historyIndex < history.length - 1;
 
-  // Handlers
   const handleAddShape = (shape: AnyShape) => {
     dispatch(addShape(shape));
   };
@@ -51,11 +48,9 @@ export const PaintApp: React.FC = () => {
   };
 
   const handleExport = () => {
-    // TODO: Implement export logic
     const json = JSON.stringify(shapes, null, 2);
     console.log('Export JSON:', json);
     
-    // Download as file
     const blob = new Blob([json], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -65,10 +60,41 @@ export const PaintApp: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
+  useEffect(() => {
+    if (!selectedId) return;
+    const sel = shapes.find((s) => s.id === selectedId);
+    if (!sel) return;
+
+    if ('stroke' in sel && sel.stroke) dispatch(setStrokeColor(sel.stroke));
+    if ('strokeWidth' in sel && typeof sel.strokeWidth === 'number')
+      dispatch(setStrokeWidth(sel.strokeWidth));
+    if ('fill' in sel) dispatch(setFillColor((sel as any).fill ?? 'transparent'));
+  }, [selectedId, shapes, dispatch]);
+
+  useEffect(() => {
+    if (!selectedId) return;
+    const sel = shapes.find((s) => s.id === selectedId);
+    if (!sel) return;
+
+    const currentFill = (sel as any).fill ?? 'transparent';
+    const needsUpdate =
+      sel.stroke !== strokeColor || sel.strokeWidth !== strokeWidth || currentFill !== fillColor;
+
+    if (!needsUpdate) return;
+
+    const updated = {
+      ...sel,
+      stroke: strokeColor,
+      strokeWidth,
+      fill: fillColor,
+    } as any;
+
+    dispatch(updateShape(updated));
+  }, [strokeColor, strokeWidth, fillColor, selectedId, shapes, dispatch]);
+
   return (
     <div className="flex h-screen bg-slate-100">
       <div className="flex-1 flex flex-col">
-        {/* Canvas */}
         <DrawingCanvas
           shapes={shapes}
           onAddShape={handleAddShape}
@@ -78,7 +104,6 @@ export const PaintApp: React.FC = () => {
         />
       </div>
 
-      {/* Toolbar */}
       <Toolbar
         tool={tool}
         onToolChange={(t) => dispatch(setTool(t))}
