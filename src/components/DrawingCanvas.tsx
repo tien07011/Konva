@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react';
 import { Stage, Layer } from 'react-konva';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../store/store';
+import { setTool } from '../store/uiSlice';
 import { LineComponent } from './shapes/LineComponent';
 import type { AnyShape, LineShape } from '../types/drawing';
 
@@ -20,6 +21,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   selectedId,
   onSelectShape,
 }) => {
+  const dispatch = useDispatch();
   const { tool, strokeColor, strokeWidth, showGrid } = useSelector(
     (state: RootState) => state.ui,
   );
@@ -82,6 +84,9 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     onAddShape(currentShape);
     setIsDrawing(false);
     setCurrentShape(null);
+    
+    // Switch to select mode after drawing
+    dispatch(setTool('none'));
   };
 
   const handleDragEnd = (shape: AnyShape) => (e: any) => {
