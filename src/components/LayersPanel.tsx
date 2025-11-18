@@ -1,10 +1,11 @@
-import React, { useMemo } from 'react';
-import type { AnyShape, ShapeGroup } from '../types/drawing';
+import React, { useMemo } from "react";
+import type { AnyShape, ShapeGroup } from "../types/drawing";
+import { Button } from "./ui/button"; // shadcn button
 
 interface LayersPanelProps {
   shapes: AnyShape[];
   groups: ShapeGroup[];
-  selectedIds: string[]; // allow multi-select for grouping
+  selectedIds: string[];
   onToggleSelect: (id: string) => void;
   onClearSelection: () => void;
   onGroup: (ids: string[]) => void;
@@ -13,7 +14,6 @@ interface LayersPanelProps {
   onSelectGroup?: (id: string) => void;
 }
 
-// Flatten groups for quick search of group by id
 function walkGroups(groups: ShapeGroup[], fn: (g: ShapeGroup) => void) {
   groups.forEach((g) => {
     fn(g);
@@ -43,45 +43,18 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({
   const canGroup = selectedIds.length >= 2;
 
   return (
-    <div
-      style={{
-        width: 240,
-        borderRight: '1px solid #e5e7eb',
-        background: '#ffffff',
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-      }}
-    >
-      <div
-        style={{
-          padding: '8px 12px',
-          borderBottom: '1px solid #e5e7eb',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-        }}
-      >
-        <strong style={{ fontSize: 13 }}>Layers</strong>
-        <button
-          type="button"
-          style={{ fontSize: 11, marginLeft: 'auto' }}
-          onClick={onClearSelection}
-        >
+    <div className="w-60 border-r border-gray-200 bg-white flex flex-col h-full">
+      {/* Header */}
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-200">
+        <strong className="text-xs">Layers</strong>
+        <Button variant="ghost" size="xs" className="ml-auto" onClick={onClearSelection}>
           Clear Sel
-        </button>
+        </Button>
       </div>
-      <div
-        style={{
-          padding: 10,
-          flex: 1,
-          overflowY: 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 6,
-        }}
-      >
-        {/* Groups tree */}
+
+      {/* Content */}
+      <div className="flex-1 flex flex-col gap-1 p-2 overflow-y-auto">
+        {/* Groups */}
         {groups.map((g) => (
           <GroupNode
             key={g.id}
@@ -99,36 +72,29 @@ export const LayersPanel: React.FC<LayersPanelProps> = ({
         {shapes
           .filter((s) => !groupedShapeIds.has(s.id))
           .map((s) => (
-            <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div key={s.id} className="flex items-center gap-1">
               <input
                 type="checkbox"
                 checked={selectedIds.includes(s.id)}
                 onChange={() => onToggleSelect(s.id)}
                 title="Select shape"
               />
-              <span style={{ fontSize: 12, flex: 1 }}>
+              <span className="text-xs flex-1">
                 {s.type}:{s.id}
               </span>
             </div>
           ))}
       </div>
-      <div
-        style={{
-          padding: 10,
-          borderTop: '1px solid #e5e7eb',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 6,
-        }}
-      >
-        <button
-          type="button"
+
+      {/* Footer */}
+      <div className="flex flex-col gap-1 p-2 border-t border-gray-200">
+        <Button
+          size="sm"
           disabled={!canGroup}
           onClick={() => canGroup && onGroup(selectedIds)}
-          style={{ fontSize: 12, padding: '6px 8px', cursor: canGroup ? 'pointer' : 'not-allowed' }}
         >
           Group ({selectedIds.length})
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -154,57 +120,49 @@ const GroupNode: React.FC<GroupNodeProps> = ({
   selectedGroupId,
 }) => {
   return (
-    <div
-      style={{
-        border: '1px solid #e5e7eb',
-        borderRadius: 6,
-        padding: 6,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 6,
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+    <div className="border border-gray-200 rounded-md p-1 flex flex-col gap-1">
+      <div className="flex items-center gap-1">
         <span
-          style={{
-            fontSize: 12,
-            fontWeight: 600,
-            cursor: 'pointer',
-            color: selectedGroupId === group.id ? '#2563eb' : '#111827',
-          }}
+          className={`text-xs font-semibold cursor-pointer ${
+            selectedGroupId === group.id ? "text-blue-600" : "text-gray-900"
+          }`}
           onClick={() => onSelectGroup?.(group.id)}
           title="Select group"
         >
           Group: {group.name}
         </span>
-        <button
-          type="button"
-          style={{ fontSize: 10, marginLeft: 'auto' }}
+        <Button
+          size="xs"
+          variant="outline"
+          className="ml-auto"
           onClick={() => onUngroup(group.id)}
-          title="Ungroup"
         >
           Ungroup
-        </button>
+        </Button>
       </div>
+
+      {/* Shapes in group */}
       {group.shapeIds.map((sid) => {
         const s = shapeMap.get(sid);
         if (!s) return null;
         return (
-          <div key={sid} style={{ display: 'flex', alignItems: 'center', gap: 6, paddingLeft: 4 }}>
+          <div key={sid} className="flex items-center gap-1 pl-1">
             <input
               type="checkbox"
               checked={selectedIds.includes(sid)}
               onChange={() => onToggleSelect(sid)}
               title="Select shape"
             />
-            <span style={{ fontSize: 12 }}>
+            <span className="text-xs">
               {s.type}:{sid}
             </span>
           </div>
         );
       })}
+
+      {/* Nested groups */}
       {group.groups.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingLeft: 8 }}>
+        <div className="flex flex-col gap-1 pl-2">
           {group.groups.map((child) => (
             <GroupNode
               key={child.id}

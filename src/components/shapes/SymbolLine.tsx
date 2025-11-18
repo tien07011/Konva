@@ -231,7 +231,7 @@ export const SymbolLine: React.FC<{
   lineCap?: 'butt' | 'round' | 'square';
   lineJoin?: 'miter' | 'round' | 'bevel';
 }> = ({
-  size = 36,
+  size = 28,
   stroke = '#111827',
   strokeWidth = 4,
   lineCap = 'round',

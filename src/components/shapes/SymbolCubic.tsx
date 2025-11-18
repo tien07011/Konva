@@ -130,7 +130,7 @@ export const CubicCurveShapeNode: React.FC<{
 
 // Icon preview for cubic curve tool
 export const SymbolCubic: React.FC<{ size?: number; stroke?: string; strokeWidth?: number }> = ({
-  size = 36,
+  size = 28,
   stroke = '#111827',
   strokeWidth = 4,
 }) => {

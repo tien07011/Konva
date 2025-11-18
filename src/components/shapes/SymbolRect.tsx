@@ -131,7 +131,7 @@ export const SymbolRect: React.FC<{
   strokeWidth?: number;
   fill?: string;
 }> = ({
-  size = 36,
+  size = 28,
   stroke = '#111827',
   strokeWidth = 4,
   fill = 'transparent',

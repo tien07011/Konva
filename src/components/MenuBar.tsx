@@ -5,6 +5,7 @@ import { SymbolCircle } from './shapes/SymbolCircle';
 import { SymbolQuadratic } from './shapes/SymbolQuadratic';
 import { SymbolCubic } from './shapes/SymbolCubic';
 import type { ToolType } from '../types/drawing';
+import { Button } from './ui/button';
 
 interface MenuBarProps {
   strokeColor: string;
@@ -31,9 +32,9 @@ export const MenuBar: React.FC<MenuBarProps> = ({
   onStrokeColorChange,
   strokeWidth,
   onStrokeWidthChange,
-  fillColor = 'transparent',
+  fillColor = "transparent",
   onFillColorChange,
-  tool = 'line',
+  tool = "line",
   onToolChange,
   canUndo = false,
   canRedo = false,
@@ -44,149 +45,114 @@ export const MenuBar: React.FC<MenuBarProps> = ({
   showGrid = false,
   onToggleGrid,
 }) => {
+  const toolButton = (active: boolean) =>
+    active
+      ? "border-blue-600 border-2 bg-blue-50"
+      : "border border-gray-300 bg-white";
+
   return (
     <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 12,
-        padding: '8px 12px',
-        borderBottom: '1px solid #e5e7eb',
-        background: '#fafafa',
-        position: 'sticky',
-        top: 0,
-        height: 44,
-        zIndex: 10,
-      }}
+      className="
+        flex items-center gap-3 
+        px-3 py-1 
+        border-b border-gray-200 
+        bg-[#fafafa]
+        sticky top-0 h-11 z-10
+      "
     >
-      <div style={{ display: 'flex', gap: 8 }}>
-        <button
-          type="button"
-          onClick={() => onToolChange?.('line')}
-          aria-pressed={tool === 'line'}
-          title="Công cụ: Vẽ đường"
-          style={{
-            padding: 4,
-            border: tool === 'line' ? '2px solid #2563eb' : '1px solid #e5e7eb',
-            borderRadius: 8,
-            background: tool === 'line' ? '#eff6ff' : '#ffffff',
-          }}
+      <div className="flex gap-2">
+        <Button
+          variant="ghost"
+          onClick={() => onToolChange?.("line")}
+          className={`p-1 rounded-lg ${toolButton(tool === "line")}`}
         >
           <SymbolLine stroke={strokeColor} strokeWidth={strokeWidth} />
-        </button>
-        <button
-          type="button"
-          onClick={() => onToolChange?.('rect')}
-          aria-pressed={tool === 'rect'}
-          title="Công cụ: Hình chữ nhật"
-          style={{
-            padding: 4,
-            border: tool === 'rect' ? '2px solid #2563eb' : '1px solid #e5e7eb',
-            borderRadius: 8,
-            background: tool === 'rect' ? '#eff6ff' : '#ffffff',
-          }}
+        </Button>
+
+        <Button
+          variant="ghost"
+          onClick={() => onToolChange?.("rect")}
+          className={`p-1 rounded-lg ${toolButton(tool === "rect")}`}
         >
           <SymbolRect stroke={strokeColor} strokeWidth={strokeWidth} fill={fillColor} />
-        </button>
-        <button
-          type="button"
-          onClick={() => onToolChange?.('circle')}
-          aria-pressed={tool === 'circle'}
-          title="Công cụ: Hình tròn"
-          style={{
-            padding: 4,
-            border: tool === 'circle' ? '2px solid #2563eb' : '1px solid #e5e7eb',
-            borderRadius: 8,
-            background: tool === 'circle' ? '#eff6ff' : '#ffffff',
-          }}
+        </Button>
+
+        <Button
+          variant="ghost"
+          onClick={() => onToolChange?.("circle")}
+          className={`p-1 rounded-lg ${toolButton(tool === "circle")}`}
         >
           <SymbolCircle stroke={strokeColor} strokeWidth={strokeWidth} fill={fillColor} />
-        </button>
-        <button
-          type="button"
-          onClick={() => onToolChange?.('qcurve')}
-          aria-pressed={tool === 'qcurve'}
-          title="Công cụ: Đường cong bậc 2"
-          style={{
-            padding: 4,
-            border: tool === 'qcurve' ? '2px solid #2563eb' : '1px solid #e5e7eb',
-            borderRadius: 8,
-            background: tool === 'qcurve' ? '#eff6ff' : '#ffffff',
-          }}
+        </Button>
+
+        <Button
+          variant="ghost"
+          onClick={() => onToolChange?.("qcurve")}
+          className={`p-1 rounded-lg ${toolButton(tool === "qcurve")}`}
         >
           <SymbolQuadratic stroke={strokeColor} strokeWidth={strokeWidth} />
-        </button>
-        <button
-          type="button"
-          onClick={() => onToolChange?.('ccurve')}
-          aria-pressed={tool === 'ccurve'}
-          title="Công cụ: Đường cong bậc 3"
-          style={{
-            padding: 4,
-            border: tool === 'ccurve' ? '2px solid #2563eb' : '1px solid #e5e7eb',
-            borderRadius: 8,
-            background: tool === 'ccurve' ? '#eff6ff' : '#ffffff',
-          }}
+        </Button>
+
+        <Button
+          variant="ghost"
+          onClick={() => onToolChange?.("ccurve")}
+          className={`p-1 rounded-lg ${toolButton(tool === "ccurve")}`}
         >
           <SymbolCubic stroke={strokeColor} strokeWidth={strokeWidth} />
-        </button>
+        </Button>
       </div>
 
-      <div style={{ width: 1, height: 28, background: '#e5e7eb' }} />
+      {/* Divider */}
+      <div className="w-[1px] h-7 bg-gray-300" />
 
-      <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      {/* Stroke color */}
+      <label className="flex items-center gap-2">
         Màu viền
         <input
           type="color"
           value={strokeColor}
           onChange={(e) => onStrokeColorChange(e.target.value)}
-          title="Màu viền"
+          className="h-6 w-6 rounded"
         />
       </label>
-      <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+
+      {/* Fill color */}
+      <label className="flex items-center gap-2">
         Màu trong
         <input
           type="color"
-          value={fillColor === 'transparent' ? '#ffffff' : fillColor}
+          value={fillColor === "transparent" ? "#ffffff" : fillColor}
           onChange={(e) => onFillColorChange?.(e.target.value)}
-          title="Màu tô bên trong"
+          className="h-6 w-6 rounded"
         />
-        <button
-          type="button"
-          style={{ fontSize: 11 }}
-          onClick={() => onFillColorChange?.('transparent')}
-          title="Không tô màu"
-        >
-          Xoá
-        </button>
       </label>
-      <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-        <button
-          type="button"
+
+      {/* RIGHT */}
+      <div className="ml-auto flex gap-2">
+        {/* Grid toggle */}
+        <Button
+          variant="ghost"
           onClick={onToggleGrid}
-          aria-pressed={showGrid}
-          title="Bật/tắt lưới"
-          style={{
-            padding: '4px 10px',
-            border: showGrid ? '2px solid #2563eb' : '1px solid #e5e7eb',
-            borderRadius: 6,
-            background: showGrid ? '#eff6ff' : '#ffffff',
-          }}
+          className={`px-3 ${showGrid ? "border-2 border-blue-600 bg-blue-50" : "border border-gray-300 bg-white"}`}
         >
           Lưới
-        </button>
-        <button type="button" onClick={onUndo} disabled={!canUndo}>
+        </Button>
+
+        <Button onClick={onUndo} disabled={!canUndo} variant="outline">
           Undo
-        </button>
-        <button type="button" onClick={onRedo} disabled={!canRedo}>
+        </Button>
+
+        <Button onClick={onRedo} disabled={!canRedo} variant="outline">
           Redo
-        </button>
-        <button type="button" onClick={onClear}>
+        </Button>
+
+        <Button variant="outline" onClick={onClear}>
           Xoá
-        </button>
-        <button type="button" onClick={onExport}>
+        </Button>
+
+        <Button variant="outline" onClick={onExport}>
           Xuất file
-        </button>
+        </Button>
       </div>
     </div>
   );

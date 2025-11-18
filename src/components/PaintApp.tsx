@@ -8,21 +8,42 @@ import { setStrokeColor, setStrokeWidth, setFillColor, setTool, toggleGrid, setH
 
 export const PaintApp: React.FC = () => {
   const dispatch = useDispatch();
+  const canvasRef = useRef<DrawingCanvasHandle | null>(null);
+
   const { strokeColor, strokeWidth, fillColor, tool, showGrid, canUndo, canRedo } = useSelector(
     (state: RootState) => state.ui,
   );
 
-  const canvasRef = useRef<DrawingCanvasHandle | null>(null);
+  const exportJSON = () => {
+    const json = canvasRef.current?.exportJSON();
+    if (!json) return;
+
+    const blob = new Blob([json], {
+      type: "application/json;charset=utf-8",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+
+    const pad = (n: number) => String(n).padStart(2, "0");
+
+    const t = new Date();
+    const filename = `screen-${
+      t.getFullYear()
+      }${pad(t.getMonth() + 1)}${pad(t.getDate())}-${pad(
+      t.getHours()
+      )}${pad(t.getMinutes())}${pad(t.getSeconds())}.json`;
+
+    a.href = url;
+    a.download = filename;
+    a.click();
+
+    URL.revokeObjectURL(url);
+  };
+
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100vh',
-        background: '#f1f5f9',
-      }}
-    >
+    <div className="flex flex-col h-screen bg-slate-100">
       <MenuBar
         strokeColor={strokeColor}
         onStrokeColorChange={(c) => dispatch(setStrokeColor(c))}
@@ -37,25 +58,12 @@ export const PaintApp: React.FC = () => {
         onUndo={() => canvasRef.current?.undo()}
         onRedo={() => canvasRef.current?.redo()}
         onClear={() => canvasRef.current?.clear()}
-        onExport={() => {
-          const json = canvasRef.current?.exportJSON();
-          if (!json) return;
-          const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          const ts = new Date();
-          const pad = (n: number) => String(n).padStart(2, '0');
-          const name = `screen-${ts.getFullYear()}${pad(ts.getMonth() + 1)}${pad(ts.getDate())}-${pad(ts.getHours())}${pad(ts.getMinutes())}${pad(ts.getSeconds())}.json`;
-          a.download = name;
-          a.click();
-          URL.revokeObjectURL(url);
-        }}
+        onExport={() => exportJSON()}
         showGrid={showGrid}
         onToggleGrid={() => dispatch(toggleGrid())}
       />
 
-      <div style={{ display: 'flex', flex: 1 }}>
+      <div className="flex flex-1">
         <DrawingCanvas
           ref={canvasRef}
           strokeColor={strokeColor}
