@@ -1,19 +1,16 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import { MenuBar } from './MenuBar';
 import { DrawingCanvas, type DrawingCanvasHandle } from './DrawingCanvas';
 import type { ToolType } from '../types/drawing';
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState } from '../store/store';
+import { setStrokeColor, setStrokeWidth, setFillColor, setTool, toggleGrid, setHistoryFlags } from '../store/uiSlice';
 
 export const PaintApp: React.FC = () => {
-  // UI state only (chỉ vẽ đường)
-  const [strokeColor, setStrokeColor] = useState<string>('#111827');
-  const [strokeWidth, setStrokeWidth] = useState<number>(3);
-  const [fillColor, setFillColor] = useState<string>('transparent');
-  const [tool, setTool] = useState<ToolType>('line');
-  const [showGrid, setShowGrid] = useState<boolean>(true);
-
-  // History flags
-  const [canUndo, setCanUndo] = useState(false);
-  const [canRedo, setCanRedo] = useState(false);
+  const dispatch = useDispatch();
+  const { strokeColor, strokeWidth, fillColor, tool, showGrid, canUndo, canRedo } = useSelector(
+    (state: RootState) => state.ui,
+  );
 
   const canvasRef = useRef<DrawingCanvasHandle | null>(null);
 
@@ -28,13 +25,13 @@ export const PaintApp: React.FC = () => {
     >
       <MenuBar
         strokeColor={strokeColor}
-        onStrokeColorChange={setStrokeColor}
+        onStrokeColorChange={(c) => dispatch(setStrokeColor(c))}
         strokeWidth={strokeWidth}
-        onStrokeWidthChange={setStrokeWidth}
+        onStrokeWidthChange={(w) => dispatch(setStrokeWidth(w))}
         fillColor={fillColor}
-        onFillColorChange={setFillColor}
+        onFillColorChange={(f) => dispatch(setFillColor(f))}
         tool={tool}
-        onToolChange={setTool}
+        onToolChange={(t: ToolType) => dispatch(setTool(t))}
         canUndo={canUndo}
         canRedo={canRedo}
         onUndo={() => canvasRef.current?.undo()}
@@ -55,7 +52,7 @@ export const PaintApp: React.FC = () => {
           URL.revokeObjectURL(url);
         }}
         showGrid={showGrid}
-        onToggleGrid={() => setShowGrid((g) => !g)}
+        onToggleGrid={() => dispatch(toggleGrid())}
       />
 
       <div style={{ display: 'flex', flex: 1 }}>
@@ -65,10 +62,9 @@ export const PaintApp: React.FC = () => {
           strokeWidth={strokeWidth}
           fillColor={fillColor}
           tool={tool}
-          onToolChange={setTool}
+          onToolChange={(t: ToolType) => dispatch(setTool(t))}
           onHistoryChange={({ canUndo, canRedo }) => {
-            setCanUndo(canUndo);
-            setCanRedo(canRedo);
+            dispatch(setHistoryFlags({ canUndo, canRedo }));
           }}
           showGrid={showGrid}
         />
