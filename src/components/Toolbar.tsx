@@ -1,5 +1,5 @@
 import React from 'react';
-import { Minus, MousePointer, Circle as CircleIcon, Square as RectIcon, Undo, Redo, Trash2, Download, Grid3x3, Pencil } from 'lucide-react';
+import { Minus, MousePointer, Circle as CircleIcon, Square as RectIcon, Undo, Redo, Trash2, Download, Upload, Grid3x3, Pencil } from 'lucide-react';
 import { Button } from './ui/button';
 import type { ToolType, AnyShape, LineShape } from '../types/drawing';
 
@@ -20,6 +20,7 @@ interface ToolbarProps {
   onRedo: () => void;
   onClear: () => void;
   onExport: () => void;
+  onImport: () => void;
   selectedShape?: AnyShape | null;
   onUpdateSelectedShape?: (shape: AnyShape) => void;
   onDeleteSelected?: () => void;
@@ -53,6 +54,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onRedo,
   onClear,
   onExport,
+  onImport,
   selectedShape,
   onUpdateSelectedShape,
   onDeleteSelected,
@@ -353,6 +355,11 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           <Button variant="default" size="sm" onClick={onExport} className="w-full">
             <Download size={16} />
             <span className="ml-2">Export JSON</span>
+          </Button>
+
+          <Button variant="default" size="sm" onClick={onImport} className="w-full">
+            <Upload size={16} />
+            <span className="ml-2">Import JSON</span>
           </Button>
         </div>
       </div>

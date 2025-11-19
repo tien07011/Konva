@@ -16,7 +16,8 @@ import {
   clearShapes, 
   undo, 
   redo, 
-  deleteShape 
+  deleteShape,
+  importData
 } from '../store/shapesSlice';
 import type { AnyShape, ShapeGroup } from '../types/drawing';
 
@@ -96,7 +97,11 @@ export const PaintApp: React.FC = () => {
   };
 
   const handleExport = () => {
-    const json = JSON.stringify(shapes, null, 2);
+    const exportData = {
+      shapes,
+      groups
+    };
+    const json = JSON.stringify(exportData, null, 2);
     console.log('Export JSON:', json);
     
     const blob = new Blob([json], { type: 'application/json' });
@@ -106,6 +111,38 @@ export const PaintApp: React.FC = () => {
     link.download = `drawing-${Date.now()}.json`;
     link.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleImport = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (e: Event) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const json = event.target?.result as string;
+          const data = JSON.parse(json);
+          
+          // Support both old format (array of shapes) and new format (object with shapes and groups)
+          if (Array.isArray(data)) {
+            dispatch(importData({ shapes: data, groups: [] }));
+          } else if (data.shapes) {
+            dispatch(importData({ shapes: data.shapes, groups: data.groups || [] }));
+          } else {
+            alert('Invalid JSON format');
+          }
+        } catch (error) {
+          console.error('Import error:', error);
+          alert('Failed to import file. Please check the file format.');
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
   };
 
   useEffect(() => {
@@ -207,6 +244,7 @@ export const PaintApp: React.FC = () => {
         onRedo={handleRedo}
         onClear={handleClear}
         onExport={handleExport}
+        onImport={handleImport}
         selectedShape={selectedShape}
           selectedIds={selectedIds}
           selectedGroupId={selectedGroupId}

@@ -139,6 +139,16 @@ const shapesSlice = createSlice({
         state.selectedId = null;
       }
     },
+    importData(state, action: PayloadAction<{ shapes: AnyShape[]; groups?: ShapeGroup[] }>) {
+      state.shapes = action.payload.shapes;
+      state.groups = action.payload.groups || [];
+      state.selectedId = null;
+      state.selectedIds = [];
+      state.selectedGroupId = null;
+      // Update history
+      state.history = [[...state.shapes]];
+      state.historyIndex = 0;
+    },
   },
 });
 
@@ -155,7 +165,8 @@ export const {
   ungroupShapes,
   clearShapes, 
   undo, 
-  redo 
+  redo,
+  importData
 } = shapesSlice.actions;
 
 export default shapesSlice.reducer;
