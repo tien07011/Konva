@@ -39,7 +39,11 @@ const shapesSlice = createSlice({
       }
     },
     deleteShape(state, action: PayloadAction<string>) {
-      state.shapes = state.shapes.filter((s) => s.id !== action.payload);
+      const id = action.payload;
+      state.shapes = state.shapes.filter((s) => s.id !== id);
+      if (state.selectedId === id) {
+        state.selectedId = null;
+      }
       // Update history
       const newHistory = state.history.slice(0, state.historyIndex + 1);
       newHistory.push([...state.shapes]);

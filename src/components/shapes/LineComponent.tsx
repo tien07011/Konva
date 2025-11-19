@@ -29,20 +29,6 @@ export const LineComponent: React.FC<LineComponentProps> = ({
     setActiveHandle(null);
   }, [shape.id, isSelected]);
 
-  useEffect(() => {
-    // Demo: compute polyline length in WASM when points change (no UI change)
-    const pts = draftPoints ?? shape.points;
-    if (pts && pts.length >= 4) {
-      polylineLength(pts).then((len) => {
-        console.log(`[WASM] polyline length for ${shape.id}:`, len.toFixed(2));
-        if (process.env.NODE_ENV !== 'production') {
-          // eslint-disable-next-line no-console
-          console.debug(`[WASM] polyline length for ${shape.id}:`, len.toFixed(2));
-        }
-      });
-    }
-  }, [shape.id, shape.points, draftPoints]);
-
   const points = draftPoints ?? shape.points;
 
   const handleDragMove = useCallback(

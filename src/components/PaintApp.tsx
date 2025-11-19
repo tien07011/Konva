@@ -4,7 +4,7 @@ import type { RootState } from '../store/store';
 import { DrawingCanvas } from './DrawingCanvas';
 import { Toolbar } from './Toolbar';
 import { setTool, setStrokeColor, setStrokeWidth, setFillColor, toggleGrid } from '../store/uiSlice';
-import { addShape, updateShape, selectShape, clearShapes, undo, redo } from '../store/shapesSlice';
+import { addShape, updateShape, selectShape, clearShapes, undo, redo, deleteShape } from '../store/shapesSlice';
 import type { AnyShape } from '../types/drawing';
 
 export const PaintApp: React.FC = () => {
@@ -46,6 +46,12 @@ export const PaintApp: React.FC = () => {
     if (window.confirm('Are you sure you want to clear all shapes?')) {
       dispatch(clearShapes());
     }
+  };
+
+  const handleDeleteSelected = () => {
+    if (!selectedId) return;
+    dispatch(deleteShape(selectedId));
+    dispatch(selectShape(null));
   };
 
   const handleExport = () => {
@@ -107,6 +113,24 @@ export const PaintApp: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [strokeColor, strokeWidth, fillColor, selectedId]);
 
+  // Keyboard delete handler
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!selectedId) return;
+      if (e.key !== 'Delete' && e.key !== 'Backspace') return;
+      const target = e.target as HTMLElement | null;
+      if (target) {
+        const tag = target.tagName;
+        const editable = target.isContentEditable;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || editable) return; // don't interfere with typing
+      }
+      dispatch(deleteShape(selectedId));
+      dispatch(selectShape(null));
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [dispatch, selectedId]);
+
   return (
     <div className="flex h-screen bg-slate-100">
       <div className="flex-1 flex flex-col">
@@ -138,6 +162,7 @@ export const PaintApp: React.FC = () => {
         onExport={handleExport}
         selectedShape={selectedShape}
         onUpdateSelectedShape={(shape: AnyShape) => dispatch(updateShape(shape))}
+        onDeleteSelected={handleDeleteSelected}
       />
     </div>
   );

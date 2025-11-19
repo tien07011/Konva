@@ -22,6 +22,7 @@ interface ToolbarProps {
   onExport: () => void;
   selectedShape?: AnyShape | null;
   onUpdateSelectedShape?: (shape: AnyShape) => void;
+  onDeleteSelected?: () => void;
 }
 
 const commonColors = [
@@ -54,6 +55,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onExport,
   selectedShape,
   onUpdateSelectedShape,
+  onDeleteSelected,
 }) => {
   const selectedLine: LineShape | null = selectedShape && selectedShape.type === 'line' ? (selectedShape as LineShape) : null;
 
@@ -295,6 +297,19 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             <Grid3x3 size={16} />
             <span className="ml-2">{showGrid ? 'Hide' : 'Show'} Grid</span>
           </Button>
+
+          {selectedShape && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={onDeleteSelected}
+              className="w-full"
+              disabled={!onDeleteSelected}
+            >
+              <Trash2 size={16} />
+              <span className="ml-2">Delete Selected</span>
+            </Button>
+          )}
 
           <Button variant="outline" size="sm" onClick={onClear} className="w-full">
             <Trash2 size={16} />
