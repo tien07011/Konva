@@ -13,7 +13,7 @@ const initialState: UIState = {
   strokeColor: '#111827',
   strokeWidth: 3,
   fillColor: 'transparent',
-  tool: 'line',
+    tool: 'select',
   showGrid: true,
 };
 

@@ -4,8 +4,21 @@ import type { RootState } from '../store/store';
 import { DrawingCanvas } from './DrawingCanvas';
 import { Toolbar } from './Toolbar';
 import { setTool, setStrokeColor, setStrokeWidth, setFillColor, toggleGrid } from '../store/uiSlice';
-import { addShape, updateShape, selectShape, clearShapes, undo, redo, deleteShape } from '../store/shapesSlice';
-import type { AnyShape } from '../types/drawing';
+import { 
+  addShape, 
+  updateShape, 
+  selectShape, 
+  selectMultipleShapes,
+  selectGroup,
+  createGroup,
+  updateGroup,
+  ungroupShapes,
+  clearShapes, 
+  undo, 
+  redo, 
+  deleteShape 
+} from '../store/shapesSlice';
+import type { AnyShape, ShapeGroup } from '../types/drawing';
 
 export const PaintApp: React.FC = () => {
   const dispatch = useDispatch();
@@ -14,9 +27,9 @@ export const PaintApp: React.FC = () => {
     (state: RootState) => state.ui,
   );
 
-  const { shapes, selectedId, historyIndex, history } = useSelector(
-    (state: RootState) => state.shapes,
-  );
+    const { shapes, groups, selectedId, selectedIds, selectedGroupId, historyIndex, history } = useSelector(
+      (state: RootState) => state.shapes
+    );
 
   const canUndo = historyIndex > 0;
   const canRedo = historyIndex < history.length - 1;
@@ -34,6 +47,30 @@ export const PaintApp: React.FC = () => {
     dispatch(selectShape(id));
   };
 
+    const handleSelectMultiple = (ids: string[]) => {
+      dispatch(selectMultipleShapes(ids));
+    };
+
+    const handleSelectGroup = (id: string | null) => {
+      dispatch(selectGroup(id));
+    };
+
+    const handleCreateGroup = () => {
+      if (selectedIds.length >= 2) {
+        dispatch(createGroup({ name: undefined }));
+      }
+    };
+
+    const handleUpdateGroup = (group: ShapeGroup) => {
+      dispatch(updateGroup(group));
+    };
+
+    const handleUngroupShapes = () => {
+      if (selectedGroupId) {
+        dispatch(ungroupShapes(selectedGroupId));
+      }
+    };
+
   const handleUndo = () => {
     dispatch(undo());
   };
@@ -49,9 +86,13 @@ export const PaintApp: React.FC = () => {
   };
 
   const handleDeleteSelected = () => {
-    if (!selectedId) return;
-    dispatch(deleteShape(selectedId));
-    dispatch(selectShape(null));
+    if (selectedId) {
+      dispatch(deleteShape(selectedId));
+      dispatch(selectShape(null));
+    } else if (selectedGroupId) {
+      dispatch(ungroupShapes(selectedGroupId));
+      dispatch(selectGroup(null));
+    }
   };
 
   const handleExport = () => {
@@ -136,10 +177,16 @@ export const PaintApp: React.FC = () => {
       <div className="flex-1 flex flex-col">
         <DrawingCanvas
           shapes={shapes}
+            groups={groups}
           onAddShape={handleAddShape}
           onUpdateShape={handleUpdateShape}
           selectedId={selectedId}
+            selectedIds={selectedIds}
+            selectedGroupId={selectedGroupId}
           onSelectShape={handleSelectShape}
+            onSelectMultiple={handleSelectMultiple}
+            onSelectGroup={handleSelectGroup}
+            onUpdateGroup={handleUpdateGroup}
         />
       </div>
 
@@ -161,6 +208,10 @@ export const PaintApp: React.FC = () => {
         onClear={handleClear}
         onExport={handleExport}
         selectedShape={selectedShape}
+          selectedIds={selectedIds}
+          selectedGroupId={selectedGroupId}
+          onCreateGroup={handleCreateGroup}
+          onUngroupShapes={handleUngroupShapes}
         onUpdateSelectedShape={(shape: AnyShape) => dispatch(updateShape(shape))}
         onDeleteSelected={handleDeleteSelected}
       />

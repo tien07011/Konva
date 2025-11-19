@@ -23,6 +23,10 @@ interface ToolbarProps {
   selectedShape?: AnyShape | null;
   onUpdateSelectedShape?: (shape: AnyShape) => void;
   onDeleteSelected?: () => void;
+  selectedIds?: string[];
+  selectedGroupId?: string | null;
+  onCreateGroup?: () => void;
+  onUngroupShapes?: () => void;
 }
 
 const commonColors = [
@@ -52,6 +56,10 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   selectedShape,
   onUpdateSelectedShape,
   onDeleteSelected,
+  selectedIds = [],
+  selectedGroupId = null,
+  onCreateGroup,
+  onUngroupShapes,
 }) => {
   const selectedLine: LineShape | null = selectedShape && selectedShape.type === 'line' ? (selectedShape as LineShape) : null;
 
@@ -67,9 +75,9 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         <h3 className="text-sm font-semibold text-slate-700 mb-2">Tools</h3>
         <div className="grid grid-cols-3 gap-2">
           <Button
-            variant={tool === 'none' ? 'default' : 'outline'}
+            variant={tool === 'select' ? 'default' : 'outline'}
             size="sm"
-            onClick={() => onToolChange('none')}
+            onClick={() => onToolChange('select')}
             className="justify-start"
           >
             <MousePointer size={16} />
@@ -298,12 +306,33 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             </Button>
           </div>
 
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onCreateGroup}
+              disabled={!onCreateGroup || selectedIds.length < 2}
+              className="flex-1"
+            >
+              Group ({selectedIds.length})
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onUngroupShapes}
+              disabled={!onUngroupShapes || !selectedGroupId}
+              className="flex-1"
+            >
+              Ungroup
+            </Button>
+          </div>
+
           <Button variant="outline" size="sm" onClick={onToggleGrid} className="w-full">
             <Grid3x3 size={16} />
             <span className="ml-2">{showGrid ? 'Hide' : 'Show'} Grid</span>
           </Button>
 
-          {selectedShape && (
+          {(selectedShape || selectedGroupId) && (
             <Button
               variant="destructive"
               size="sm"
@@ -312,7 +341,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
               disabled={!onDeleteSelected}
             >
               <Trash2 size={16} />
-              <span className="ml-2">Delete Selected</span>
+              <span className="ml-2">Delete {selectedGroupId ? 'Group' : 'Shape'}</span>
             </Button>
           )}
 

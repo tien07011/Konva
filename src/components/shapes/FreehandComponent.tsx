@@ -60,6 +60,7 @@ export const FreehandComponent: React.FC<FreehandComponentProps> = ({
         lineJoin="round"
         tension={0.5}
         draggable={interactive}
+        listening={true}
         onClick={onSelect}
         onTap={onSelect}
         onDragEnd={onDragEnd}

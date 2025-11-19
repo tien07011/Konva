@@ -270,10 +270,10 @@ export const CurveComponent: React.FC<CurveComponentProps> = ({
         stroke={shape.stroke}
         strokeWidth={shape.strokeWidth}
         fill={shape.fill}
-        onClick={interactive ? onSelect : undefined}
-        onTap={interactive ? onSelect : undefined}
+        onClick={onSelect}
+        onTap={onSelect}
         draggable={interactive}
-        listening={interactive}
+        listening={true}
         onDragMove={(e: any) => {
           const n = e.target;
           setDragOffset({ x: n.x(), y: n.y() });

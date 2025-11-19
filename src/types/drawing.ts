@@ -1,4 +1,4 @@
-export type ToolType = 'none' | 'line' | 'rect' | 'circle' | 'qcurve' | 'ccurve' | 'path' | 'freehand'; // thêm custom path
+export type ToolType = 'none' | 'select' | 'line' | 'rect' | 'circle' | 'qcurve' | 'ccurve' | 'path' | 'freehand'; // thêm custom path
 
 export interface BaseShape {
   id: string;
@@ -93,14 +93,12 @@ export type GroupChild = ShapeRef | ShapeGroup;
 export interface ShapeGroup {
   id: string;
   name: string;
-  children?: GroupChild[];
   shapeIds: string[];
-  groups: ShapeGroup[];
-  visible: boolean;
-  locked: boolean;
-  rotation?: number;
-  translate?: { x: number; y: number };
-  scale?: { x: number; y: number };
+  x: number;
+  y: number;
+  rotation: number;
+  scaleX: number;
+  scaleY: number;
 }
 
 export type DraftShape = AnyShape | null;

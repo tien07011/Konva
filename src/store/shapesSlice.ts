@@ -1,8 +1,11 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import type { AnyShape } from '../types/drawing';
+import type { AnyShape, ShapeGroup } from '../types/drawing';
 
 export interface ShapesState {
   shapes: AnyShape[];
+  groups: ShapeGroup[];
+  selectedIds: string[];
+  selectedGroupId: string | null;
   selectedId: string | null;
   history: AnyShape[][];
   historyIndex: number;
@@ -10,6 +13,9 @@ export interface ShapesState {
 
 const initialState: ShapesState = {
   shapes: [],
+  groups: [],
+  selectedIds: [],
+  selectedGroupId: null,
   selectedId: null,
   history: [[]],
   historyIndex: 0,
@@ -52,10 +58,69 @@ const shapesSlice = createSlice({
     },
     selectShape(state, action: PayloadAction<string | null>) {
       state.selectedId = action.payload;
+      state.selectedIds = action.payload ? [action.payload] : [];
+      state.selectedGroupId = null;
+    },
+    selectMultipleShapes(state, action: PayloadAction<string[]>) {
+      state.selectedIds = action.payload;
+      state.selectedId = null;
+      state.selectedGroupId = null;
+    },
+    toggleShapeSelection(state, action: PayloadAction<string>) {
+      const id = action.payload;
+      if (state.selectedIds.includes(id)) {
+        state.selectedIds = state.selectedIds.filter((i) => i !== id);
+      } else {
+        state.selectedIds.push(id);
+      }
+      state.selectedId = null;
+      state.selectedGroupId = null;
+    },
+    selectGroup(state, action: PayloadAction<string | null>) {
+      state.selectedGroupId = action.payload;
+      state.selectedId = null;
+      state.selectedIds = [];
+    },
+    createGroup(state, action: PayloadAction<{ name?: string }>) {
+      if (state.selectedIds.length < 2) return;
+      
+      const id = `group-${Date.now()}`;
+      const newGroup: ShapeGroup = {
+        id,
+        name: action.payload.name || `Group ${state.groups.length + 1}`,
+        shapeIds: [...state.selectedIds],
+        x: 0,
+        y: 0,
+        rotation: 0,
+        scaleX: 1,
+        scaleY: 1,
+      };
+      
+      state.groups.push(newGroup);
+      state.selectedIds = [];
+      state.selectedGroupId = id;
+    },
+    updateGroup(state, action: PayloadAction<ShapeGroup>) {
+      const index = state.groups.findIndex((g) => g.id === action.payload.id);
+      if (index !== -1) {
+        state.groups[index] = action.payload;
+      }
+    },
+    ungroupShapes(state, action: PayloadAction<string>) {
+      const groupId = action.payload;
+      const group = state.groups.find((g) => g.id === groupId);
+      if (group) {
+        state.selectedIds = [...group.shapeIds];
+        state.groups = state.groups.filter((g) => g.id !== groupId);
+        state.selectedGroupId = null;
+      }
     },
     clearShapes(state) {
       state.shapes = [];
+      state.groups = [];
       state.selectedId = null;
+      state.selectedIds = [];
+      state.selectedGroupId = null;
       // Update history
       state.history = [[]];
       state.historyIndex = 0;
@@ -77,7 +142,20 @@ const shapesSlice = createSlice({
   },
 });
 
-export const { addShape, updateShape, deleteShape, selectShape, clearShapes, undo, redo } =
-  shapesSlice.actions;
+export const { 
+  addShape, 
+  updateShape, 
+  deleteShape, 
+  selectShape, 
+  selectMultipleShapes,
+  toggleShapeSelection,
+  selectGroup,
+  createGroup,
+  updateGroup,
+  ungroupShapes,
+  clearShapes, 
+  undo, 
+  redo 
+} = shapesSlice.actions;
 
 export default shapesSlice.reducer;
