@@ -9,6 +9,7 @@ import { RectComponent } from './shapes/RectComponent';
 import { CurveComponent } from './shapes/CurveComponent';
 import { FreehandComponent } from './shapes/FreehandComponent';
 import { GroupComponent } from './shapes/GroupComponent';
+import { TextComponent } from './shapes/TextComponent';
 import type {
   AnyShape,
   LineShape,
@@ -17,6 +18,7 @@ import type {
   QuadraticCurveShape,
   CubicCurveShape,
   FreehandShape,
+  TextShape,
   ShapeGroup,
 } from '../types/drawing';
 import { startCircle, updateCircleFromCenter, updateCircleFromCorner } from '../utils/circle';
@@ -160,6 +162,29 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
         strokeWidth,
       };
       setCurrentShape(newC);
+    } else if (tool === 'text') {
+      // Place text at click position
+      setIsDrawing(true);
+      setDragStart({ x: pos.x, y: pos.y });
+
+      const id = `text-${Date.now()}`;
+      const newText: TextShape = {
+        id,
+        type: 'text',
+        x: pos.x,
+        y: pos.y,
+        text: 'Text',
+        fontSize: 24,
+        fontFamily: 'Arial',
+        align: 'left',
+        width: 200,
+        height: 32,
+        stroke: strokeColor,
+        strokeWidth,
+        fill: '#111827',
+      };
+
+      setCurrentShape(newText);
     }
   };
 
@@ -278,6 +303,23 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       };
       setCurrentShape(updatedC);
     }
+
+    if (tool === 'text' && currentShape.type === 'text') {
+      // Optional: drag to set wrapping width/height
+      if (!dragStart) return;
+      const startX = dragStart.x;
+      const startY = dragStart.y;
+      const width = Math.max(20, Math.abs(pos.x - startX));
+      const height = Math.max(20, Math.abs(pos.y - startY));
+      const updatedText: TextShape = {
+        ...currentShape,
+        x: Math.min(startX, pos.x),
+        y: Math.min(startY, pos.y),
+        width,
+        height,
+      };
+      setCurrentShape(updatedText);
+    }
   };
 
   const handleMouseUp = () => {
@@ -297,6 +339,8 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
           adjusted = { ...shape, cx: shape.cx + offsetX, cy: shape.cy + offsetY };
         } else if (shape.type === 'line' || shape.type === 'freehand' || shape.type === 'qcurve' || shape.type === 'ccurve') {
           adjusted = { ...shape, points: shape.points.map((v, i) => (i % 2 === 0 ? v + offsetX : v + offsetY)) } as AnyShape;
+        } else if (shape.type === 'text') {
+          adjusted = { ...shape, x: shape.x + offsetX, y: shape.y + offsetY } as AnyShape;
         }
         if (isShapeInSelection(adjusted, selectionRect)) {
           selected.push(shape.id);
@@ -374,6 +418,15 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       node.position({ x: 0, y: 0 });
       onUpdateShape(updatedShape);
     }
+    if (shape.type === 'text') {
+      const updatedShape: TextShape = {
+        ...shape,
+        x: node.x(),
+        y: node.y(),
+      };
+      node.position({ x: 0, y: 0 });
+      onUpdateShape(updatedShape);
+    }
   };
 
   const renderShape = (shape: AnyShape) => {
@@ -445,7 +498,21 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
           interactive={interactive}
           onSelect={interactive ? () => (tool === 'select' ? onSelectShape(shape.id) : onSelectShape(shape.id)) : undefined}
           onDragEnd={handleDragEnd(shape)}
-          onChange={(next) => onUpdateShape(next)}
+          onChange={(next: AnyShape) => onUpdateShape(next)}
+        />
+      );
+    }
+
+    if (shape.type === 'text') {
+      return (
+        <TextComponent
+          key={shape.id}
+          shape={shape}
+          isSelected={isSelected}
+          interactive={interactive}
+          onSelect={interactive ? () => (tool === 'select' ? onSelectShape(shape.id) : onSelectShape(shape.id)) : undefined}
+          onDragEnd={handleDragEnd(shape)}
+          onChange={(next: AnyShape) => onUpdateShape(next)}
         />
       );
     }

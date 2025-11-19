@@ -26,6 +26,14 @@ export function isShapeInSelection(shape: AnyShape, selectionRect: SelectionRect
     return !(shapeRight < left || shapeLeft > right || shapeBottom < top || shapeTop > bottom);
   }
 
+  if (shape.type === 'text') {
+    const shapeLeft = shape.x;
+    const shapeTop = shape.y;
+    const shapeRight = shape.x + (shape.width ?? 0);
+    const shapeBottom = shape.y + (shape.height ?? 0);
+    return !(shapeRight < left || shapeLeft > right || shapeBottom < top || shapeTop > bottom);
+  }
+
   if (shape.type === 'circle') {
     const { cx, cy, r } = shape;
     // Check if circle center is in rectangle or if circle intersects with rectangle

@@ -6,6 +6,7 @@ import { CircleComponent } from './CircleComponent';
 import { RectComponent } from './RectComponent';
 import { CurveComponent } from './CurveComponent';
 import { FreehandComponent } from './FreehandComponent';
+import { TextComponent } from './TextComponent';
 
 interface GroupComponentProps {
   group: ShapeGroup;
@@ -83,6 +84,9 @@ export const GroupComponent: React.FC<GroupComponentProps> = ({
     }
     if (shape.type === 'freehand') {
       return <FreehandComponent key={shape.id} shape={shape} isSelected={childSelected} interactive={false} onSelect={() => onSelectShape?.(shape.id)} />;
+    }
+    if (shape.type === 'text') {
+      return <TextComponent key={shape.id} shape={shape as any} isSelected={childSelected} interactive={false} onSelect={() => onSelectShape?.(shape.id)} />;
     }
     return null;
   };

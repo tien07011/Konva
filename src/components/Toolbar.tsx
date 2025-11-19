@@ -1,5 +1,5 @@
 import React from 'react';
-import { Minus, MousePointer, Circle as CircleIcon, Square as RectIcon, Undo, Redo, Trash2, Download, Upload, Grid3x3, Pencil } from 'lucide-react';
+import { Minus, MousePointer, Circle as CircleIcon, Square as RectIcon, Undo, Redo, Trash2, Download, Upload, Grid3x3, Pencil, Type as TextIcon } from 'lucide-react';
 import { Button } from './ui/button';
 import type { ToolType, AnyShape, LineShape } from '../types/drawing';
 
@@ -64,6 +64,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onUngroupShapes,
 }) => {
   const selectedLine: LineShape | null = selectedShape && selectedShape.type === 'line' ? (selectedShape as LineShape) : null;
+  const selectedText = selectedShape && selectedShape.type === 'text' ? (selectedShape as any) : null;
 
   const updateLine = (patch: Partial<LineShape>) => {
     if (!selectedLine || !onUpdateSelectedShape) return;
@@ -138,6 +139,15 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           >
             <Minus size={16} />
             <span className="ml-2">CCurve</span>
+          </Button>
+          <Button
+            variant={tool === 'text' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => onToolChange('text')}
+            className="justify-start"
+          >
+            <TextIcon size={16} />
+            <span className="ml-2">Text</span>
           </Button>
         </div>
       </div>
@@ -275,6 +285,63 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                   onChange={(e) => updateLine({ tension: Number(e.target.value) })}
                   className="w-full"
                 />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Text-specific controls */}
+      {selectedText && (
+        <div>
+          <h3 className="text-sm font-semibold text-slate-700 mb-2">Text</h3>
+          <div className="space-y-3">
+            <div>
+              <div className="text-xs text-slate-600 mb-1">Content</div>
+              <input
+                type="text"
+                className="w-full border border-slate-300 rounded px-2 py-1 text-sm"
+                value={selectedText.text}
+                onChange={(e) => onUpdateSelectedShape && onUpdateSelectedShape({ ...selectedText, text: e.target.value })}
+              />
+            </div>
+            <div>
+              <div className="text-xs text-slate-600 mb-1">Font Size: {selectedText.fontSize}px</div>
+              <input
+                type="range"
+                min="8"
+                max="96"
+                value={selectedText.fontSize || 16}
+                onChange={(e) => onUpdateSelectedShape && onUpdateSelectedShape({ ...selectedText, fontSize: Number(e.target.value) })}
+                className="w-full"
+              />
+            </div>
+            <div>
+              <div className="text-xs text-slate-600 mb-1">Font Family</div>
+              <select
+                className="w-full border border-slate-300 rounded px-2 py-1 text-sm"
+                value={selectedText.fontFamily || 'Arial'}
+                onChange={(e) => onUpdateSelectedShape && onUpdateSelectedShape({ ...selectedText, fontFamily: e.target.value })}
+              >
+                <option value="Arial">Arial</option>
+                <option value="Inter">Inter</option>
+                <option value="Times New Roman">Times New Roman</option>
+                <option value="Courier New">Courier New</option>
+              </select>
+            </div>
+            <div>
+              <div className="text-xs text-slate-600 mb-1">Align</div>
+              <div className="grid grid-cols-3 gap-2">
+                {(['left','center','right'] as const).map((al) => (
+                  <Button
+                    key={al}
+                    variant={selectedText.align === al ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => onUpdateSelectedShape && onUpdateSelectedShape({ ...selectedText, align: al })}
+                  >
+                    {al}
+                  </Button>
+                ))}
               </div>
             </div>
           </div>

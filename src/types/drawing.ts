@@ -1,4 +1,4 @@
-export type ToolType = 'none' | 'select' | 'line' | 'rect' | 'circle' | 'qcurve' | 'ccurve' | 'path' | 'freehand'; // thêm custom path
+export type ToolType = 'none' | 'select' | 'line' | 'rect' | 'circle' | 'qcurve' | 'ccurve' | 'path' | 'freehand' | 'text'; // thêm custom path
 
 export interface BaseShape {
   id: string;
@@ -52,6 +52,18 @@ export interface CircleShape extends BaseShape {
   r: number;
 }
 
+export interface TextShape extends BaseShape {
+  type: 'text';
+  x: number;
+  y: number;
+  text: string;
+  fontSize: number;
+  fontFamily?: string;
+  align?: 'left' | 'center' | 'right';
+  width?: number; // wrapping width
+  height?: number; // cached for selection/transform box
+}
+
 export type PathCommand =
   | { cmd: 'M'; x: number; y: number }
   | { cmd: 'L'; x: number; y: number }
@@ -81,7 +93,8 @@ export type AnyShape =
   | QuadraticCurveShape
   | CubicCurveShape
   | PathShape
-  | FreehandShape;
+  | FreehandShape
+  | TextShape;
 
 export interface ShapeRef {
   kind: 'shape';
