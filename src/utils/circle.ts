@@ -43,7 +43,7 @@ export async function circleBBox(cx: number, cy: number, r: number): Promise<{ m
     const ptr = wasm.circle_bbox(cx, cy, Math.abs(r));
     const arr: number[] = typeof wasm.__getArray === 'function' ? wasm.__getArray(ptr) : [];
     if (arr && arr.length >= 4) return { minx: arr[0], miny: arr[1], maxx: arr[2], maxy: arr[3] };
-  } catch {}
+  } catch (_e) { /* wasm unavailable - fallback to JS */ void 0; }
   const rr = Math.abs(r);
   return { minx: cx - rr, miny: cy - rr, maxx: cx + rr, maxy: cy + rr };
 }
@@ -79,7 +79,7 @@ export async function circleIntersectRay(
       const hit = isFinite(x) && isFinite(y);
       return { hit, x, y };
     }
-  } catch {}
+  } catch (_e) { /* wasm unavailable - fallback to JS */ void 0; }
   // JS fallback
   const dx = x2 - x1;
   const dy = y2 - y1;
