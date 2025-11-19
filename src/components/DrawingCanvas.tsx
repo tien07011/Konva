@@ -15,6 +15,7 @@ import type {
   QuadraticCurveShape,
   CubicCurveShape,
 } from '../types/drawing';
+import { startCircle, updateCircleFromCenter, updateCircleFromCorner } from '../utils/circle';
 
 interface DrawingCanvasProps {
   shapes: AnyShape[];
@@ -38,6 +39,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
 
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentShape, setCurrentShape] = useState<AnyShape | null>(null);
+  const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
   const stageRef = useRef<any>(null);
 
   const handleMouseDown = (e: any) => {
@@ -71,19 +73,10 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       setCurrentShape(newLine);
     } else if (tool === 'circle') {
       setIsDrawing(true);
+      setDragStart({ x: pos.x, y: pos.y });
 
       const id = `circle-${Date.now()}`;
-      const newCircle: CircleShape = {
-        id,
-        type: 'circle',
-        cx: pos.x,
-        cy: pos.y,
-        r: 0,
-        stroke: strokeColor,
-        strokeWidth,
-        fill: undefined,
-      };
-
+      const newCircle: CircleShape = startCircle(id, pos.x, pos.y, strokeColor, strokeWidth);
       setCurrentShape(newCircle);
     } else if (tool === 'rect') {
       setIsDrawing(true);
@@ -147,13 +140,11 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     }
 
     if (tool === 'circle' && currentShape.type === 'circle') {
-      const dx = pos.x - currentShape.cx;
-      const dy = pos.y - currentShape.cy;
-      const r = Math.sqrt(dx * dx + dy * dy);
-      const updatedCircle: CircleShape = {
-        ...currentShape,
-        r,
-      };
+      const alt = !!(e.evt && e.evt.altKey);
+      const start = dragStart ?? { x: currentShape.cx, y: currentShape.cy };
+      const updatedCircle = alt
+        ? updateCircleFromCenter(currentShape, start.x, start.y, pos.x, pos.y)
+        : updateCircleFromCorner(currentShape, start.x, start.y, pos.x, pos.y);
       setCurrentShape(updatedCircle);
     }
 
@@ -227,6 +218,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     onAddShape(currentShape);
     setIsDrawing(false);
     setCurrentShape(null);
+    setDragStart(null);
 
     // Switch to select mode after drawing
     dispatch(setTool('none'));
@@ -303,6 +295,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
           isSelected={isSelected}
           onSelect={() => onSelectShape(shape.id)}
           onDragEnd={handleDragEnd(shape)}
+          onChange={(next) => onUpdateShape(next)}
         />
       );
     }
