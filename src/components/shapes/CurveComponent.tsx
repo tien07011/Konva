@@ -9,6 +9,7 @@ interface CurveComponentProps {
   onSelect?: () => void;
   onDragEnd?: (e: any) => void;
   onChange?: (next: QuadraticCurveShape | CubicCurveShape) => void;
+  interactive?: boolean;
 }
 
 export const CurveComponent: React.FC<CurveComponentProps> = ({
@@ -17,6 +18,7 @@ export const CurveComponent: React.FC<CurveComponentProps> = ({
   onSelect,
   onDragEnd,
   onChange,
+  interactive = true,
 }) => {
   const [draftPoints, setDraftPoints] = useState<number[] | null>(null);
   const [activeHandle, setActiveHandle] = useState<number | null>(null); // stores x-index in points
@@ -268,9 +270,10 @@ export const CurveComponent: React.FC<CurveComponentProps> = ({
         stroke={shape.stroke}
         strokeWidth={shape.strokeWidth}
         fill={shape.fill}
-        onClick={onSelect}
-        onTap={onSelect}
-        draggable
+        onClick={interactive ? onSelect : undefined}
+        onTap={interactive ? onSelect : undefined}
+        draggable={interactive}
+        listening={interactive}
         onDragMove={(e: any) => {
           const n = e.target;
           setDragOffset({ x: n.x(), y: n.y() });
@@ -284,7 +287,7 @@ export const CurveComponent: React.FC<CurveComponentProps> = ({
         shadowOpacity={isSelected ? 0.8 : 0}
         shadowOffset={isSelected ? { x: 0, y: 0 } : undefined}
       />
-      {isSelected ? anchors : null}
+      {interactive && isSelected ? anchors : null}
     </Group>
   );
 };

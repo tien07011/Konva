@@ -273,6 +273,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
 
   const renderShape = (shape: AnyShape) => {
     const isSelected = shape.id === selectedId;
+    const interactive = tool === 'none';
 
     if (shape.type === 'line') {
       return (
@@ -280,7 +281,8 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
           key={shape.id}
           shape={shape}
           isSelected={isSelected}
-          onSelect={() => onSelectShape(shape.id)}
+          interactive={interactive}
+          onSelect={interactive ? () => onSelectShape(shape.id) : undefined}
           onDragEnd={handleDragEnd(shape)}
           onChange={(next) => onUpdateShape(next)}
         />
@@ -293,7 +295,8 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
           key={shape.id}
           shape={shape}
           isSelected={isSelected}
-          onSelect={() => onSelectShape(shape.id)}
+          interactive={interactive}
+          onSelect={interactive ? () => onSelectShape(shape.id) : undefined}
           onDragEnd={handleDragEnd(shape)}
           onChange={(next) => onUpdateShape(next)}
         />
@@ -306,7 +309,8 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
           key={shape.id}
           shape={shape}
           isSelected={isSelected}
-          onSelect={() => onSelectShape(shape.id)}
+          interactive={interactive}
+          onSelect={interactive ? () => onSelectShape(shape.id) : undefined}
           onDragEnd={handleDragEnd(shape)}
           onChange={(next) => onUpdateShape(next)}
         />
@@ -319,7 +323,8 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
           key={shape.id}
           shape={shape}
           isSelected={isSelected}
-          onSelect={() => onSelectShape(shape.id)}
+          interactive={interactive}
+          onSelect={interactive ? () => onSelectShape(shape.id) : undefined}
           onDragEnd={handleDragEnd(shape)}
           onChange={(next) => onUpdateShape(next)}
         />

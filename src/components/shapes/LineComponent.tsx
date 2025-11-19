@@ -9,6 +9,7 @@ interface LineComponentProps {
   onSelect?: () => void;
   onDragEnd?: (e: any) => void;
   onChange?: (next: LineShape) => void;
+  interactive?: boolean;
 }
 
 export const LineComponent: React.FC<LineComponentProps> = ({
@@ -17,6 +18,7 @@ export const LineComponent: React.FC<LineComponentProps> = ({
   onSelect,
   onDragEnd,
   onChange,
+  interactive = true,
 }) => {
   const [draftPoints, setDraftPoints] = useState<number[] | null>(null);
   const [activeHandle, setActiveHandle] = useState<number | null>(null);
@@ -226,9 +228,10 @@ export const LineComponent: React.FC<LineComponentProps> = ({
         tension={shape.tension ?? 0}
         fill={shape.fill}
         rotation={shape.rotation || 0}
-        draggable
-        onClick={onSelect}
-        onTap={onSelect}
+        draggable={interactive}
+        listening={interactive}
+        onClick={interactive ? onSelect : undefined}
+        onTap={interactive ? onSelect : undefined}
         onDblClick={handleDoubleClick}
         onDragEnd={onDragEnd}
         shadowColor={isSelected ? 'rgba(59, 130, 246, 0.5)' : undefined}
@@ -236,7 +239,7 @@ export const LineComponent: React.FC<LineComponentProps> = ({
         shadowOpacity={isSelected ? 0.8 : 0}
         shadowOffset={isSelected ? { x: 0, y: 0 } : undefined}
       />
-      {isSelected ? anchors : null}
+      {interactive && isSelected ? anchors : null}
     </Group>
   );
 };

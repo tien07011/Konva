@@ -8,6 +8,7 @@ interface RectComponentProps {
   onSelect?: () => void;
   onDragEnd?: (e: any) => void;
   onChange?: (next: RectShape) => void;
+  interactive?: boolean;
 }
 
 export const RectComponent: React.FC<RectComponentProps> = ({
@@ -16,6 +17,7 @@ export const RectComponent: React.FC<RectComponentProps> = ({
   onSelect,
   onDragEnd,
   onChange,
+  interactive = true,
 }) => {
   const rectRef = useRef<any>(null);
   const trRef = useRef<any>(null);
@@ -95,9 +97,10 @@ export const RectComponent: React.FC<RectComponentProps> = ({
         strokeWidth={shape.strokeWidth}
         fill={shape.fill}
         rotation={shape.rotation || 0}
-        draggable
-        onClick={onSelect}
-        onTap={onSelect}
+        draggable={interactive}
+        listening={interactive}
+        onClick={interactive ? onSelect : undefined}
+        onTap={interactive ? onSelect : undefined}
         onDragEnd={onDragEnd}
         onTransformEnd={handleTransformEnd}
         shadowColor={isSelected ? 'rgba(59, 130, 246, 0.5)' : undefined}
@@ -105,7 +108,7 @@ export const RectComponent: React.FC<RectComponentProps> = ({
         shadowOpacity={isSelected ? 0.8 : 0}
         shadowOffset={isSelected ? { x: 0, y: 0 } : undefined}
       />
-      {isSelected ? (
+      {interactive && isSelected ? (
         <Transformer
           ref={trRef}
           rotateEnabled

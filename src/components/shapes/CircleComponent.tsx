@@ -8,6 +8,7 @@ interface CircleComponentProps {
   onSelect?: () => void;
   onDragEnd?: (e: any) => void;
   onChange?: (next: CircleShape) => void;
+  interactive?: boolean;
 }
 
 export const CircleComponent: React.FC<CircleComponentProps> = ({
@@ -16,6 +17,7 @@ export const CircleComponent: React.FC<CircleComponentProps> = ({
   onSelect,
   onDragEnd,
   onChange,
+  interactive = true,
 }) => {
   const nodeRef = useRef<any>(null);
   const trRef = useRef<any>(null);
@@ -64,9 +66,10 @@ export const CircleComponent: React.FC<CircleComponentProps> = ({
         strokeWidth={shape.strokeWidth}
         fill={shape.fill}
         rotation={shape.rotation || 0}
-        draggable
-        onClick={onSelect}
-        onTap={onSelect}
+        draggable={interactive}
+        listening={interactive}
+        onClick={interactive ? onSelect : undefined}
+        onTap={interactive ? onSelect : undefined}
         onDragEnd={onDragEnd}
         shadowColor={isSelected ? 'rgba(59, 130, 246, 0.5)' : undefined}
         shadowBlur={isSelected ? 10 : 0}
@@ -74,7 +77,7 @@ export const CircleComponent: React.FC<CircleComponentProps> = ({
         shadowOffset={isSelected ? { x: 0, y: 0 } : undefined}
         onTransformEnd={handleTransformEnd}
       />
-      {isSelected ? (
+      {interactive && isSelected ? (
         <Transformer
           ref={trRef}
           rotateEnabled={false}

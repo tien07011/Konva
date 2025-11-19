@@ -66,11 +66,24 @@ export const PaintApp: React.FC = () => {
     const sel = shapes.find((s) => s.id === selectedId);
     if (!sel) return;
 
-    if ('stroke' in sel && sel.stroke) dispatch(setStrokeColor(sel.stroke));
-    if ('strokeWidth' in sel && typeof sel.strokeWidth === 'number')
+    if ('stroke' in sel && sel.stroke && sel.stroke !== strokeColor) {
+      dispatch(setStrokeColor(sel.stroke));
+    }
+    if (
+      'strokeWidth' in sel &&
+      typeof sel.strokeWidth === 'number' &&
+      sel.strokeWidth !== strokeWidth
+    ) {
       dispatch(setStrokeWidth(sel.strokeWidth));
-    if ('fill' in sel) dispatch(setFillColor((sel as any).fill ?? 'transparent'));
-  }, [selectedId, shapes, dispatch]);
+    }
+    if ('fill' in sel) {
+      const fill = (sel as any).fill ?? 'transparent';
+      if (fill !== fillColor) {
+        dispatch(setFillColor(fill));
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedId]);
 
   useEffect(() => {
     if (!selectedId) return;
@@ -83,15 +96,16 @@ export const PaintApp: React.FC = () => {
 
     if (!needsUpdate) return;
 
-    const updated = {
-      ...sel,
-      stroke: strokeColor,
-      strokeWidth,
-      fill: fillColor,
-    } as any;
-
-    dispatch(updateShape(updated));
-  }, [strokeColor, strokeWidth, fillColor, selectedId, shapes, dispatch]);
+    dispatch(
+      updateShape({
+        ...sel,
+        stroke: strokeColor,
+        strokeWidth,
+        fill: fillColor,
+      }),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [strokeColor, strokeWidth, fillColor, selectedId]);
 
   return (
     <div className="flex h-screen bg-slate-100">
