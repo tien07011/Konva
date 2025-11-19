@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Line } from 'react-konva';
 import type { LineShape } from '../../types/drawing';
+import { polylineLength } from '../../utils/geometry';
 
 interface LineComponentProps {
   shape: LineShape;
@@ -15,6 +16,18 @@ export const LineComponent: React.FC<LineComponentProps> = ({
   onSelect,
   onDragEnd,
 }) => {
+  useEffect(() => {
+    // Demo: compute polyline length in WASM when points change (no UI change)
+    if (shape.points && shape.points.length >= 4) {
+      polylineLength(shape.points).then((len) => {
+        console.log(`[WASM] polyline length for ${shape.id}:`, len.toFixed(2));
+        if (process.env.NODE_ENV !== 'production') {
+          // eslint-disable-next-line no-console
+          console.debug(`[WASM] polyline length for ${shape.id}:`, len.toFixed(2));
+        }
+      });
+    }
+  }, [shape.id, shape.points]);
   return (
     <Line
       id={shape.id}
