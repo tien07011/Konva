@@ -315,6 +315,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
           isSelected={isSelected}
           onSelect={() => onSelectShape(shape.id)}
           onDragEnd={handleDragEnd(shape)}
+          onChange={(next) => onUpdateShape(next)}
         />
       );
     }
