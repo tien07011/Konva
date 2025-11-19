@@ -1,4 +1,4 @@
-export type ToolType = 'none' | 'line' | 'rect' | 'circle' | 'qcurve' | 'ccurve' | 'path'; // thêm custom path
+export type ToolType = 'none' | 'line' | 'rect' | 'circle' | 'qcurve' | 'ccurve' | 'path' | 'freehand'; // thêm custom path
 
 export interface BaseShape {
   id: string;
@@ -17,6 +17,12 @@ export interface LineShape extends BaseShape {
   dash?: number[]; // mẫu gạch (ví dụ [8,6])
   closed?: boolean; // đóng đường để có fill
   tension?: number; // 0..1 làm mượt polyline
+}
+
+// Freehand drawing shape
+export interface FreehandShape extends BaseShape {
+  type: 'freehand';
+  points: number[]; // [x1, y1, x2, y2, x3, y3, ...]
 }
 
 // Quadratic Bézier curve: [x0, y0, cx, cy, x1, y1]
@@ -74,7 +80,8 @@ export type AnyShape =
   | CircleShape
   | QuadraticCurveShape
   | CubicCurveShape
-  | PathShape;
+  | PathShape
+  | FreehandShape;
 
 export interface ShapeRef {
   kind: 'shape';

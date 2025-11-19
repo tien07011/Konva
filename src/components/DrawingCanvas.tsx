@@ -7,6 +7,7 @@ import { LineComponent } from './shapes/LineComponent';
 import { CircleComponent } from './shapes/CircleComponent';
 import { RectComponent } from './shapes/RectComponent';
 import { CurveComponent } from './shapes/CurveComponent';
+import { FreehandComponent } from './shapes/FreehandComponent';
 import type {
   AnyShape,
   LineShape,
@@ -14,6 +15,7 @@ import type {
   RectShape,
   QuadraticCurveShape,
   CubicCurveShape,
+  FreehandShape,
 } from '../types/drawing';
 import { startCircle, updateCircleFromCenter, updateCircleFromCorner } from '../utils/circle';
 
@@ -71,6 +73,19 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       };
 
       setCurrentShape(newLine);
+    } else if (tool === 'freehand') {
+      setIsDrawing(true);
+
+      const id = `freehand-${Date.now()}`;
+      const newFreehand: FreehandShape = {
+        id,
+        type: 'freehand',
+        points: [pos.x, pos.y],
+        stroke: strokeColor,
+        strokeWidth,
+      };
+
+      setCurrentShape(newFreehand);
     } else if (tool === 'circle') {
       setIsDrawing(true);
       setDragStart({ x: pos.x, y: pos.y });
@@ -137,6 +152,15 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
         points: [currentShape.points[0], currentShape.points[1], pos.x, pos.y],
       };
       setCurrentShape(updatedLine);
+    }
+
+    if (tool === 'freehand' && currentShape.type === 'freehand') {
+      // Add new point to the freehand line
+      const updatedFreehand: FreehandShape = {
+        ...currentShape,
+        points: [...currentShape.points, pos.x, pos.y],
+      };
+      setCurrentShape(updatedFreehand);
     }
 
     if (tool === 'circle' && currentShape.type === 'circle') {
@@ -269,6 +293,16 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       node.position({ x: 0, y: 0 });
       onUpdateShape(updatedShape);
     }
+    if (shape.type === 'freehand') {
+      const deltaX = node.x();
+      const deltaY = node.y();
+      const updatedShape: FreehandShape = {
+        ...shape,
+        points: shape.points.map((v, i) => (i % 2 === 0 ? v + deltaX : v + deltaY)),
+      };
+      node.position({ x: 0, y: 0 });
+      onUpdateShape(updatedShape);
+    }
   };
 
   const renderShape = (shape: AnyShape) => {
@@ -320,6 +354,20 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     if (shape.type === 'qcurve' || shape.type === 'ccurve') {
       return (
         <CurveComponent
+          key={shape.id}
+          shape={shape}
+          isSelected={isSelected}
+          interactive={interactive}
+          onSelect={interactive ? () => onSelectShape(shape.id) : undefined}
+          onDragEnd={handleDragEnd(shape)}
+          onChange={(next) => onUpdateShape(next)}
+        />
+      );
+    }
+
+    if (shape.type === 'freehand') {
+      return (
+        <FreehandComponent
           key={shape.id}
           shape={shape}
           isSelected={isSelected}

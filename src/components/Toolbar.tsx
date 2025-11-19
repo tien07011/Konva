@@ -1,5 +1,5 @@
 import React from 'react';
-import { Minus, MousePointer, Circle as CircleIcon, Square as RectIcon, Undo, Redo, Trash2, Download, Grid3x3 } from 'lucide-react';
+import { Minus, MousePointer, Circle as CircleIcon, Square as RectIcon, Undo, Redo, Trash2, Download, Grid3x3, Pencil } from 'lucide-react';
 import { Button } from './ui/button';
 import type { ToolType, AnyShape, LineShape } from '../types/drawing';
 
@@ -87,6 +87,15 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           >
             <Minus size={16} />
             <span className="ml-2">Line</span>
+          </Button>
+          <Button
+            variant={tool === 'freehand' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => onToolChange('freehand')}
+            className="justify-start"
+          >
+            <Pencil size={16} />
+            <span className="ml-2">Draw</span>
           </Button>
           <Button
             variant={tool === 'rect' ? 'default' : 'outline'}
