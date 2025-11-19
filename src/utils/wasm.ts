@@ -1,11 +1,13 @@
-import type { ASUtil } from '@assemblyscript/loader';
+// Using loose typings for loader compatibility across versions
 import { instantiate } from '@assemblyscript/loader';
 
 // Types matching our AssemblyScript exports
-export interface GeometryWasmExports extends ASUtil {
+export interface GeometryWasmExports {
   memory: WebAssembly.Memory;
   FLOAT64ARRAY_ID: number;
   polyline_length(pointsPtr: number): number;
+  // Additional exports can be declared here as needed
+  [key: string]: any;
 }
 
 let wasmPromise: Promise<GeometryWasmExports> | null = null;
