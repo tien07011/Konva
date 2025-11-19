@@ -1,5 +1,5 @@
 import React from 'react';
-import { Minus, MousePointer, Circle as CircleIcon, Square as RectIcon, Undo, Redo, Trash2, Download, Grid3x3 } from 'lucide-react';
+import { Minus, MousePointer, Circle as CircleIcon, Square as RectIcon, Undo, Redo, Trash2, Download, Grid3x3, Pencil } from 'lucide-react';
 import { Button } from './ui/button';
 import type { ToolType, AnyShape, LineShape } from '../types/drawing';
 
@@ -29,11 +29,7 @@ const commonColors = [
   '#111827',
   '#ef4444',
   '#3b82f6',
-  '#10b981',
-  '#f59e0b',
-  '#8b5cf6',
-  '#ec4899',
-  '#6366f1',
+  '#10b981'
 ];
 
 export const Toolbar: React.FC<ToolbarProps> = ({
@@ -68,7 +64,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
     <div className="w-72 bg-slate-50 border-l border-slate-200 p-4 space-y-6 overflow-y-auto">
       {/* Tools */}
       <div>
-        <h3 className="text-sm font-semibold text-slate-700 mb-3">Tools</h3>
+        <h3 className="text-sm font-semibold text-slate-700 mb-2">Tools</h3>
         <div className="grid grid-cols-3 gap-2">
           <Button
             variant={tool === 'none' ? 'default' : 'outline'}
@@ -87,6 +83,15 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           >
             <Minus size={16} />
             <span className="ml-2">Line</span>
+          </Button>
+          <Button
+            variant={tool === 'freehand' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => onToolChange('freehand')}
+            className="justify-start"
+          >
+            <Pencil size={16} />
+            <span className="ml-2">Draw</span>
           </Button>
           <Button
             variant={tool === 'rect' ? 'default' : 'outline'}
@@ -129,7 +134,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
 
       {/* Stroke Color */}
       <div>
-        <h3 className="text-sm font-semibold text-slate-700 mb-3">Stroke Color</h3>
+        <h3 className="text-sm font-semibold text-slate-700 mb-2">Stroke Color</h3>
         <div className="grid grid-cols-4 gap-2 mb-2">
           {commonColors.map((color) => (
             <button
@@ -152,7 +157,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
 
       {/* Stroke Width */}
       <div>
-        <h3 className="text-sm font-semibold text-slate-700 mb-3">
+        <h3 className="text-sm font-semibold text-slate-700 mb-2">
           Stroke Width: {strokeWidth}px
         </h3>
         <input
@@ -168,7 +173,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
       {/* Line-specific controls */}
       {selectedLine && (
         <div>
-          <h3 className="text-sm font-semibold text-slate-700 mb-3">Line</h3>
+          <h3 className="text-sm font-semibold text-slate-700 mb-2">Line</h3>
           <div className="space-y-4">
             {/* Line Cap */}
             <div>
@@ -268,7 +273,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
 
       {/* Actions */}
       <div>
-        <h3 className="text-sm font-semibold text-slate-700 mb-3">Actions</h3>
+        <h3 className="text-sm font-semibold text-slate-700 mb-2">Actions</h3>
         <div className="space-y-2">
           <div className="flex gap-2">
             <Button
