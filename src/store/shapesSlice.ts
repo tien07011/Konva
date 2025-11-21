@@ -44,6 +44,18 @@ const shapesSlice = createSlice({
         state.historyIndex = newHistory.length - 1;
       }
     },
+    updateShapes(state, action: PayloadAction<AnyShape[]>) {
+      const updates = action.payload;
+      updates.forEach((u) => {
+        const index = state.shapes.findIndex((s) => s.id === u.id);
+        if (index !== -1) state.shapes[index] = u;
+      });
+      // Update history once for the batch
+      const newHistory = state.history.slice(0, state.historyIndex + 1);
+      newHistory.push([...state.shapes]);
+      state.history = newHistory;
+      state.historyIndex = newHistory.length - 1;
+    },
     deleteShape(state, action: PayloadAction<string>) {
       const id = action.payload;
       state.shapes = state.shapes.filter((s) => s.id !== id);
@@ -155,6 +167,7 @@ const shapesSlice = createSlice({
 export const { 
   addShape, 
   updateShape, 
+  updateShapes,
   deleteShape, 
   selectShape, 
   selectMultipleShapes,

@@ -7,6 +7,7 @@ import { setTool, setStrokeColor, setStrokeWidth, setFillColor, toggleGrid } fro
 import { 
   addShape, 
   updateShape, 
+  updateShapes,
   selectShape, 
   selectMultipleShapes,
   selectGroup,
@@ -168,6 +169,61 @@ export const PaintApp: React.FC = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedId]);
+
+    // When a group is selected, populate the toolbar with the first child's styles
+    useEffect(() => {
+      if (!selectedGroupId) return;
+      const group = groups.find((g) => g.id === selectedGroupId);
+      if (!group) return;
+      const firstShape = shapes.find((s) => s.id === group.shapeIds[0]);
+      if (!firstShape) return;
+
+      if ('stroke' in firstShape && firstShape.stroke && firstShape.stroke !== strokeColor) {
+        dispatch(setStrokeColor(firstShape.stroke));
+      }
+      if (
+        'strokeWidth' in firstShape &&
+        typeof firstShape.strokeWidth === 'number' &&
+        firstShape.strokeWidth !== strokeWidth
+      ) {
+        dispatch(setStrokeWidth(firstShape.strokeWidth));
+      }
+      if ('fill' in firstShape) {
+        const fill = (firstShape as any).fill ?? 'transparent';
+        if (fill !== fillColor) {
+          dispatch(setFillColor(fill));
+        }
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedGroupId]);
+
+    // Apply toolbar changes to all shapes in selected group
+    useEffect(() => {
+      if (!selectedGroupId) return;
+      const group = groups.find((g) => g.id === selectedGroupId);
+      if (!group) return;
+
+      const updated: AnyShape[] = [];
+      group.shapeIds.forEach((id) => {
+        const s = shapes.find((sh) => sh.id === id);
+        if (!s) return;
+        const currentFill = (s as any).fill ?? 'transparent';
+        const needsUpdate = s.stroke !== strokeColor || s.strokeWidth !== strokeWidth || currentFill !== fillColor;
+        if (needsUpdate) {
+          updated.push({
+            ...s,
+            stroke: strokeColor,
+            strokeWidth,
+            fill: fillColor,
+          });
+        }
+      });
+
+      if (updated.length > 0) {
+        dispatch(updateShapes(updated));
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [strokeColor, strokeWidth, fillColor, selectedGroupId]);
 
   useEffect(() => {
     if (!selectedId) return;
