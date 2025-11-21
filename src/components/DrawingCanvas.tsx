@@ -58,6 +58,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
 
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentShape, setCurrentShape] = useState<AnyShape | null>(null);
+  const [textPreview, setTextPreview] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
     const [selectionRect, setSelectionRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const stageRef = useRef<any>(null);
@@ -163,28 +164,10 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       };
       setCurrentShape(newC);
     } else if (tool === 'text') {
-      // Place text at click position
+      // Start drag for text region selection (defer creating shape until mouse up)
       setIsDrawing(true);
       setDragStart({ x: pos.x, y: pos.y });
-
-      const id = `text-${Date.now()}`;
-      const newText: TextShape = {
-        id,
-        type: 'text',
-        x: pos.x,
-        y: pos.y,
-        text: 'Text',
-        fontSize: 24,
-        fontFamily: 'Arial',
-        align: 'left',
-        width: 200,
-        height: 32,
-        stroke: strokeColor,
-        strokeWidth,
-        fill: '#111827',
-      };
-
-      setCurrentShape(newText);
+      setTextPreview({ x: pos.x, y: pos.y, width: 0, height: 0 });
     }
   };
 
@@ -205,9 +188,22 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
         return;
       }
 
-    if (!isDrawing || !currentShape) return;
+    if (tool === 'text' && isDrawing && dragStart && textPreview) {
+      const stage = e.target.getStage();
+      if (!stage) return;
+      const pos = stage.getPointerPosition();
+      if (!pos) return;
+      const startX = dragStart.x;
+      const startY = dragStart.y;
+      const x = Math.min(startX, pos.x);
+      const y = Math.min(startY, pos.y);
+      const width = Math.max(20, Math.abs(pos.x - startX));
+      const height = Math.max(20, Math.abs(pos.y - startY));
+      setTextPreview({ x, y, width, height });
+      return;
+    }
 
-      if (!currentShape) return;
+    if (!isDrawing || !currentShape) return;
 
     const stage = e.target.getStage();
     if (!stage) return;
@@ -304,22 +300,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       setCurrentShape(updatedC);
     }
 
-    if (tool === 'text' && currentShape.type === 'text') {
-      // Optional: drag to set wrapping width/height
-      if (!dragStart) return;
-      const startX = dragStart.x;
-      const startY = dragStart.y;
-      const width = Math.max(20, Math.abs(pos.x - startX));
-      const height = Math.max(20, Math.abs(pos.y - startY));
-      const updatedText: TextShape = {
-        ...currentShape,
-        x: Math.min(startX, pos.x),
-        y: Math.min(startY, pos.y),
-        width,
-        height,
-      };
-      setCurrentShape(updatedText);
-    }
+    // (text tool handled earlier by preview rectangle)
   };
 
   const handleMouseUp = () => {
@@ -352,14 +333,46 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       return;
     }
 
+    if (tool === 'text' && isDrawing) {
+      // Finalize text shape creation from preview
+      const region = textPreview;
+      const start = dragStart;
+      const baseX = start?.x ?? 0;
+      const baseY = start?.y ?? 0;
+      const finalBox = region && region.width >= 5 && region.height >= 5
+        ? region
+        : { x: baseX, y: baseY, width: 160, height: 40 };
+      const id = `text-${Date.now()}`;
+      const newText: TextShape = {
+        id,
+        type: 'text',
+        x: finalBox.x,
+        y: finalBox.y,
+        text: 'Text',
+        fontSize: 24,
+        fontFamily: 'Arial',
+        align: 'left',
+        width: finalBox.width,
+        height: finalBox.height,
+        stroke: strokeColor,
+        strokeWidth,
+        fill: '#111827',
+      };
+      onAddShape(newText);
+      onSelectShape(newText.id);
+      setIsDrawing(false);
+      setDragStart(null);
+      setTextPreview(null);
+      dispatch(setTool('select'));
+      return;
+    }
+
     if (!isDrawing || !currentShape) return;
 
     onAddShape(currentShape);
     setIsDrawing(false);
     setCurrentShape(null);
     setDragStart(null);
-
-    // Switch to select mode after drawing
     dispatch(setTool('select'));
   };
 
@@ -552,6 +565,18 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
           {/* Skip shapes that are members of a group to avoid double render */}
           {shapes.filter((s) => !groups.some((g) => g.shapeIds.includes(s.id))).map(renderShape)}
           {currentShape && renderShape(currentShape)}
+          {textPreview && tool === 'text' && (
+            <Rect
+              x={textPreview.x}
+              y={textPreview.y}
+              width={textPreview.width}
+              height={textPreview.height}
+              stroke="#3b82f6"
+              strokeWidth={1}
+              dash={[6, 4]}
+              fill="rgba(59,130,246,0.1)"
+            />
+          )}
           {selectionRect && (
             <Rect
               x={selectionRect.x}

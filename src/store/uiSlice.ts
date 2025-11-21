@@ -11,7 +11,7 @@ export interface UIState {
 
 const initialState: UIState = {
   strokeColor: '#111827',
-  strokeWidth: 3,
+  strokeWidth: 5,
   fillColor: 'transparent',
     tool: 'select',
   showGrid: true,

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { Group, Line, Circle, Rect } from 'react-konva';
 import type { LineShape } from '../../types/drawing';
 import { polylineLength, closestSegment, snapVector45 } from '../../utils/geometry';
@@ -22,6 +22,8 @@ export const LineComponent: React.FC<LineComponentProps> = ({
 }) => {
   const [draftPoints, setDraftPoints] = useState<number[] | null>(null);
   const [activeHandle, setActiveHandle] = useState<number | null>(null);
+  const lineRef = useRef<any>(null);
+  const [lineOffset, setLineOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
   useEffect(() => {
     // reset draft when selection or shape changes externally
@@ -34,21 +36,21 @@ export const LineComponent: React.FC<LineComponentProps> = ({
   const handleDragMove = useCallback(
     (idx: number) => (e: any) => {
       const node = e.target;
-      const x = node.x();
-      const y = node.y();
+      const x = node.x() - lineOffset.x;
+      const y = node.y() - lineOffset.y;
       const next = points.slice();
       next[idx] = x;
       next[idx + 1] = y;
       setDraftPoints(next);
     },
-    [points],
+    [points, lineOffset],
   );
 
   const handleDragMoveSnapped = useCallback(
     (idx: number) => (e: any) => {
       const node = e.target;
-      const x = node.x();
-      const y = node.y();
+      const x = node.x() - lineOffset.x;
+      const y = node.y() - lineOffset.y;
       // snap relative to previous point if exists, else next
       const refX = points[idx - 2] ?? points[idx + 2] ?? x;
       const refY = points[idx - 1] ?? points[idx + 3] ?? y;
@@ -60,22 +62,32 @@ export const LineComponent: React.FC<LineComponentProps> = ({
       next[idx + 1] = sy;
       setDraftPoints(next);
     },
-    [points],
+    [points, lineOffset],
   );
 
   const handleDragEndPoint = useCallback(
     (idx: number) => (e: any) => {
       const node = e.target;
-      const x = node.x();
-      const y = node.y();
-      const next = (draftPoints ?? points).slice();
-      next[idx] = x;
-      next[idx + 1] = y;
+      const isRect = node.className === 'Rect';
+      const rawX = node.x();
+      const rawY = node.y();
+      const x = (isRect ? rawX + 4 : rawX) - lineOffset.x;
+      const y = (isRect ? rawY + 4 : rawY) - lineOffset.y;
+      // If we were dragging a midpoint (Rect) and already updated draftPoints continuously,
+      // commit draftPoints directly to avoid discrepancy between preview and final.
+      let next: number[];
+      if (isRect && draftPoints) {
+        next = draftPoints.slice();
+      } else {
+        next = (draftPoints ?? points).slice();
+        next[idx] = x;
+        next[idx + 1] = y;
+      }
       setDraftPoints(null);
       setActiveHandle(null);
       if (onChange) onChange({ ...shape, points: next });
     },
-    [draftPoints, points, onChange, shape],
+    [draftPoints, points, onChange, shape, lineOffset],
   );
 
   const makeOnPointDragMove = useCallback(
@@ -88,12 +100,25 @@ export const LineComponent: React.FC<LineComponentProps> = ({
 
   const makeOnMidDragMove = useCallback(
     () => (e: any) => {
-      if (activeHandle !== null && activeHandle >= 0) {
-        if (e.evt?.shiftKey) return handleDragMoveSnapped(activeHandle)(e);
-        return handleDragMove(activeHandle)(e);
+      if (activeHandle === null || activeHandle < 0) return;
+      const node = e.target;
+      // midpoint rect uses top-left; convert to center
+      const centerX = node.x() + 4 - lineOffset.x;
+      const centerY = node.y() + 4 - lineOffset.y;
+      const next = points.slice();
+      if (e.evt?.shiftKey) {
+        const refX = points[activeHandle - 2] ?? points[activeHandle + 2] ?? centerX;
+        const refY = points[activeHandle - 1] ?? points[activeHandle + 3] ?? centerY;
+        const { dx, dy } = snapVector45(centerX - refX, centerY - refY);
+        next[activeHandle] = refX + dx;
+        next[activeHandle + 1] = refY + dy;
+      } else {
+        next[activeHandle] = centerX;
+        next[activeHandle + 1] = centerY;
       }
+      setDraftPoints(next);
     },
-    [activeHandle, handleDragMove, handleDragMoveSnapped],
+    [activeHandle, points, lineOffset],
   );
 
   const makeOnMidDragEnd = useCallback(
@@ -107,8 +132,9 @@ export const LineComponent: React.FC<LineComponentProps> = ({
     (segStartIdx: number) => (e: any) => {
       // when starting drag on midpoint, insert it into points
       const node = e.target;
-      const x = node.x();
-      const y = node.y();
+      // rect top-left -> center (+4)
+      const x = node.x() + 4 - lineOffset.x;
+      const y = node.y() + 4 - lineOffset.y;
       const base = draftPoints ?? points;
       const next = base.slice();
       // insert after segStartIdx (which is x index), at position segStartIdx+2
@@ -116,7 +142,7 @@ export const LineComponent: React.FC<LineComponentProps> = ({
       setDraftPoints(next);
       setActiveHandle(segStartIdx + 2);
     },
-    [draftPoints, points],
+    [draftPoints, points, lineOffset],
   );
 
   const handleKeyDown = useCallback(
@@ -162,8 +188,8 @@ export const LineComponent: React.FC<LineComponentProps> = ({
       out.push(
         <Circle
           key={`p-${i}`}
-          x={x}
-          y={y}
+          x={x + lineOffset.x}
+          y={y + lineOffset.y}
           radius={6}
           stroke={'#3b82f6'}
           fill={'#fff'}
@@ -181,8 +207,8 @@ export const LineComponent: React.FC<LineComponentProps> = ({
         out.push(
           <Rect
             key={`m-${i}`}
-            x={mx - 4}
-            y={my - 4}
+            x={mx + lineOffset.x - 4}
+            y={my + lineOffset.y - 4}
             width={8}
             height={8}
             cornerRadius={2}
@@ -198,11 +224,27 @@ export const LineComponent: React.FC<LineComponentProps> = ({
       }
     }
     return out;
-  }, [points, handleDragEndPoint, handleDragMove, handleDragMoveSnapped, handleInsertAndDragMid, activeHandle]);
+  }, [points, handleDragEndPoint, handleDragMove, handleDragMoveSnapped, handleInsertAndDragMid, activeHandle, lineOffset]);
+
+  const handleLineDragMove = useCallback((e: any) => {
+    const node = e.target;
+    setLineOffset({ x: node.x(), y: node.y() });
+  }, []);
+
+  const handleLineDragEnd = useCallback(
+    (e: any) => {
+      // delegate to parent to flatten translation into points
+      if (onDragEnd) onDragEnd(e);
+      // reset offset after points updated
+      setLineOffset({ x: 0, y: 0 });
+    },
+    [onDragEnd],
+  );
 
   return (
     <Group>
       <Line
+        ref={lineRef}
         id={shape.id}
         points={points}
         stroke={shape.stroke}
@@ -219,7 +261,8 @@ export const LineComponent: React.FC<LineComponentProps> = ({
         onClick={onSelect}
         onTap={onSelect}
         onDblClick={handleDoubleClick}
-        onDragEnd={onDragEnd}
+        onDragMove={handleLineDragMove}
+        onDragEnd={handleLineDragEnd}
         shadowColor={isSelected ? 'rgba(59, 130, 246, 0.5)' : undefined}
         shadowBlur={isSelected ? 10 : 0}
         shadowOpacity={isSelected ? 0.8 : 0}

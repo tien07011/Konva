@@ -1,5 +1,5 @@
 import React from 'react';
-import { Minus, MousePointer, Circle as CircleIcon, Square as RectIcon, Undo, Redo, Trash2, Download, Upload, Grid3x3, Pencil, Type as TextIcon } from 'lucide-react';
+import { Minus, MousePointer, Circle as CircleIcon, Square as RectIcon, Undo, Redo, Trash2, Download, Upload, Grid3x3, Pencil, Type as TextIcon, Spline, LineSquiggle } from 'lucide-react';
 import { Button } from './ui/button';
 import type { ToolType, AnyShape, LineShape } from '../types/drawing';
 
@@ -72,7 +72,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   };
 
   return (
-    <div className="w-72 bg-slate-50 border-l border-slate-200 p-4 space-y-6 overflow-y-auto">
+    <div className="w-72 bg-slate-50 border-l border-slate-200 p-4 space-y-2 overflow-y-auto">
       {/* Tools */}
       <div>
         <h3 className="text-sm font-semibold text-slate-700 mb-2">Tools</h3>
@@ -128,8 +128,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             onClick={() => onToolChange('qcurve')}
             className="justify-start"
           >
-            <Minus size={16} />
-            <span className="ml-2">QCurve</span>
+            <Spline size={16} />
+            <span className="ml-2">Q</span>
           </Button>
           <Button
             variant={tool === 'ccurve' ? 'default' : 'outline'}
@@ -137,8 +137,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             onClick={() => onToolChange('ccurve')}
             className="justify-start"
           >
-            <Minus size={16} />
-            <span className="ml-2">CCurve</span>
+            <LineSquiggle size={16} />
+            <span className="ml-2">C</span>
           </Button>
           <Button
             variant={tool === 'text' ? 'default' : 'outline'}
