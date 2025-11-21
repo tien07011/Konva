@@ -65,6 +65,14 @@ export const FreehandComponent: React.FC<FreehandComponentProps> = ({
         onTap={onSelect}
         onDragEnd={onDragEnd}
         onTransformEnd={handleTransform}
+        onMouseEnter={(e: any) => {
+          const stage = e.target.getStage();
+          if (stage) stage.container().style.cursor = interactive ? 'move' : 'default';
+        }}
+        onMouseLeave={(e: any) => {
+          const stage = e.target.getStage();
+          if (stage) stage.container().style.cursor = 'default';
+        }}
       />
       {isSelected && <Transformer ref={trRef} />}
     </>

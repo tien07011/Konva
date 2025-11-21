@@ -72,7 +72,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   };
 
   return (
-    <div className="w-72 bg-slate-50 border-l border-slate-200 p-4 space-y-2 overflow-y-auto">
+    <div className="w-72 bg-slate-50 border-l border-slate-200 p-2 space-y-2 overflow-y-auto">
       {/* Tools */}
       <div>
         <h3 className="text-sm font-semibold text-slate-700 mb-2">Tools</h3>
@@ -129,7 +129,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             className="justify-start"
           >
             <Spline size={16} />
-            <span className="ml-2">Q</span>
+            <span className="ml-2">QCurve</span>
           </Button>
           <Button
             variant={tool === 'ccurve' ? 'default' : 'outline'}
@@ -138,7 +138,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             className="justify-start"
           >
             <LineSquiggle size={16} />
-            <span className="ml-2">C</span>
+            <span className="ml-2">CCurve</span>
           </Button>
           <Button
             variant={tool === 'text' ? 'default' : 'outline'}

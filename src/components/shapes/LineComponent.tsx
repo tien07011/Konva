@@ -267,6 +267,14 @@ export const LineComponent: React.FC<LineComponentProps> = ({
         shadowBlur={isSelected ? 10 : 0}
         shadowOpacity={isSelected ? 0.8 : 0}
         shadowOffset={isSelected ? { x: 0, y: 0 } : undefined}
+        onMouseEnter={(e: any) => {
+          const stage = e.target.getStage();
+          if (stage) stage.container().style.cursor = interactive ? 'move' : 'default';
+        }}
+        onMouseLeave={(e: any) => {
+          const stage = e.target.getStage();
+          if (stage) stage.container().style.cursor = 'default';
+        }}
       />
       {interactive && isSelected ? anchors : null}
     </Group>

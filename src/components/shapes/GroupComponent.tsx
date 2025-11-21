@@ -108,6 +108,14 @@ export const GroupComponent: React.FC<GroupComponentProps> = ({
         onTap={onSelect}
         onDragEnd={handleDragEnd}
         onTransformEnd={handleTransformEnd}
+        onMouseEnter={(e: any) => {
+          const stage = e.target.getStage();
+          if (stage) stage.container().style.cursor = 'move';
+        }}
+        onMouseLeave={(e: any) => {
+          const stage = e.target.getStage();
+          if (stage) stage.container().style.cursor = 'default';
+        }}
       >
         {groupShapes.map(renderShape)}
       </GroupComp>
