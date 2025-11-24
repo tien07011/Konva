@@ -581,8 +581,8 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     <div className={`flex-1 bg-white relative ${showGrid ? 'bg-grid' : ''}`}>
       <StageComponent
         ref={stageRef}
-        width={window.innerWidth - 300}
-        height={window.innerHeight - 100}
+        width={window.innerWidth - 528}
+        height={window.innerHeight}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
