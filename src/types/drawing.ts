@@ -1,4 +1,14 @@
-export type ToolType = 'none' | 'select' | 'line' | 'rect' | 'circle' | 'qcurve' | 'ccurve' | 'path' | 'freehand' | 'text'; // thêm custom path
+export type ToolType =
+  | 'none'
+  | 'select'
+  | 'line'
+  | 'rect'
+  | 'circle'
+  | 'qcurve'
+  | 'ccurve'
+  | 'path'
+  | 'freehand'
+  | 'text'; // thêm custom path
 
 export interface BaseShape {
   id: string;
@@ -8,11 +18,11 @@ export interface BaseShape {
   rotation?: number;
   fill?: string;
 }
-   
+
 export interface LineShape extends BaseShape {
   type: 'line';
   points: number[]; // [x1, y1, x2, y2]
-  lineCap?: 'butt' | 'round' | 'square' // kiểu mũi đầu cuối
+  lineCap?: 'butt' | 'round' | 'square'; // kiểu mũi đầu cuối
   lineJoin?: 'miter' | 'round' | 'bevel'; // kiểu nối giữa các đoạn
   dash?: number[]; // mẫu gạch (ví dụ [8,6])
   closed?: boolean; // đóng đường để có fill

@@ -75,7 +75,16 @@ export const RectComponent: React.FC<RectComponentProps> = ({
     [onChange, shape],
   );
 
-  const rotationSnaps = useMemo(() => (shiftPressed ? [0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180, 195, 210, 225, 240, 255, 270, 285, 300, 315, 330, 345] : []), [shiftPressed]);
+  const rotationSnaps = useMemo(
+    () =>
+      shiftPressed
+        ? [
+            0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180, 195, 210, 225, 240, 255, 270,
+            285, 300, 315, 330, 345,
+          ]
+        : [],
+    [shiftPressed],
+  );
 
   const boundBoxFunc = useCallback((oldBox: any, newBox: any) => {
     const minSize = 4;
@@ -123,7 +132,16 @@ export const RectComponent: React.FC<RectComponentProps> = ({
           rotationSnaps={rotationSnaps}
           keepRatio={shiftPressed}
           centeredScaling={altPressed}
-          enabledAnchors={['top-left','top-center','top-right','middle-right','bottom-right','bottom-center','bottom-left','middle-left']}
+          enabledAnchors={[
+            'top-left',
+            'top-center',
+            'top-right',
+            'middle-right',
+            'bottom-right',
+            'bottom-center',
+            'bottom-left',
+            'middle-left',
+          ]}
           anchorFill="#fff"
           anchorStroke="#3b82f6"
           anchorStrokeWidth={2}

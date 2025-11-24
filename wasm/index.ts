@@ -153,17 +153,26 @@ export function project_point_to_segment(
   const ab2 = abx * abx + aby * aby;
   let t: f64 = 0.0;
   if (ab2 > 0.0) t = (apx * abx + apy * aby) / ab2;
-  if (t < 0.0) t = 0.0; else if (t > 1.0) t = 1.0;
+  if (t < 0.0) t = 0.0;
+  else if (t > 1.0) t = 1.0;
   const qx = ax + t * abx;
   const qy = ay + t * aby;
   const d = dist(px, py, qx, qy);
   const out = new Float64Array(4);
-  out[0] = qx; out[1] = qy; out[2] = t; out[3] = d;
+  out[0] = qx;
+  out[1] = qy;
+  out[2] = t;
+  out[3] = d;
   return out;
 }
 
 // Find closest segment in polyline to point (px,py). If maxDist >= 0, applies threshold.
-export function closest_segment(points: Float64Array, px: f64, py: f64, maxDist: f64): Float64Array {
+export function closest_segment(
+  points: Float64Array,
+  px: f64,
+  py: f64,
+  maxDist: f64,
+): Float64Array {
   let bestIndex: f64 = -1.0;
   let bestX: f64 = NaN;
   let bestY: f64 = NaN;
@@ -187,9 +196,16 @@ export function closest_segment(points: Float64Array, px: f64, py: f64, maxDist:
   }
   if (maxDist >= 0.0 && bestD > maxDist) {
     bestIndex = -1.0;
-    bestX = NaN; bestY = NaN; bestT = NaN; bestD = 1.0 / 0.0;
+    bestX = NaN;
+    bestY = NaN;
+    bestT = NaN;
+    bestD = 1.0 / 0.0;
   }
   const out = new Float64Array(5);
-  out[0] = bestIndex; out[1] = bestX; out[2] = bestY; out[3] = bestT; out[4] = bestD;
+  out[0] = bestIndex;
+  out[1] = bestX;
+  out[2] = bestY;
+  out[3] = bestT;
+  out[4] = bestD;
   return out;
 }

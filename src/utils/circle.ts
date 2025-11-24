@@ -1,11 +1,24 @@
 import type { CircleShape } from '../types/drawing';
 import { loadGeometryWasm } from './wasm';
 
-export function startCircle(id: string, cx: number, cy: number, stroke: string, strokeWidth: number, fill?: string): CircleShape {
+export function startCircle(
+  id: string,
+  cx: number,
+  cy: number,
+  stroke: string,
+  strokeWidth: number,
+  fill?: string,
+): CircleShape {
   return { id, type: 'circle', cx, cy, r: 0, stroke, strokeWidth, fill };
 }
 
-export function updateCircleFromCorner(shape: CircleShape, startX: number, startY: number, x: number, y: number): CircleShape {
+export function updateCircleFromCorner(
+  shape: CircleShape,
+  startX: number,
+  startY: number,
+  x: number,
+  y: number,
+): CircleShape {
   const dx = x - startX;
   const dy = y - startY;
   const cx = (startX + x) / 2;
@@ -14,7 +27,13 @@ export function updateCircleFromCorner(shape: CircleShape, startX: number, start
   return { ...shape, cx, cy, r };
 }
 
-export function updateCircleFromCenter(shape: CircleShape, cx: number, cy: number, x: number, y: number): CircleShape {
+export function updateCircleFromCenter(
+  shape: CircleShape,
+  cx: number,
+  cy: number,
+  x: number,
+  y: number,
+): CircleShape {
   const r = Math.hypot(x - cx, y - cy);
   return { ...shape, cx, cy, r };
 }
@@ -28,7 +47,13 @@ export async function circleLength(r: number): Promise<number> {
   }
 }
 
-export async function circlePointDistance(cx: number, cy: number, r: number, px: number, py: number): Promise<number> {
+export async function circlePointDistance(
+  cx: number,
+  cy: number,
+  r: number,
+  px: number,
+  py: number,
+): Promise<number> {
   try {
     const wasm: any = await loadGeometryWasm();
     return wasm.circle_point_distance(cx, cy, Math.abs(r), px, py);
@@ -37,18 +62,30 @@ export async function circlePointDistance(cx: number, cy: number, r: number, px:
   }
 }
 
-export async function circleBBox(cx: number, cy: number, r: number): Promise<{ minx: number; miny: number; maxx: number; maxy: number }>{
+export async function circleBBox(
+  cx: number,
+  cy: number,
+  r: number,
+): Promise<{ minx: number; miny: number; maxx: number; maxy: number }> {
   try {
     const wasm: any = await loadGeometryWasm();
     const ptr = wasm.circle_bbox(cx, cy, Math.abs(r));
     const arr: number[] = typeof wasm.__getArray === 'function' ? wasm.__getArray(ptr) : [];
     if (arr && arr.length >= 4) return { minx: arr[0], miny: arr[1], maxx: arr[2], maxy: arr[3] };
-  } catch (_e) { /* wasm unavailable - fallback to JS */ void 0; }
+  } catch (_e) {
+    /* wasm unavailable - fallback to JS */ void 0;
+  }
   const rr = Math.abs(r);
   return { minx: cx - rr, miny: cy - rr, maxx: cx + rr, maxy: cy + rr };
 }
 
-export function circlePerimeterPointTowards(cx: number, cy: number, r: number, px: number, py: number): { x: number; y: number } {
+export function circlePerimeterPointTowards(
+  cx: number,
+  cy: number,
+  r: number,
+  px: number,
+  py: number,
+): { x: number; y: number } {
   const ang = Math.atan2(py - cy, px - cx);
   const rr = Math.abs(r);
   return { x: cx + rr * Math.cos(ang), y: cy + rr * Math.sin(ang) };
@@ -62,7 +99,7 @@ export async function circleIntersectRay(
   y1: number,
   x2: number,
   y2: number,
-): Promise<{ hit: boolean; x: number; y: number }>{
+): Promise<{ hit: boolean; x: number; y: number }> {
   try {
     const wasm: any = await loadGeometryWasm();
     if (typeof wasm.circle_intersect_ray_t === 'function') {
@@ -75,11 +112,14 @@ export async function circleIntersectRay(
     if (typeof wasm.circle_intersect_ray === 'function' && typeof wasm.__getArray === 'function') {
       const ptr = wasm.circle_intersect_ray(cx, cy, Math.abs(r), x1, y1, x2, y2);
       const arr: number[] = wasm.__getArray(ptr);
-      const x = arr[0], y = arr[1];
+      const x = arr[0],
+        y = arr[1];
       const hit = isFinite(x) && isFinite(y);
       return { hit, x, y };
     }
-  } catch (_e) { /* wasm unavailable - fallback to JS */ void 0; }
+  } catch (_e) {
+    /* wasm unavailable - fallback to JS */ void 0;
+  }
   // JS fallback
   const dx = x2 - x1;
   const dy = y2 - y1;

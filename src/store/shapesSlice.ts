@@ -95,7 +95,7 @@ const shapesSlice = createSlice({
     },
     createGroup(state, action: PayloadAction<{ name?: string }>) {
       if (state.selectedIds.length < 2) return;
-      
+
       const id = `group-${Date.now()}`;
       const newGroup: ShapeGroup = {
         id,
@@ -107,7 +107,7 @@ const shapesSlice = createSlice({
         scaleX: 1,
         scaleY: 1,
       };
-      
+
       state.groups.push(newGroup);
       state.selectedIds = [];
       state.selectedGroupId = id;
@@ -164,22 +164,22 @@ const shapesSlice = createSlice({
   },
 });
 
-export const { 
-  addShape, 
-  updateShape, 
+export const {
+  addShape,
+  updateShape,
   updateShapes,
-  deleteShape, 
-  selectShape, 
+  deleteShape,
+  selectShape,
   selectMultipleShapes,
   toggleShapeSelection,
   selectGroup,
   createGroup,
   updateGroup,
   ungroupShapes,
-  clearShapes, 
-  undo, 
+  clearShapes,
+  undo,
   redo,
-  importData
+  importData,
 } = shapesSlice.actions;
 
 export default shapesSlice.reducer;

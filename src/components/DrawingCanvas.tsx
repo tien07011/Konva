@@ -26,41 +26,49 @@ import { isShapeInSelection } from '../utils/selection';
 
 interface DrawingCanvasProps {
   shapes: AnyShape[];
-    groups: ShapeGroup[];
+  groups: ShapeGroup[];
   onAddShape: (shape: AnyShape) => void;
   onUpdateShape: (shape: AnyShape) => void;
   selectedId: string | null;
-    selectedIds: string[];
-    selectedGroupId: string | null;
+  selectedIds: string[];
+  selectedGroupId: string | null;
   onSelectShape: (id: string | null) => void;
-    onSelectMultiple: (ids: string[]) => void;
-    onSelectGroup: (id: string | null) => void;
-    onUpdateGroup: (group: ShapeGroup) => void;
+  onSelectMultiple: (ids: string[]) => void;
+  onSelectGroup: (id: string | null) => void;
+  onUpdateGroup: (group: ShapeGroup) => void;
 }
 
 export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   shapes,
-    groups,
+  groups,
   onAddShape,
   onUpdateShape,
   selectedId,
-    selectedIds,
-    selectedGroupId,
+  selectedIds,
+  selectedGroupId,
   onSelectShape,
-    onSelectMultiple,
-    onSelectGroup,
-    onUpdateGroup,
+  onSelectMultiple,
+  onSelectGroup,
+  onUpdateGroup,
 }) => {
   const dispatch = useDispatch();
-  const { tool, strokeColor, strokeWidth, showGrid } = useSelector(
-    (state: RootState) => state.ui,
-  );
+  const { tool, strokeColor, strokeWidth, showGrid } = useSelector((state: RootState) => state.ui);
 
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentShape, setCurrentShape] = useState<AnyShape | null>(null);
-  const [textPreview, setTextPreview] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+  const [textPreview, setTextPreview] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
-    const [selectionRect, setSelectionRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+  const [selectionRect, setSelectionRect] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
   const stageRef = useRef<any>(null);
 
   const handleMouseDown = (e: any) => {
@@ -73,17 +81,17 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     // Deselect when clicking on empty area
     if (e.target === stage) {
       onSelectShape(null);
-        onSelectGroup(null);
+      onSelectGroup(null);
     }
 
-      // Selection rectangle mode
-      if (tool === 'select') {
-        if (e.target === stage) {
-          setIsDrawing(true);
-          setSelectionRect({ x: pos.x, y: pos.y, width: 0, height: 0 });
-        }
-        return;
+    // Selection rectangle mode
+    if (tool === 'select') {
+      if (e.target === stage) {
+        setIsDrawing(true);
+        setSelectionRect({ x: pos.x, y: pos.y, width: 0, height: 0 });
       }
+      return;
+    }
 
     if (tool === 'line') {
       setIsDrawing(true);
@@ -174,19 +182,19 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   const handleMouseMove = (e: any) => {
     // Selection rectangle path must run even when currentShape is null
     if (tool === 'select' && selectionRect && isDrawing) {
-        const stage = e.target.getStage();
-        if (!stage) return;
-        const pos = stage.getPointerPosition();
-        if (!pos) return;
+      const stage = e.target.getStage();
+      if (!stage) return;
+      const pos = stage.getPointerPosition();
+      if (!pos) return;
 
-        const x = Math.min(selectionRect.x, pos.x);
-        const y = Math.min(selectionRect.y, pos.y);
-        const width = Math.abs(pos.x - selectionRect.x);
-        const height = Math.abs(pos.y - selectionRect.y);
+      const x = Math.min(selectionRect.x, pos.x);
+      const y = Math.min(selectionRect.y, pos.y);
+      const width = Math.abs(pos.x - selectionRect.x);
+      const height = Math.abs(pos.y - selectionRect.y);
 
-        setSelectionRect({ x, y, width, height });
-        return;
-      }
+      setSelectionRect({ x, y, width, height });
+      return;
+    }
 
     if (tool === 'text' && isDrawing && dragStart && textPreview) {
       const stage = e.target.getStage();
@@ -318,8 +326,16 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
           adjusted = { ...shape, x: shape.x + offsetX, y: shape.y + offsetY };
         } else if (shape.type === 'circle') {
           adjusted = { ...shape, cx: shape.cx + offsetX, cy: shape.cy + offsetY };
-        } else if (shape.type === 'line' || shape.type === 'freehand' || shape.type === 'qcurve' || shape.type === 'ccurve') {
-          adjusted = { ...shape, points: shape.points.map((v, i) => (i % 2 === 0 ? v + offsetX : v + offsetY)) } as AnyShape;
+        } else if (
+          shape.type === 'line' ||
+          shape.type === 'freehand' ||
+          shape.type === 'qcurve' ||
+          shape.type === 'ccurve'
+        ) {
+          adjusted = {
+            ...shape,
+            points: shape.points.map((v, i) => (i % 2 === 0 ? v + offsetX : v + offsetY)),
+          } as AnyShape;
         } else if (shape.type === 'text') {
           adjusted = { ...shape, x: shape.x + offsetX, y: shape.y + offsetY } as AnyShape;
         }
@@ -339,9 +355,10 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       const start = dragStart;
       const baseX = start?.x ?? 0;
       const baseY = start?.y ?? 0;
-      const finalBox = region && region.width >= 5 && region.height >= 5
-        ? region
-        : { x: baseX, y: baseY, width: 160, height: 40 };
+      const finalBox =
+        region && region.width >= 5 && region.height >= 5
+          ? region
+          : { x: baseX, y: baseY, width: 160, height: 40 };
       const id = `text-${Date.now()}`;
       const newText: TextShape = {
         id,
@@ -453,7 +470,11 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
           shape={shape}
           isSelected={isSelected}
           interactive={interactive}
-          onSelect={interactive ? () => (tool === 'select' ? onSelectShape(shape.id) : onSelectShape(shape.id)) : undefined}
+          onSelect={
+            interactive
+              ? () => (tool === 'select' ? onSelectShape(shape.id) : onSelectShape(shape.id))
+              : undefined
+          }
           onDragEnd={handleDragEnd(shape)}
           onChange={(next) => onUpdateShape(next)}
         />
@@ -467,7 +488,11 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
           shape={shape}
           isSelected={isSelected}
           interactive={interactive}
-          onSelect={interactive ? () => (tool === 'select' ? onSelectShape(shape.id) : onSelectShape(shape.id)) : undefined}
+          onSelect={
+            interactive
+              ? () => (tool === 'select' ? onSelectShape(shape.id) : onSelectShape(shape.id))
+              : undefined
+          }
           onDragEnd={handleDragEnd(shape)}
           onChange={(next) => onUpdateShape(next)}
         />
@@ -481,7 +506,11 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
           shape={shape}
           isSelected={isSelected}
           interactive={interactive}
-          onSelect={interactive ? () => (tool === 'select' ? onSelectShape(shape.id) : onSelectShape(shape.id)) : undefined}
+          onSelect={
+            interactive
+              ? () => (tool === 'select' ? onSelectShape(shape.id) : onSelectShape(shape.id))
+              : undefined
+          }
           onDragEnd={handleDragEnd(shape)}
           onChange={(next) => onUpdateShape(next)}
         />
@@ -495,7 +524,11 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
           shape={shape}
           isSelected={isSelected}
           interactive={interactive}
-          onSelect={interactive ? () => (tool === 'select' ? onSelectShape(shape.id) : onSelectShape(shape.id)) : undefined}
+          onSelect={
+            interactive
+              ? () => (tool === 'select' ? onSelectShape(shape.id) : onSelectShape(shape.id))
+              : undefined
+          }
           onDragEnd={handleDragEnd(shape)}
           onChange={(next) => onUpdateShape(next)}
         />
@@ -509,7 +542,11 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
           shape={shape}
           isSelected={isSelected}
           interactive={interactive}
-          onSelect={interactive ? () => (tool === 'select' ? onSelectShape(shape.id) : onSelectShape(shape.id)) : undefined}
+          onSelect={
+            interactive
+              ? () => (tool === 'select' ? onSelectShape(shape.id) : onSelectShape(shape.id))
+              : undefined
+          }
           onDragEnd={handleDragEnd(shape)}
           onChange={(next: AnyShape) => onUpdateShape(next)}
         />
@@ -523,7 +560,11 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
           shape={shape}
           isSelected={isSelected}
           interactive={interactive}
-          onSelect={interactive ? () => (tool === 'select' ? onSelectShape(shape.id) : onSelectShape(shape.id)) : undefined}
+          onSelect={
+            interactive
+              ? () => (tool === 'select' ? onSelectShape(shape.id) : onSelectShape(shape.id))
+              : undefined
+          }
           onDragEnd={handleDragEnd(shape)}
           onChange={(next: AnyShape) => onUpdateShape(next)}
         />

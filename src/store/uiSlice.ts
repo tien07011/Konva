@@ -13,7 +13,7 @@ const initialState: UIState = {
   strokeColor: '#111827',
   strokeWidth: 5,
   fillColor: 'transparent',
-    tool: 'select',
+  tool: 'select',
   showGrid: true,
 };
 
@@ -39,12 +39,7 @@ const uiSlice = createSlice({
   },
 });
 
-export const {
-  setStrokeColor,
-  setStrokeWidth,
-  setFillColor,
-  setTool,
-  toggleGrid,
-} = uiSlice.actions;
+export const { setStrokeColor, setStrokeWidth, setFillColor, setTool, toggleGrid } =
+  uiSlice.actions;
 
 export default uiSlice.reducer;

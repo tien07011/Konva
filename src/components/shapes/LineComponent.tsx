@@ -224,7 +224,15 @@ export const LineComponent: React.FC<LineComponentProps> = ({
       }
     }
     return out;
-  }, [points, handleDragEndPoint, handleDragMove, handleDragMoveSnapped, handleInsertAndDragMid, activeHandle, lineOffset]);
+  }, [
+    points,
+    handleDragEndPoint,
+    handleDragMove,
+    handleDragMoveSnapped,
+    handleInsertAndDragMid,
+    activeHandle,
+    lineOffset,
+  ]);
 
   const handleLineDragMove = useCallback((e: any) => {
     const node = e.target;

@@ -34,7 +34,14 @@ export const CurveComponent: React.FC<CurveComponentProps> = ({
     const src = draftPoints ?? shape.points ?? [];
     if (shape.type === 'qcurve') {
       if (src.length === 6 && src.every((v) => Number.isFinite(v))) return src;
-      const [x0 = 0, y0 = 0, cx = src[2] ?? x0, cy = src[3] ?? y0, x1 = src[4] ?? x0, y1 = src[5] ?? y0] = src;
+      const [
+        x0 = 0,
+        y0 = 0,
+        cx = src[2] ?? x0,
+        cy = src[3] ?? y0,
+        x1 = src[4] ?? x0,
+        y1 = src[5] ?? y0,
+      ] = src;
       // If control/end missing, fall back to midpoint-based defaults
       const defX1 = Number.isFinite(x1) ? x1 : x0 + 1;
       const defY1 = Number.isFinite(y1) ? y1 : y0 + 1;
@@ -44,7 +51,16 @@ export const CurveComponent: React.FC<CurveComponentProps> = ({
     }
     // ccurve
     if (src.length === 8 && src.every((v) => Number.isFinite(v))) return src;
-    const [x0 = 0, y0 = 0, c1x = src[2] ?? x0, c1y = src[3] ?? y0, c2x = src[4] ?? x0, c2y = src[5] ?? y0, x1 = src[6] ?? x0, y1 = src[7] ?? y0] = src;
+    const [
+      x0 = 0,
+      y0 = 0,
+      c1x = src[2] ?? x0,
+      c1y = src[3] ?? y0,
+      c2x = src[4] ?? x0,
+      c2y = src[5] ?? y0,
+      x1 = src[6] ?? x0,
+      y1 = src[7] ?? y0,
+    ] = src;
     const defX1 = Number.isFinite(x1) ? x1 : x0 + 1;
     const defY1 = Number.isFinite(y1) ? y1 : y0 + 1;
     const dc1x = Number.isFinite(c1x) ? c1x : (x0 * 2 + defX1) / 3;
@@ -65,7 +81,7 @@ export const CurveComponent: React.FC<CurveComponentProps> = ({
 
   const setPointAt = useCallback(
     (idx: number, x: number, y: number, commit = false) => {
-      const base = (commit ? draftPoints ?? points : points).slice();
+      const base = (commit ? (draftPoints ?? points) : points).slice();
       base[idx] = x;
       base[idx + 1] = y;
       if (commit) {
@@ -82,7 +98,10 @@ export const CurveComponent: React.FC<CurveComponentProps> = ({
   const handleDragMove = useCallback(
     (idx: number) => (e: any) => {
       const node = e.target;
-      const pos = typeof node.getAbsolutePosition === 'function' ? node.getAbsolutePosition() : { x: node.x(), y: node.y() };
+      const pos =
+        typeof node.getAbsolutePosition === 'function'
+          ? node.getAbsolutePosition()
+          : { x: node.x(), y: node.y() };
       setPointAt(idx, pos.x, pos.y, false);
     },
     [setPointAt],
@@ -92,25 +111,46 @@ export const CurveComponent: React.FC<CurveComponentProps> = ({
   const handleDragMoveSnapped = useCallback(
     (idx: number) => (e: any) => {
       const node = e.target;
-      const pos = typeof node.getAbsolutePosition === 'function' ? node.getAbsolutePosition() : { x: node.x(), y: node.y() };
+      const pos =
+        typeof node.getAbsolutePosition === 'function'
+          ? node.getAbsolutePosition()
+          : { x: node.x(), y: node.y() };
       let refX = points[0];
       let refY = points[1];
       if (shape.type === 'qcurve') {
-        const endX = points[4], endY = points[5];
-        if (idx === 0) { refX = endX; refY = endY; }
-        else if (idx === 4) { refX = points[0]; refY = points[1]; }
-        else {
+        const endX = points[4],
+          endY = points[5];
+        if (idx === 0) {
+          refX = endX;
+          refY = endY;
+        } else if (idx === 4) {
+          refX = points[0];
+          refY = points[1];
+        } else {
           // control: snap relative to closer endpoint
           const d0 = Math.hypot(points[0] - pos.x, points[1] - pos.y);
           const d1 = Math.hypot(endX - pos.x, endY - pos.y);
-          if (d1 < d0) { refX = endX; refY = endY; }
+          if (d1 < d0) {
+            refX = endX;
+            refY = endY;
+          }
         }
       } else {
-        const endX = points[6], endY = points[7];
-        if (idx === 0) { refX = endX; refY = endY; }
-        else if (idx === 6) { refX = points[0]; refY = points[1]; }
-        else if (idx === 2) { refX = points[0]; refY = points[1]; }
-        else if (idx === 4) { refX = endX; refY = endY; }
+        const endX = points[6],
+          endY = points[7];
+        if (idx === 0) {
+          refX = endX;
+          refY = endY;
+        } else if (idx === 6) {
+          refX = points[0];
+          refY = points[1];
+        } else if (idx === 2) {
+          refX = points[0];
+          refY = points[1];
+        } else if (idx === 4) {
+          refX = endX;
+          refY = endY;
+        }
       }
       const { dx, dy } = snapVector45(pos.x - refX, pos.y - refY);
       setPointAt(idx, refX + dx, refY + dy, false);
@@ -121,7 +161,10 @@ export const CurveComponent: React.FC<CurveComponentProps> = ({
   const handleDragEndPoint = useCallback(
     (idx: number) => (e: any) => {
       const node = e.target;
-      const pos = typeof node.getAbsolutePosition === 'function' ? node.getAbsolutePosition() : { x: node.x(), y: node.y() };
+      const pos =
+        typeof node.getAbsolutePosition === 'function'
+          ? node.getAbsolutePosition()
+          : { x: node.x(), y: node.y() };
       setPointAt(idx, pos.x, pos.y, true);
     },
     [setPointAt],
@@ -143,8 +186,20 @@ export const CurveComponent: React.FC<CurveComponentProps> = ({
       const oy = dragOffset.y;
       // helper lines
       els.push(
-        <KLine key="hl-0" points={[x0+ox, y0+oy, cx+ox, cy+oy]} stroke="#93c5fd" strokeWidth={1} dash={[4,4]} />,
-        <KLine key="hl-1" points={[cx+ox, cy+oy, x1+ox, y1+oy]} stroke="#93c5fd" strokeWidth={1} dash={[4,4]} />,
+        <KLine
+          key="hl-0"
+          points={[x0 + ox, y0 + oy, cx + ox, cy + oy]}
+          stroke="#93c5fd"
+          strokeWidth={1}
+          dash={[4, 4]}
+        />,
+        <KLine
+          key="hl-1"
+          points={[cx + ox, cy + oy, x1 + ox, y1 + oy]}
+          stroke="#93c5fd"
+          strokeWidth={1}
+          dash={[4, 4]}
+        />,
       );
       // endpoints
       els.push(
@@ -197,9 +252,27 @@ export const CurveComponent: React.FC<CurveComponentProps> = ({
       const oy = dragOffset.y;
       // helper lines
       els.push(
-        <KLine key="hl-0" points={[x0+ox, y0+oy, c1x+ox, c1y+oy]} stroke="#93c5fd" strokeWidth={1} dash={[4,4]} />,
-        <KLine key="hl-1" points={[x1+ox, y1+oy, c2x+ox, c2y+oy]} stroke="#93c5fd" strokeWidth={1} dash={[4,4]} />,
-        <KLine key="hl-2" points={[c1x+ox, c1y+oy, c2x+ox, c2y+oy]} stroke="#bfdbfe" strokeWidth={1} dash={[2,4]} />,
+        <KLine
+          key="hl-0"
+          points={[x0 + ox, y0 + oy, c1x + ox, c1y + oy]}
+          stroke="#93c5fd"
+          strokeWidth={1}
+          dash={[4, 4]}
+        />,
+        <KLine
+          key="hl-1"
+          points={[x1 + ox, y1 + oy, c2x + ox, c2y + oy]}
+          stroke="#93c5fd"
+          strokeWidth={1}
+          dash={[4, 4]}
+        />,
+        <KLine
+          key="hl-2"
+          points={[c1x + ox, c1y + oy, c2x + ox, c2y + oy]}
+          stroke="#bfdbfe"
+          strokeWidth={1}
+          dash={[2, 4]}
+        />,
       );
       // endpoints
       els.push(

@@ -24,8 +24,12 @@ export const CircleComponent: React.FC<CircleComponentProps> = ({
   const [altPressed, setAltPressed] = useState(false);
 
   useEffect(() => {
-    const down = (e: KeyboardEvent) => { if (e.key === 'Alt') setAltPressed(true); };
-    const up = (e: KeyboardEvent) => { if (e.key === 'Alt') setAltPressed(false); };
+    const down = (e: KeyboardEvent) => {
+      if (e.key === 'Alt') setAltPressed(true);
+    };
+    const up = (e: KeyboardEvent) => {
+      if (e.key === 'Alt') setAltPressed(false);
+    };
     window.addEventListener('keydown', down);
     window.addEventListener('keyup', up);
     return () => {
@@ -91,7 +95,16 @@ export const CircleComponent: React.FC<CircleComponentProps> = ({
           rotateEnabled={false}
           keepRatio
           centeredScaling={altPressed}
-          enabledAnchors={['top-left','top-right','bottom-right','bottom-left','top-center','bottom-center','middle-left','middle-right']}
+          enabledAnchors={[
+            'top-left',
+            'top-right',
+            'bottom-right',
+            'bottom-left',
+            'top-center',
+            'bottom-center',
+            'middle-left',
+            'middle-right',
+          ]}
           anchorFill="#fff"
           anchorStroke="#3b82f6"
           anchorStrokeWidth={2}

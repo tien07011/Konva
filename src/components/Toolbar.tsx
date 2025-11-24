@@ -1,5 +1,20 @@
 import React from 'react';
-import { Minus, MousePointer, Circle as CircleIcon, Square as RectIcon, Undo, Redo, Trash2, Download, Upload, Grid3x3, Pencil, Type as TextIcon, Spline, LineSquiggle } from 'lucide-react';
+import {
+  Minus,
+  MousePointer,
+  Circle as CircleIcon,
+  Square as RectIcon,
+  Undo,
+  Redo,
+  Trash2,
+  Download,
+  Upload,
+  Grid3x3,
+  Pencil,
+  Type as TextIcon,
+  Spline,
+  LineSquiggle,
+} from 'lucide-react';
 import { Button } from './ui/button';
 import type { ToolType, AnyShape, LineShape } from '../types/drawing';
 
@@ -30,12 +45,7 @@ interface ToolbarProps {
   onUngroupShapes?: () => void;
 }
 
-const commonColors = [
-  '#111827',
-  '#ef4444',
-  '#3b82f6',
-  '#10b981'
-];
+const commonColors = ['#111827', '#ef4444', '#3b82f6', '#10b981'];
 
 export const Toolbar: React.FC<ToolbarProps> = ({
   tool,
@@ -63,8 +73,10 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onCreateGroup,
   onUngroupShapes,
 }) => {
-  const selectedLine: LineShape | null = selectedShape && selectedShape.type === 'line' ? (selectedShape as LineShape) : null;
-  const selectedText = selectedShape && selectedShape.type === 'text' ? (selectedShape as any) : null;
+  const selectedLine: LineShape | null =
+    selectedShape && selectedShape.type === 'line' ? (selectedShape as LineShape) : null;
+  const selectedText =
+    selectedShape && selectedShape.type === 'text' ? (selectedShape as any) : null;
 
   const updateLine = (patch: Partial<LineShape>) => {
     if (!selectedLine || !onUpdateSelectedShape) return;
@@ -177,9 +189,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
 
       {/* Stroke Width */}
       <div>
-        <h3 className="text-sm font-semibold text-slate-700 mb-2">
-          Stroke Width: {strokeWidth}px
-        </h3>
+        <h3 className="text-sm font-semibold text-slate-700 mb-2">Stroke Width: {strokeWidth}px</h3>
         <input
           type="range"
           min="1"
@@ -199,7 +209,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             <div>
               <div className="text-xs text-slate-600 mb-2">Line Cap</div>
               <div className="grid grid-cols-3 gap-2">
-                {(['butt','round','square'] as const).map((cap) => (
+                {(['butt', 'round', 'square'] as const).map((cap) => (
                   <Button
                     key={cap}
                     variant={selectedLine.lineCap === cap ? 'default' : 'outline'}
@@ -216,7 +226,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             <div>
               <div className="text-xs text-slate-600 mb-2">Line Join</div>
               <div className="grid grid-cols-3 gap-2">
-                {(['miter','round','bevel'] as const).map((join) => (
+                {(['miter', 'round', 'bevel'] as const).map((join) => (
                   <Button
                     key={join}
                     variant={selectedLine.lineJoin === join ? 'default' : 'outline'}
@@ -234,28 +244,42 @@ export const Toolbar: React.FC<ToolbarProps> = ({
               <div className="text-xs text-slate-600 mb-2">Dash</div>
               <div className="grid grid-cols-4 gap-2">
                 <Button
-                  variant={!selectedLine.dash || selectedLine.dash.length === 0 ? 'default' : 'outline'}
+                  variant={
+                    !selectedLine.dash || selectedLine.dash.length === 0 ? 'default' : 'outline'
+                  }
                   size="sm"
                   onClick={() => updateLine({ dash: [] })}
                 >
                   None
                 </Button>
                 <Button
-                  variant={JSON.stringify(selectedLine.dash) === JSON.stringify([4,4]) ? 'default' : 'outline'}
+                  variant={
+                    JSON.stringify(selectedLine.dash) === JSON.stringify([4, 4])
+                      ? 'default'
+                      : 'outline'
+                  }
                   size="sm"
                   onClick={() => updateLine({ dash: [4, 4] })}
                 >
                   4-4
                 </Button>
                 <Button
-                  variant={JSON.stringify(selectedLine.dash) === JSON.stringify([8,6]) ? 'default' : 'outline'}
+                  variant={
+                    JSON.stringify(selectedLine.dash) === JSON.stringify([8, 6])
+                      ? 'default'
+                      : 'outline'
+                  }
                   size="sm"
                   onClick={() => updateLine({ dash: [8, 6] })}
                 >
                   8-6
                 </Button>
                 <Button
-                  variant={JSON.stringify(selectedLine.dash) === JSON.stringify([12,4,2,4]) ? 'default' : 'outline'}
+                  variant={
+                    JSON.stringify(selectedLine.dash) === JSON.stringify([12, 4, 2, 4])
+                      ? 'default'
+                      : 'outline'
+                  }
                   size="sm"
                   onClick={() => updateLine({ dash: [12, 4, 2, 4] })}
                 >
@@ -275,7 +299,9 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                 Closed (fill)
               </label>
               <div className="flex-1">
-                <div className="text-xs text-slate-600 mb-1">Tension: {selectedLine.tension ?? 0}</div>
+                <div className="text-xs text-slate-600 mb-1">
+                  Tension: {selectedLine.tension ?? 0}
+                </div>
                 <input
                   type="range"
                   min="0"
@@ -302,17 +328,25 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                 type="text"
                 className="w-full border border-slate-300 rounded px-2 py-1 text-sm"
                 value={selectedText.text}
-                onChange={(e) => onUpdateSelectedShape && onUpdateSelectedShape({ ...selectedText, text: e.target.value })}
+                onChange={(e) =>
+                  onUpdateSelectedShape &&
+                  onUpdateSelectedShape({ ...selectedText, text: e.target.value })
+                }
               />
             </div>
             <div>
-              <div className="text-xs text-slate-600 mb-1">Font Size: {selectedText.fontSize}px</div>
+              <div className="text-xs text-slate-600 mb-1">
+                Font Size: {selectedText.fontSize}px
+              </div>
               <input
                 type="range"
                 min="8"
                 max="96"
                 value={selectedText.fontSize || 16}
-                onChange={(e) => onUpdateSelectedShape && onUpdateSelectedShape({ ...selectedText, fontSize: Number(e.target.value) })}
+                onChange={(e) =>
+                  onUpdateSelectedShape &&
+                  onUpdateSelectedShape({ ...selectedText, fontSize: Number(e.target.value) })
+                }
                 className="w-full"
               />
             </div>
@@ -321,7 +355,10 @@ export const Toolbar: React.FC<ToolbarProps> = ({
               <select
                 className="w-full border border-slate-300 rounded px-2 py-1 text-sm"
                 value={selectedText.fontFamily || 'Arial'}
-                onChange={(e) => onUpdateSelectedShape && onUpdateSelectedShape({ ...selectedText, fontFamily: e.target.value })}
+                onChange={(e) =>
+                  onUpdateSelectedShape &&
+                  onUpdateSelectedShape({ ...selectedText, fontFamily: e.target.value })
+                }
               >
                 <option value="Arial">Arial</option>
                 <option value="Inter">Inter</option>
@@ -332,12 +369,14 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             <div>
               <div className="text-xs text-slate-600 mb-1">Align</div>
               <div className="grid grid-cols-3 gap-2">
-                {(['left','center','right'] as const).map((al) => (
+                {(['left', 'center', 'right'] as const).map((al) => (
                   <Button
                     key={al}
                     variant={selectedText.align === al ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => onUpdateSelectedShape && onUpdateSelectedShape({ ...selectedText, align: al })}
+                    onClick={() =>
+                      onUpdateSelectedShape && onUpdateSelectedShape({ ...selectedText, align: al })
+                    }
                   >
                     {al}
                   </Button>

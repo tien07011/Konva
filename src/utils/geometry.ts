@@ -76,15 +76,20 @@ export async function projectPointToSegmentWasm(
   ay: number,
   bx: number,
   by: number,
-): Promise<{ x: number; y: number; t: number; dist: number }>{
+): Promise<{ x: number; y: number; t: number; dist: number }> {
   try {
     const wasm: any = await loadGeometryWasm();
-    if (typeof wasm.project_point_to_segment === 'function' && typeof wasm.__getArray === 'function') {
+    if (
+      typeof wasm.project_point_to_segment === 'function' &&
+      typeof wasm.__getArray === 'function'
+    ) {
       const ptr = wasm.project_point_to_segment(px, py, ax, ay, bx, by);
       const arr: number[] = wasm.__getArray(ptr);
       return { x: arr[0], y: arr[1], t: arr[2], dist: arr[3] };
     }
-  } catch (_e) { /* wasm unavailable - fallback */ void 0; }
+  } catch (_e) {
+    /* wasm unavailable - fallback */ void 0;
+  }
   return projectPointToSegment(px, py, ax, ay, bx, by);
 }
 
@@ -96,7 +101,11 @@ export async function closestSegmentWasm(
 ): Promise<{ index: number; x: number; y: number; t: number; dist: number } | null> {
   try {
     const wasm: any = await loadGeometryWasm();
-    if (typeof wasm.closest_segment === 'function' && typeof wasm.__newArray === 'function' && typeof wasm.__getArray === 'function') {
+    if (
+      typeof wasm.closest_segment === 'function' &&
+      typeof wasm.__newArray === 'function' &&
+      typeof wasm.__getArray === 'function'
+    ) {
       const arrPtr = wasm.__newArray(wasm.FLOAT64ARRAY_ID, new Float64Array(points));
       const resPtr = wasm.closest_segment(arrPtr, px, py, maxDist);
       const arr: number[] = wasm.__getArray(resPtr);
@@ -107,7 +116,9 @@ export async function closestSegmentWasm(
       }
       return null;
     }
-  } catch (_e) { /* wasm unavailable - fallback */ void 0; }
+  } catch (_e) {
+    /* wasm unavailable - fallback */ void 0;
+  }
   return closestSegment(points, px, py, maxDist);
 }
 

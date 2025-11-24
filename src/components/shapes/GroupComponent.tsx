@@ -71,22 +71,70 @@ export const GroupComponent: React.FC<GroupComponentProps> = ({
   const renderShape = (shape: AnyShape) => {
     const childSelected = selectedIds.includes(shape.id);
     if (shape.type === 'line') {
-      return <LineComponent key={shape.id} shape={shape} isSelected={childSelected} interactive={false} onSelect={() => onSelectShape?.(shape.id)} />;
+      return (
+        <LineComponent
+          key={shape.id}
+          shape={shape}
+          isSelected={childSelected}
+          interactive={false}
+          onSelect={() => onSelectShape?.(shape.id)}
+        />
+      );
     }
     if (shape.type === 'circle') {
-      return <CircleComponent key={shape.id} shape={shape} isSelected={childSelected} interactive={false} onSelect={() => onSelectShape?.(shape.id)} />;
+      return (
+        <CircleComponent
+          key={shape.id}
+          shape={shape}
+          isSelected={childSelected}
+          interactive={false}
+          onSelect={() => onSelectShape?.(shape.id)}
+        />
+      );
     }
     if (shape.type === 'rect') {
-      return <RectComponent key={shape.id} shape={shape} isSelected={childSelected} interactive={false} onSelect={() => onSelectShape?.(shape.id)} />;
+      return (
+        <RectComponent
+          key={shape.id}
+          shape={shape}
+          isSelected={childSelected}
+          interactive={false}
+          onSelect={() => onSelectShape?.(shape.id)}
+        />
+      );
     }
     if (shape.type === 'qcurve' || shape.type === 'ccurve') {
-      return <CurveComponent key={shape.id} shape={shape} isSelected={childSelected} interactive={false} onSelect={() => onSelectShape?.(shape.id)} />;
+      return (
+        <CurveComponent
+          key={shape.id}
+          shape={shape}
+          isSelected={childSelected}
+          interactive={false}
+          onSelect={() => onSelectShape?.(shape.id)}
+        />
+      );
     }
     if (shape.type === 'freehand') {
-      return <FreehandComponent key={shape.id} shape={shape} isSelected={childSelected} interactive={false} onSelect={() => onSelectShape?.(shape.id)} />;
+      return (
+        <FreehandComponent
+          key={shape.id}
+          shape={shape}
+          isSelected={childSelected}
+          interactive={false}
+          onSelect={() => onSelectShape?.(shape.id)}
+        />
+      );
     }
     if (shape.type === 'text') {
-      return <TextComponent key={shape.id} shape={shape as any} isSelected={childSelected} interactive={false} onSelect={() => onSelectShape?.(shape.id)} />;
+      return (
+        <TextComponent
+          key={shape.id}
+          shape={shape as any}
+          isSelected={childSelected}
+          interactive={false}
+          onSelect={() => onSelectShape?.(shape.id)}
+        />
+      );
     }
     return null;
   };

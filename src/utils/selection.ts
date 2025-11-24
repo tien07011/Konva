@@ -22,7 +22,7 @@ export function isShapeInSelection(shape: AnyShape, selectionRect: SelectionRect
     const shapeRight = shape.x + shape.width;
     const shapeTop = shape.y;
     const shapeBottom = shape.y + shape.height;
-    
+
     return !(shapeRight < left || shapeLeft > right || shapeBottom < top || shapeTop > bottom);
   }
 
@@ -42,11 +42,16 @@ export function isShapeInSelection(shape: AnyShape, selectionRect: SelectionRect
     const distanceX = cx - closestX;
     const distanceY = cy - closestY;
     const distanceSquared = distanceX * distanceX + distanceY * distanceY;
-    
+
     return distanceSquared <= r * r;
   }
 
-  if (shape.type === 'line' || shape.type === 'freehand' || shape.type === 'qcurve' || shape.type === 'ccurve') {
+  if (
+    shape.type === 'line' ||
+    shape.type === 'freehand' ||
+    shape.type === 'qcurve' ||
+    shape.type === 'ccurve'
+  ) {
     const points = shape.points;
     // Check if any point is inside the selection rectangle
     for (let i = 0; i < points.length; i += 2) {
